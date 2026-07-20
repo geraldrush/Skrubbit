@@ -1,0 +1,21 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "skrubbit",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2025-03-25",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": {
+    "enabled": true
+  }
+  // Storage bindings are added as we wire them up:
+  // "d1_databases": [
+  //   { "binding": "DB", "database_name": "skrubbit", "database_id": "<id>" }
+  // ],
+  // "r2_buckets": [
+  //   { "binding": "PRODUCT_IMAGES", "bucket_name": "skrubbit-images" }
+  // ]
+}
