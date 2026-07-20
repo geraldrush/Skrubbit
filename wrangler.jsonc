@@ -11,6 +11,13 @@
   "observability": {
     "enabled": true
   },
+  // Custom domains. Both apex and www serve the Worker; www is redirected to
+  // the apex for canonicalisation (see the worker's host check). Attaching
+  // these creates the proxied DNS records automatically.
+  "routes": [
+    { "pattern": "skrubbit.co.za", "custom_domain": true },
+    { "pattern": "www.skrubbit.co.za", "custom_domain": true }
+  ],
   // Cloudflare Access settings for /admin. Both must be filled in before the
   // admin console will accept any request — it fails closed while they are
   // empty. ACCESS_TEAM_DOMAIN is like "yourteam.cloudflareaccess.com";
