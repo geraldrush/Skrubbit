@@ -13,6 +13,9 @@
     "isolatedModules": true,
     "jsx": "preserve",
     "incremental": true,
+    // Workers runtime globals (D1Database, R2Bucket, …) referenced by the
+    // generated worker-configuration.d.ts and by lib/products.ts.
+    "types": ["@cloudflare/workers-types", "node"],
     "plugins": [{ "name": "next" }],
     "paths": {
       "@/*": ["./*"]

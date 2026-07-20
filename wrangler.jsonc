@@ -10,12 +10,23 @@
   },
   "observability": {
     "enabled": true
-  }
-  // Storage bindings are added as we wire them up:
-  // "d1_databases": [
-  //   { "binding": "DB", "database_name": "skrubbit", "database_id": "<id>" }
-  // ],
-  // "r2_buckets": [
-  //   { "binding": "PRODUCT_IMAGES", "bucket_name": "skrubbit-images" }
-  // ]
+  },
+  // Cloudflare Access settings for /admin. Both must be filled in before the
+  // admin console will accept any request — it fails closed while they are
+  // empty. ACCESS_TEAM_DOMAIN is like "yourteam.cloudflareaccess.com";
+  // ACCESS_AUD is the Application Audience tag from the Access application.
+  "vars": {
+    "ACCESS_TEAM_DOMAIN": "",
+    "ACCESS_AUD": ""
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "skrubbit",
+      "database_id": "081f7d3c-7546-4f22-859b-b8a8a1147764"
+    }
+  ],
+  "r2_buckets": [
+    { "binding": "PRODUCT_IMAGES", "bucket_name": "skrubbit-images" }
+  ]
 }

@@ -1,8 +1,13 @@
 import { NextResponse } from "next/server";
-import { products, categories } from "@/data/products";
 
-export const dynamic = "force-static";
+import { categories } from "@/data/products";
+import { getProducts } from "@/lib/products";
 
-export function GET() {
+// Reads from D1, so this can no longer be prerendered at build time —
+// otherwise newly added products would not appear until the next deploy.
+export const dynamic = "force-dynamic";
+
+export async function GET() {
+  const products = await getProducts();
   return NextResponse.json({ products, categories });
 }

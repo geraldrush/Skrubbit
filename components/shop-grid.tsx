@@ -5,11 +5,13 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import { products, categories, type CategoryId } from "@/data/products";
+import { categories, type CategoryId, type Product } from "@/data/products";
 import { ProductCard } from "@/components/product-card";
 import { Input } from "@/components/ui/input";
 
-export function ShopGrid() {
+// Products are passed in from the server page rather than imported: the
+// catalogue now lives in D1, which a client component can't read.
+export function ShopGrid({ products }: { products: Product[] }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const activeCategory = searchParams.get("category") as CategoryId | null;

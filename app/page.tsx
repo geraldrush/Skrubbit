@@ -9,7 +9,8 @@ import {
 } from "lucide-react";
 
 import { site } from "@/data/site";
-import { products, categories } from "@/data/products";
+import { categories } from "@/data/products";
+import { getProducts } from "@/lib/products";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
@@ -37,8 +38,11 @@ const perks = [
   },
 ];
 
-export default function HomePage() {
-  const featured = products.filter((p) => p.featured);
+// Featured products come from D1.
+export const dynamic = "force-dynamic";
+
+export default async function HomePage() {
+  const featured = (await getProducts()).filter((p) => p.featured);
 
   return (
     <>
@@ -78,8 +82,8 @@ export default function HomePage() {
           <div className="relative mx-auto aspect-square w-full max-w-sm">
             <div className="absolute inset-0 rounded-full bg-white/40 blur-2xl" />
             <Image
-              src="/images/products/dishwashing-liquid.jpg"
-              alt="Skrubb-it products"
+              src="/images/brand/hero.webp"
+              alt="The Skrubb-it range of cleaning products"
               fill
               priority
               sizes="(max-width: 768px) 80vw, 400px"

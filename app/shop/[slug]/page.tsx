@@ -4,15 +4,16 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { Check, ChevronRight, Leaf } from "lucide-react";
 
-import { products, getProduct, getCategory } from "@/data/products";
+import { getCategory } from "@/data/products";
+import { getProduct, getProducts } from "@/lib/products";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 
-export function generateStaticParams() {
-  return products.map((p) => ({ slug: p.slug }));
-}
+// Slugs are no longer known at build time now that products live in D1, so
+// generateStaticParams is gone and pages render per-request.
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
@@ -20,7 +21,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) return { title: "Product not found" };
   return {
     title: product.name,
@@ -35,11 +36,11 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const product = getProduct(slug);
+  const product = await getProduct(slug);
   if (!product) notFound();
 
   const category = getCategory(product.category);
-  const related = products
+  const related = (await getProducts())
     .filter((p) => p.category === product.category && p.slug !== product.slug)
     .slice(0, 4);
 
