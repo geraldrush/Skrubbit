@@ -14,11 +14,12 @@ export const site = {
     "Skrubb-it manufactures industrial and household cleaning products and personal care essentials in South Africa. Quality you can trust, at prices that make sense.",
   url: "https://skrubbit.co.za",
 
-  // --- Contact (PLACEHOLDER VALUES — replace) ---
+  // --- Contact ---
   contact: {
-    // International format, digits only (e.g. 27 82 123 4567 -> "27821234567")
-    whatsapp: "27000000000",
-    phoneDisplay: "+27 (0) 00 000 0000",
+    // International format, digits only (e.g. 27 82 123 4567 -> "27821234567").
+    // This drives the WhatsApp order enquiry, so it must be WhatsApp-enabled.
+    whatsapp: "27659669657",
+    phoneDisplay: "+27 65 966 9657",
     email: "orders@skrubbit.co.za",
     location: "Gauteng, South Africa",
   },

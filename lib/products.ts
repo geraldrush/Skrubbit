@@ -149,6 +149,47 @@ export async function createProduct(p: NewProduct): Promise<void> {
   await d.batch(statements);
 }
 
+/**
+ * Updates a product in place, replacing its variants wholesale.
+ *
+ * The slug is the primary key and is not changeable here. Variants are deleted
+ * and re-inserted rather than diffed: the set is small, and a full replace is
+ * simpler to reason about than matching rows by SKU. The whole thing runs as
+ * one batch so a mid-update failure can't leave the product variant-less.
+ */
+export async function updateProduct(
+  slug: string,
+  p: Omit<NewProduct, "slug">
+): Promise<void> {
+  const d = db();
+  await d.batch([
+    d
+      .prepare(
+        `UPDATE products
+         SET name = ?, tagline = ?, description = ?, category = ?, image = ?,
+             featured = ?, scents = ?, usage = ?
+         WHERE slug = ?`
+      )
+      .bind(
+        p.name,
+        p.tagline,
+        p.description,
+        p.category,
+        p.image,
+        p.featured ? 1 : 0,
+        JSON.stringify(p.scents),
+        JSON.stringify(p.usage),
+        slug
+      ),
+    d.prepare("DELETE FROM variants WHERE product_slug = ?").bind(slug),
+    ...p.variants.map((v, i) =>
+      d
+        .prepare("INSERT INTO variants (sku, product_slug, size, price, position) VALUES (?, ?, ?, ?, ?)")
+        .bind(v.sku, slug, v.size, v.price, i)
+    ),
+  ]);
+}
+
 export async function deleteProduct(slug: string): Promise<void> {
   // Variants are deleted explicitly rather than relying on ON DELETE CASCADE,
   // which only fires when SQLite foreign-key enforcement is on.

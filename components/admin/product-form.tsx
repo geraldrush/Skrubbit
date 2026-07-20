@@ -3,10 +3,10 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { Loader2, Plus, Trash2, Upload } from "lucide-react";
+import { Loader2, Plus, Save, Trash2, Upload, X } from "lucide-react";
 import { toast } from "sonner";
 
-import { categories } from "@/data/products";
+import { categories, type Product } from "@/data/products";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,26 +35,59 @@ function slugify(value: string): string {
     .replace(/^-+|-+$/g, "");
 }
 
-export function ProductForm() {
+/**
+ * Add or edit a product.
+ *
+ * With no `product`, this is the create form (POST). With a `product`, it is
+ * the edit form (PUT): fields start pre-filled and the slug is locked, because
+ * the slug is the primary key and is also baked into the product's image keys
+ * and its /shop URL — changing it would orphan both.
+ */
+export function ProductForm({
+  product,
+  onDone,
+}: {
+  product?: Product;
+  onDone?: () => void;
+}) {
   const router = useRouter();
+  const isEdit = Boolean(product);
 
-  const [name, setName] = React.useState("");
-  const [slug, setSlug] = React.useState("");
-  const [slugTouched, setSlugTouched] = React.useState(false);
-  const [tagline, setTagline] = React.useState("");
-  const [description, setDescription] = React.useState("");
-  const [category, setCategory] = React.useState("");
-  const [featured, setFeatured] = React.useState(false);
-  const [scents, setScents] = React.useState("");
-  const [usage, setUsage] = React.useState("");
-  const [variants, setVariants] = React.useState<VariantDraft[]>([emptyVariant()]);
+  const [name, setName] = React.useState(product?.name ?? "");
+  const [slug, setSlug] = React.useState(product?.slug ?? "");
+  const [slugTouched, setSlugTouched] = React.useState(isEdit);
+  const [tagline, setTagline] = React.useState(product?.tagline ?? "");
+  const [description, setDescription] = React.useState(product?.description ?? "");
+  const [category, setCategory] = React.useState<string>(product?.category ?? "");
+  const [featured, setFeatured] = React.useState(product?.featured ?? false);
+  const [scents, setScents] = React.useState((product?.scents ?? []).join("\n"));
+  const [usage, setUsage] = React.useState((product?.usage ?? []).join("\n"));
+  const [variants, setVariants] = React.useState<VariantDraft[]>(
+    product?.variants.length
+      ? product.variants.map((v) => ({ size: v.size, sku: v.sku, price: String(v.price) }))
+      : [emptyVariant()]
+  );
 
-  const [image, setImage] = React.useState("");
+  const [image, setImage] = React.useState(product?.image ?? "");
   const [uploading, setUploading] = React.useState(false);
   const [saving, setSaving] = React.useState(false);
 
-  // The slug is derived from the name until the user edits it themselves.
-  const effectiveSlug = slugTouched ? slug : slugify(name);
+  // In edit mode the slug is fixed; otherwise it tracks the name until edited.
+  const effectiveSlug = isEdit ? slug : slugTouched ? slug : slugify(name);
+
+  function resetForm() {
+    setName("");
+    setSlug("");
+    setSlugTouched(false);
+    setTagline("");
+    setDescription("");
+    setCategory("");
+    setFeatured(false);
+    setScents("");
+    setUsage("");
+    setImage("");
+    setVariants([emptyVariant()]);
+  }
 
   function updateVariant(i: number, patch: Partial<VariantDraft>) {
     setVariants((vs) => vs.map((v, idx) => (idx === i ? { ...v, ...patch } : v)));
@@ -86,38 +119,37 @@ export function ProductForm() {
     e.preventDefault();
     setSaving(true);
     try {
-      const res = await fetch("/api/admin/products", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          slug: effectiveSlug,
-          name,
-          tagline,
-          description,
-          category,
-          image,
-          featured,
-          // One per line, matching how they render as lists on the product page.
-          scents: scents.split("\n").map((s) => s.trim()).filter(Boolean),
-          usage: usage.split("\n").map((s) => s.trim()).filter(Boolean),
-          variants: variants.map((v) => ({ ...v, price: Number(v.price) })),
-        }),
-      });
+      const payload = {
+        slug: effectiveSlug,
+        name,
+        tagline,
+        description,
+        category,
+        image,
+        featured,
+        // One per line, matching how they render as lists on the product page.
+        scents: scents.split("\n").map((s) => s.trim()).filter(Boolean),
+        usage: usage.split("\n").map((s) => s.trim()).filter(Boolean),
+        variants: variants.map((v) => ({ ...v, price: Number(v.price) })),
+      };
+
+      const res = await fetch(
+        isEdit ? `/api/admin/products/${product!.slug}` : "/api/admin/products",
+        {
+          method: isEdit ? "PUT" : "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(payload),
+        }
+      );
       const data = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "Could not save product");
 
-      toast.success(`${name} added`);
-      setName("");
-      setSlug("");
-      setSlugTouched(false);
-      setTagline("");
-      setDescription("");
-      setCategory("");
-      setFeatured(false);
-      setScents("");
-      setUsage("");
-      setImage("");
-      setVariants([emptyVariant()]);
+      toast.success(isEdit ? `${name} updated` : `${name} added`);
+      if (isEdit) {
+        onDone?.();
+      } else {
+        resetForm();
+      }
       router.refresh();
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not save product");
@@ -130,9 +162,9 @@ export function ProductForm() {
     <form onSubmit={submit} className="space-y-6 rounded-lg border p-6">
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="name">Product name</Label>
+          <Label htmlFor={`name-${effectiveSlug}`}>Product name</Label>
           <Input
-            id="name"
+            id={`name-${effectiveSlug}`}
             value={name}
             onChange={(e) => setName(e.target.value)}
             placeholder="Pine Gel"
@@ -140,9 +172,9 @@ export function ProductForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="slug">URL slug</Label>
+          <Label htmlFor={`slug-${effectiveSlug}`}>URL slug</Label>
           <Input
-            id="slug"
+            id={`slug-${effectiveSlug}`}
             value={effectiveSlug}
             onChange={(e) => {
               setSlugTouched(true);
@@ -150,15 +182,19 @@ export function ProductForm() {
             }}
             placeholder="pine-gel"
             required
+            readOnly={isEdit}
+            className={isEdit ? "cursor-not-allowed bg-muted/50" : undefined}
           />
-          <p className="text-xs text-muted-foreground">/shop/{effectiveSlug || "…"}</p>
+          <p className="text-xs text-muted-foreground">
+            {isEdit ? "The slug can't be changed after creation." : `/shop/${effectiveSlug || "…"}`}
+          </p>
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="tagline">Tagline</Label>
+        <Label htmlFor={`tagline-${effectiveSlug}`}>Tagline</Label>
         <Input
-          id="tagline"
+          id={`tagline-${effectiveSlug}`}
           value={tagline}
           onChange={(e) => setTagline(e.target.value)}
           placeholder="Fresh pine clean for every surface."
@@ -166,9 +202,9 @@ export function ProductForm() {
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="description">Description</Label>
+        <Label htmlFor={`description-${effectiveSlug}`}>Description</Label>
         <Textarea
-          id="description"
+          id={`description-${effectiveSlug}`}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           rows={4}
@@ -178,9 +214,9 @@ export function ProductForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="category">Category</Label>
+          <Label htmlFor={`category-${effectiveSlug}`}>Category</Label>
           <Select value={category} onValueChange={setCategory}>
-            <SelectTrigger id="category">
+            <SelectTrigger id={`category-${effectiveSlug}`}>
               <SelectValue placeholder="Choose a category" />
             </SelectTrigger>
             <SelectContent>
@@ -207,7 +243,7 @@ export function ProductForm() {
 
       {/* Image */}
       <div className="space-y-2">
-        <Label htmlFor="image">Product image</Label>
+        <Label htmlFor={`image-${effectiveSlug}`}>Product image</Label>
         <div className="flex flex-wrap items-center gap-4">
           {image ? (
             <div className="relative h-24 w-24 shrink-0 rounded border bg-muted/30">
@@ -216,7 +252,7 @@ export function ProductForm() {
           ) : null}
           <div className="space-y-1">
             <Input
-              id="image"
+              id={`image-${effectiveSlug}`}
               type="file"
               accept="image/webp,image/png,image/jpeg"
               disabled={uploading}
@@ -230,6 +266,8 @@ export function ProductForm() {
                 <span className="inline-flex items-center gap-1">
                   <Loader2 className="h-3 w-3 animate-spin" /> Uploading…
                 </span>
+              ) : isEdit ? (
+                "Leave empty to keep the current image, or upload a new one to replace it."
               ) : (
                 "WebP, PNG or JPEG, under 2 MB. Resize large photos before uploading."
               )}
@@ -299,9 +337,9 @@ export function ProductForm() {
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
-          <Label htmlFor="scents">Scents — one per line</Label>
+          <Label htmlFor={`scents-${effectiveSlug}`}>Scents — one per line</Label>
           <Textarea
-            id="scents"
+            id={`scents-${effectiveSlug}`}
             value={scents}
             onChange={(e) => setScents(e.target.value)}
             rows={3}
@@ -309,9 +347,9 @@ export function ProductForm() {
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="usage">How to use — one per line</Label>
+          <Label htmlFor={`usage-${effectiveSlug}`}>How to use — one per line</Label>
           <Textarea
-            id="usage"
+            id={`usage-${effectiveSlug}`}
             value={usage}
             onChange={(e) => setUsage(e.target.value)}
             rows={3}
@@ -320,17 +358,34 @@ export function ProductForm() {
         </div>
       </div>
 
-      <Button type="submit" disabled={saving || uploading} className="w-full sm:w-auto">
-        {saving ? (
-          <>
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…
-          </>
-        ) : (
-          <>
-            <Upload className="mr-2 h-4 w-4" /> Add product
-          </>
-        )}
-      </Button>
+      <div className="flex flex-wrap gap-2">
+        <Button type="submit" disabled={saving || uploading} className="w-full sm:w-auto">
+          {saving ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving…
+            </>
+          ) : isEdit ? (
+            <>
+              <Save className="mr-2 h-4 w-4" /> Save changes
+            </>
+          ) : (
+            <>
+              <Upload className="mr-2 h-4 w-4" /> Add product
+            </>
+          )}
+        </Button>
+        {isEdit ? (
+          <Button
+            type="button"
+            variant="outline"
+            disabled={saving}
+            onClick={() => onDone?.()}
+            className="w-full sm:w-auto"
+          >
+            <X className="mr-2 h-4 w-4" /> Cancel
+          </Button>
+        ) : null}
+      </div>
     </form>
   );
 }
