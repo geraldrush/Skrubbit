@@ -3,9 +3,11 @@ import { headers } from "next/headers";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { getProducts } from "@/lib/products";
-import { isAdminRequest } from "@/lib/admin-auth";
+import { isAdminRequest, passwordAuthConfigured } from "@/lib/admin-auth";
 import { ProductForm } from "@/components/admin/product-form";
 import { ProductList } from "@/components/admin/product-list";
+import { LoginForm } from "@/components/admin/login-form";
+import { LogoutButton } from "@/components/admin/logout-button";
 
 export const dynamic = "force-dynamic";
 
@@ -24,13 +26,21 @@ export default async function AdminPage() {
   const h = await headers();
   const req = new Request("https://admin.local", { headers: h });
   if (!(await isAdminRequest(req, env))) {
+    // Offer the password form only when it is actually configured; otherwise
+    // there is no way in and saying so is clearer than a form that can't work.
     return (
       <div className="container py-16">
-        <h1 className="font-display text-3xl font-extrabold">Admin</h1>
-        <p className="mt-3 max-w-prose text-muted-foreground">
-          This page is not available. It must be placed behind Cloudflare Access
-          before it can be used.
-        </p>
+        <h1 className="mb-6 text-center font-display text-3xl font-extrabold">
+          Admin
+        </h1>
+        {passwordAuthConfigured(env) ? (
+          <LoginForm />
+        ) : (
+          <p className="mx-auto max-w-prose text-center text-muted-foreground">
+            This page is not available. Admin sign-in has not been configured
+            yet.
+          </p>
+        )}
       </div>
     );
   }
@@ -39,12 +49,15 @@ export default async function AdminPage() {
 
   return (
     <div className="container max-w-4xl py-10">
-      <header className="mb-8">
-        <h1 className="font-display text-4xl font-extrabold">Admin</h1>
-        <p className="mt-2 text-muted-foreground">
-          Add products to the shop. Changes appear on the site immediately — no
-          redeploy needed.
-        </p>
+      <header className="mb-8 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="font-display text-4xl font-extrabold">Admin</h1>
+          <p className="mt-2 text-muted-foreground">
+            Add products to the shop. Changes appear on the site immediately —
+            no redeploy needed.
+          </p>
+        </div>
+        <LogoutButton />
       </header>
 
       <section className="mb-10">
