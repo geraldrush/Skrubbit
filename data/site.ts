@@ -21,7 +21,7 @@ export const site = {
     whatsapp: "27659669657",
     phoneDisplay: "+27 65 966 9657",
     email: "orders@skrubbit.co.za",
-    location: "Gauteng, South Africa",
+    location: "Limpopo, South Africa",
   },
 
   socials: {
