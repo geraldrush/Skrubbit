@@ -5,7 +5,8 @@
   "description": "Skrubb-it Products — cleaning & personal care e-commerce (Next.js + shadcn/ui on Cloudflare Workers)",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "opennextjs-cloudflare build",
+    "build:next": "next build",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
