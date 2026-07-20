@@ -79,14 +79,14 @@ export default async function HomePage() {
               </Button>
             </div>
           </div>
-          <div className="relative mx-auto aspect-square w-full max-w-lg">
+          <div className="relative mx-auto aspect-square w-full max-w-2xl">
             <div className="absolute inset-0 rounded-full bg-white/40 blur-2xl" />
             <Image
               src="/images/brand/hero.webp"
               alt="The Skrubb-it range of cleaning products"
               fill
               priority
-              sizes="(max-width: 768px) 85vw, 512px"
+              sizes="(max-width: 768px) 90vw, 672px"
               className="relative object-contain drop-shadow-xl"
             />
           </div>
