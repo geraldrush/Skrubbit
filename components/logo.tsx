@@ -17,12 +17,12 @@ export function Logo({
       className={cn("inline-flex items-center", className)}
     >
       <Image
-        src="/images/brand/logo.svg"
+        src="/images/brand/logo-mark.webp"
         alt={`${site.legalName} logo`}
-        width={150}
-        height={54}
+        width={482}
+        height={165}
         priority={priority}
-        className="h-10 w-auto sm:h-11"
+        className="h-12 w-auto sm:h-14"
       />
     </Link>
   );
