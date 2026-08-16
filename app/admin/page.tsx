@@ -3,9 +3,11 @@ import { headers } from "next/headers";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { getProducts } from "@/lib/products";
+import { getRecentContactMessages, getRecentOrders } from "@/lib/enquiries";
 import { isAdminRequest, passwordAuthConfigured } from "@/lib/admin-auth";
 import { ProductForm } from "@/components/admin/product-form";
 import { ProductList } from "@/components/admin/product-list";
+import { MessageList, OrderList } from "@/components/admin/enquiries";
 import { LoginForm } from "@/components/admin/login-form";
 import { LogoutButton } from "@/components/admin/logout-button";
 
@@ -45,7 +47,11 @@ export default async function AdminPage() {
     );
   }
 
-  const products = await getProducts();
+  const [products, orders, messages] = await Promise.all([
+    getProducts(),
+    getRecentOrders(),
+    getRecentContactMessages(),
+  ]);
 
   return (
     <div className="container max-w-4xl py-10">
@@ -59,6 +65,20 @@ export default async function AdminPage() {
         </div>
         <LogoutButton />
       </header>
+
+      <section className="mb-10">
+        <h2 className="mb-3 font-display text-xl font-bold">
+          Recent orders ({orders.length})
+        </h2>
+        <OrderList orders={orders} />
+      </section>
+
+      <section className="mb-10">
+        <h2 className="mb-3 font-display text-xl font-bold">
+          Messages ({messages.length})
+        </h2>
+        <MessageList messages={messages} />
+      </section>
 
       <section className="mb-10">
         <h2 className="mb-3 font-display text-xl font-bold">
