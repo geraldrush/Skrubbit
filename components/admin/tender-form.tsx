@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { FileText, Loader2, Plus, Save, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { SAMPLES } from "@/lib/pack-templates";
 
 /**
  * Create or edit a tender, with its compliance matrix when editing.
@@ -70,6 +71,11 @@ export function TenderForm({
   );
   const [status, setStatus] = React.useState(tender?.status ?? "preparing");
   const [notes, setNotes] = React.useState(tender?.notes ?? "");
+  const [profileOverride, setProfileOverride] = React.useState(
+    tender?.profileOverride ?? ""
+  );
+  const [methodology, setMethodology] = React.useState(tender?.methodology ?? "");
+  const [experience, setExperience] = React.useState(tender?.experience ?? "");
   const [saving, setSaving] = React.useState(false);
 
   const [drafts, setDrafts] = React.useState<Record<number, Draft>>(() =>
@@ -103,6 +109,9 @@ export function TenderForm({
         bbbeeClaimedLevel: bbbeeClaimedLevel === "" ? null : Number(bbbeeClaimedLevel),
         status,
         notes,
+        profileOverride,
+        methodology,
+        experience,
         items: items.map((i) => ({ id: i.id, ...drafts[i.id] })),
       };
 
@@ -385,6 +394,46 @@ export function TenderForm({
         </section>
       ) : null}
 
+
+      {isEdit ? (
+        <section className="space-y-4">
+          <div>
+            <h2 className="font-display text-xl font-bold">Written sections</h2>
+            <p className="text-sm text-muted-foreground">
+              These are printed in the pack and are where functionality points
+              are won. “Insert sample” fills the box with a worked example
+              showing the expected depth — replace it with your own wording; a
+              pack never prints template text on its own.
+            </p>
+          </div>
+
+          <WrittenSection
+            id="profileOverride"
+            label="Company profile for this tender"
+            hint="Leave empty to use the standard profile from Documents."
+            value={profileOverride}
+            onChange={setProfileOverride}
+            sample={SAMPLES.profile}
+          />
+          <WrittenSection
+            id="methodology"
+            label="Methodology / work plan"
+            hint="How you will actually execute this contract, step by step."
+            value={methodology}
+            onChange={setMethodology}
+            sample={SAMPLES.methodology}
+          />
+          <WrittenSection
+            id="experience"
+            label="Relevant experience"
+            hint="Similar contracts completed, with contactable references."
+            value={experience}
+            onChange={setExperience}
+            sample={SAMPLES.experience}
+          />
+        </section>
+      ) : null}
+
       <Button type="submit" disabled={saving} size="lg">
         {saving ? (
           <>
@@ -401,6 +450,55 @@ export function TenderForm({
         )}
       </Button>
     </form>
+  );
+}
+
+function WrittenSection({
+  id,
+  label,
+  hint,
+  value,
+  onChange,
+  sample,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  value: string;
+  onChange: (v: string) => void;
+  sample: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <Label htmlFor={id}>{label}</Label>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => {
+            // Never silently discard writing already done.
+            if (
+              value.trim() &&
+              !window.confirm("Replace what is written here with the sample?")
+            ) {
+              return;
+            }
+            onChange(sample);
+          }}
+        >
+          <FileText className="mr-1 h-4 w-4" /> Insert sample
+        </Button>
+      </div>
+      <Textarea
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        rows={10}
+        className="font-mono text-xs"
+      />
+      <p className="text-xs text-muted-foreground">{hint}</p>
+    </div>
   );
 }
 

@@ -141,6 +141,12 @@ export default async function PackPage({
               <ChevronLeft className="h-4 w-4" /> Back to tender
             </Link>
             <div className="flex flex-wrap gap-2">
+              <a
+                href={`/api/admin/tenders/${tender.id}/pack.pdf`}
+                className="inline-flex h-10 items-center rounded-md bg-foreground px-4 text-sm font-medium text-background hover:opacity-90"
+              >
+                <Download className="mr-2 h-4 w-4" /> Download full PDF
+              </a>
               {enclosures.length ? (
                 <a
                   href="/api/admin/documents/enclosures.zip"

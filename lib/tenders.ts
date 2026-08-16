@@ -69,6 +69,10 @@ export interface Tender {
   contactName: string;
   contactEmail: string;
   contactPhone: string;
+  /** Tender-specific override of the company profile paragraphs. */
+  profileOverride: string;
+  methodology: string;
+  experience: string;
 }
 
 export interface TenderItem {
@@ -99,6 +103,10 @@ export interface CompanyDocument {
   fileName: string;
   fileType: string;
   fileSize: number;
+  /** Whether a Commissioner of Oaths must certify the copy. */
+  requiresCertification: boolean;
+  /** When it was last certified, or null if never. */
+  certifiedOn: string | null;
 }
 
 export const CATEGORY_LABELS: Record<ItemCategory, string> = {
@@ -331,6 +339,28 @@ export function assessTender(
     }
   }
 
+  /* 6b. Certified copies go stale. Most tenders want a copy certified within
+        the last 3-6 months, so one older than 3 months is flagged and one that
+        has never been certified is a blocker on a document that needs it.
+        Nothing here certifies anything — only a Commissioner of Oaths can. */
+  for (const doc of docs) {
+    if (!doc.requiresCertification) continue;
+    if (!doc.certifiedOn) {
+      issues.push({
+        severity: "blocker",
+        message: `${doc.label} must be a certified copy and has not been certified yet.`,
+      });
+      continue;
+    }
+    const ageDays = hoursBetween(endOfDay(doc.certifiedOn), now) / 24;
+    if (ageDays > 90) {
+      issues.push({
+        severity: "warning",
+        message: `${doc.label} was certified ${doc.certifiedOn}, about ${Math.round(ageDays)} days ago — most tenders want one certified within 3 months.`,
+      });
+    }
+  }
+
   /* 7. CSD registration is mandatory for every government supplier. */
   if (!docs.some((d) => d.kind === "csd_report")) {
     issues.push({
@@ -437,6 +467,9 @@ interface TenderRow {
   contact_name: string;
   contact_email: string;
   contact_phone: string;
+  profile_override: string;
+  methodology: string;
+  experience: string;
 }
 
 function toTender(r: TenderRow): Tender {
@@ -463,6 +496,9 @@ function toTender(r: TenderRow): Tender {
     contactName: r.contact_name ?? "",
     contactEmail: r.contact_email ?? "",
     contactPhone: r.contact_phone ?? "",
+    profileOverride: r.profile_override ?? "",
+    methodology: r.methodology ?? "",
+    experience: r.experience ?? "",
   };
 }
 
@@ -508,6 +544,8 @@ interface DocRow {
   file_name: string;
   file_type: string;
   file_size: number;
+  requires_certification: number;
+  certified_on: string | null;
 }
 
 function toDoc(r: DocRow): CompanyDocument {
@@ -526,6 +564,8 @@ function toDoc(r: DocRow): CompanyDocument {
     fileName: r.file_name ?? "",
     fileType: r.file_type ?? "",
     fileSize: r.file_size ?? 0,
+    requiresCertification: r.requires_certification === 1,
+    certifiedOn: r.certified_on,
   };
 }
 
@@ -581,6 +621,9 @@ export interface TenderInput {
   bbbeeClaimedLevel: number | null;
   status: TenderStatus;
   notes: string;
+  profileOverride: string;
+  methodology: string;
+  experience: string;
 }
 
 /** The seeded compliance matrix, shared by manual creation and import. */
@@ -726,7 +769,8 @@ export async function updateTender(id: number, input: TenderInput): Promise<void
          reference = ?, title = ?, department = ?, description = ?,
          closing_at = ?, briefing_at = ?, briefing_compulsory = ?,
          briefing_attended = ?, submission_method = ?, submission_detail = ?,
-         bbbee_claimed_level = ?, status = ?, notes = ?
+         bbbee_claimed_level = ?, status = ?, notes = ?,
+         profile_override = ?, methodology = ?, experience = ?
        WHERE id = ?`
     )
     .bind(
@@ -743,6 +787,9 @@ export async function updateTender(id: number, input: TenderInput): Promise<void
       input.bbbeeClaimedLevel,
       input.status,
       input.notes,
+      input.profileOverride,
+      input.methodology,
+      input.experience,
       id
     )
     .run();
@@ -927,14 +974,17 @@ export interface DocumentInput {
   bbbeeLevel: number | null;
   location: string;
   notes: string;
+  requiresCertification: boolean;
+  certifiedOn: string | null;
 }
 
 export async function createDocument(input: DocumentInput): Promise<void> {
   await db()
     .prepare(
       `INSERT INTO company_documents
-         (kind, label, reference, issued_on, expires_on, bbbee_level, location, notes)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+         (kind, label, reference, issued_on, expires_on, bbbee_level, location,
+          notes, requires_certification, certified_on)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .bind(
       input.kind,
@@ -944,7 +994,9 @@ export async function createDocument(input: DocumentInput): Promise<void> {
       input.expiresOn,
       input.bbbeeLevel,
       input.location,
-      input.notes
+      input.notes,
+      input.requiresCertification ? 1 : 0,
+      input.certifiedOn
     )
     .run();
 }
@@ -957,7 +1009,8 @@ export async function updateDocument(
     .prepare(
       `UPDATE company_documents SET
          kind = ?, label = ?, reference = ?, issued_on = ?, expires_on = ?,
-         bbbee_level = ?, location = ?, notes = ?, updated_at = datetime('now')
+         bbbee_level = ?, location = ?, notes = ?, requires_certification = ?,
+         certified_on = ?, updated_at = datetime('now')
        WHERE id = ?`
     )
     .bind(
@@ -969,6 +1022,8 @@ export async function updateDocument(
       input.bbbeeLevel,
       input.location,
       input.notes,
+      input.requiresCertification ? 1 : 0,
+      input.certifiedOn,
       id
     )
     .run();

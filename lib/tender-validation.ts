@@ -123,6 +123,10 @@ export function validateTenderBody(
       bbbeeClaimedLevel,
       status: status as TenderStatus,
       notes: str(body.notes),
+      // Long-form prose: capped generously rather than to a field length.
+      profileOverride: str(body.profileOverride).slice(0, 20000),
+      methodology: str(body.methodology).slice(0, 20000),
+      experience: str(body.experience).slice(0, 20000),
     },
   };
 }
@@ -151,6 +155,12 @@ export function validateDocumentBody(
     errors.push("Expiry date cannot be before the issue date.");
   }
 
+  const rawCertified = str(body.certifiedOn);
+  const certifiedOn = rawCertified ? toDate(rawCertified) : null;
+  if (rawCertified && !certifiedOn) {
+    errors.push("Certification date must be YYYY-MM-DD.");
+  }
+
   const bbbeeLevel = toLevel(body.bbbeeLevel, errors, "B-BBEE level");
   // The level is what the SBD 6.1 overclaim check compares against, so a
   // B-BBEE record without one silently disables that check.
@@ -172,6 +182,8 @@ export function validateDocumentBody(
       bbbeeLevel,
       location: str(body.location),
       notes: str(body.notes),
+      requiresCertification: body.requiresCertification === true,
+      certifiedOn,
     },
   };
 }

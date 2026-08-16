@@ -48,6 +48,8 @@ interface Draft {
   bbbeeLevel: string;
   location: string;
   notes: string;
+  requiresCertification: boolean;
+  certifiedOn: string;
 }
 
 const emptyDraft = (): Draft => ({
@@ -59,6 +61,8 @@ const emptyDraft = (): Draft => ({
   bbbeeLevel: "",
   location: "",
   notes: "",
+  requiresCertification: false,
+  certifiedOn: "",
 });
 
 const toDraft = (d: CompanyDocument): Draft => ({
@@ -70,6 +74,8 @@ const toDraft = (d: CompanyDocument): Draft => ({
   bbbeeLevel: d.bbbeeLevel ? String(d.bbbeeLevel) : "",
   location: d.location,
   notes: d.notes,
+  requiresCertification: d.requiresCertification,
+  certifiedOn: d.certifiedOn ?? "",
 });
 
 function DocumentFields({
@@ -172,6 +178,34 @@ function DocumentFields({
           </p>
         </div>
       ) : null}
+
+      <div className="rounded-md border border-dashed p-3">
+        <label className="flex items-center gap-2 text-sm font-medium">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-border"
+            checked={draft.requiresCertification}
+            onChange={(e) => set({ requiresCertification: e.target.checked })}
+          />
+          A certified copy is required
+        </label>
+        {draft.requiresCertification ? (
+          <div className="mt-3 space-y-2">
+            <Label>Date certified by a Commissioner of Oaths</Label>
+            <Input
+              type="date"
+              value={draft.certifiedOn}
+              onChange={(e) => set({ certifiedOn: e.target.value })}
+              className="sm:w-64"
+            />
+            <p className="text-xs text-muted-foreground">
+              Leave empty until it has been certified — the pack watermarks
+              uncertified copies “TO BE CERTIFIED” so you know what to take in.
+              Most tenders want one certified within the last 3 months.
+            </p>
+          </div>
+        ) : null}
+      </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="space-y-2">
@@ -329,6 +363,7 @@ export function DocumentManager({
       ...d,
       issuedOn: d.issuedOn || null,
       expiresOn: d.expiresOn || null,
+      certifiedOn: d.certifiedOn || null,
       bbbeeLevel: d.bbbeeLevel === "" ? null : Number(d.bbbeeLevel),
     };
   }
@@ -401,6 +436,19 @@ export function DocumentManager({
                     {doc.bbbeeLevel ? ` · Level ${doc.bbbeeLevel}` : ""}
                     {doc.location ? ` · ${doc.location}` : ""}
                   </p>
+                  {doc.requiresCertification ? (
+                    <p
+                      className={`mt-0.5 text-xs font-medium ${
+                        doc.certifiedOn
+                          ? "text-muted-foreground"
+                          : "text-[#b02a2a] dark:text-[#e66767]"
+                      }`}
+                    >
+                      {doc.certifiedOn
+                        ? `Certified ${doc.certifiedOn}`
+                        : "Certified copy required — not yet certified"}
+                    </p>
+                  ) : null}
                   <FileControl doc={doc} busy={busy} setBusy={setBusy} />
                 </div>
                 <span className={`text-sm ${state.tone}`}>{state.label}</span>
