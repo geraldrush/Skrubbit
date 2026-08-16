@@ -54,6 +54,8 @@ export async function POST(req: Request) {
 
   // Cache-busting suffix: image URLs are served immutable, so a replacement
   // must land on a new key or browsers would keep the old picture.
+  // The `products/` prefix is load-bearing — /img refuses to serve any key
+  // outside it, so changing it here makes uploaded images unreachable.
   const key = `products/${slug}-${Date.now().toString(36)}.${EXT[file.type]}`;
 
   await env.PRODUCT_IMAGES.put(key, await file.arrayBuffer(), {
