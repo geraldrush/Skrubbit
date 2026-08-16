@@ -11,13 +11,13 @@ import { MessageList, OrderList } from "@/components/admin/enquiries";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Admin",
+  title: "Shop",
   // Keep the admin console out of search results even though Cloudflare
   // Access already blocks anonymous visitors.
   robots: { index: false, follow: false },
 };
 
-export default async function AdminPage() {
+export default async function ShopAdminPage() {
   // Guard runs before any query, so nothing is loaded for anonymous visitors.
   const gate = await adminGate();
   if (gate) return gate;
@@ -31,7 +31,7 @@ export default async function AdminPage() {
   return (
     <div className="container max-w-4xl py-10">
       <AdminNav
-        current="/admin"
+        current="/admin/shop"
         title="Shop"
         description="Orders, enquiries and the product catalogue. Changes appear on the site immediately — no redeploy needed."
       />
