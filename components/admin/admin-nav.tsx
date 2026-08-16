@@ -1,12 +1,14 @@
 import Link from "next/link";
-import { FileCheck, FolderLock, Package } from "lucide-react";
+import { FileCheck, FolderLock, LayoutDashboard, Package, Search } from "lucide-react";
 
 import { LogoutButton } from "@/components/admin/logout-button";
 
 const LINKS = [
-  { href: "/admin", label: "Shop", icon: Package },
+  { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
   { href: "/admin/tenders", label: "Tenders", icon: FileCheck },
+  { href: "/admin/tenders/search", label: "Find tenders", icon: Search },
   { href: "/admin/documents", label: "Documents", icon: FolderLock },
+  { href: "/admin/shop", label: "Shop", icon: Package },
 ];
 
 /**
