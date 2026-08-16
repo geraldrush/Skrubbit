@@ -8,6 +8,7 @@ import {
   Download,
   ExternalLink,
   Loader2,
+  RefreshCw,
   Search,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -39,6 +40,70 @@ interface Row {
   imported: boolean;
 }
 
+interface SyncState {
+  running: boolean;
+  lastRunAt: string | null;
+  lastSweepAt: string | null;
+  recordsTotal: number;
+  nextPage: number;
+  status: string;
+  message: string;
+}
+
+/** "3 hours ago" from a D1 `datetime('now')` stamp, which is UTC. */
+function ago(stamp: string | null): string {
+  if (!stamp) return "never";
+  const t = Date.parse(`${stamp.replace(" ", "T")}Z`);
+  if (Number.isNaN(t)) return stamp;
+  const mins = Math.round((Date.now() - t) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins} min ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  const days = Math.round(hours / 24);
+  return `${days} day${days === 1 ? "" : "s"} ago`;
+}
+
+function SyncBar({
+  sync,
+  syncing,
+  onSync,
+}: {
+  sync: SyncState | null;
+  syncing: boolean;
+  onSync: () => void;
+}) {
+  const running = syncing || sync?.running;
+  return (
+    <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border bg-muted/40 p-3 text-sm">
+      <div>
+        <p className="font-medium">
+          {sync?.recordsTotal ? `${sync.recordsTotal} tenders held locally` : "Nothing synced yet"}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {running
+            ? `Syncing… (page ${sync?.nextPage ?? 1}) — searching still works while this runs`
+            : `Last checked ${ago(sync?.lastRunAt ?? null)} · full pass ${ago(
+                sync?.lastSweepAt ?? null
+              )}`}
+          {sync?.message ? ` · ${sync.message}` : ""}
+        </p>
+      </div>
+      <Button type="button" variant="outline" size="sm" onClick={onSync} disabled={Boolean(running)}>
+        {running ? (
+          <>
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Syncing
+          </>
+        ) : (
+          <>
+            <RefreshCw className="mr-1 h-4 w-4" /> Sync now
+          </>
+        )}
+      </Button>
+    </div>
+  );
+}
+
 const PROVINCES = [
   "Eastern Cape",
   "Free State",
@@ -63,13 +128,69 @@ export function TenderSearch() {
   const router = useRouter();
   const [keyword, setKeyword] = React.useState("");
   const [province, setProvince] = React.useState("");
-  // Goods by default: the business is supplying and delivering things, and
-  // services/works adverts would otherwise drown that out.
-  const [category, setCategory] = React.useState("goods");
+  // All types by default, so the count lines up with what etenders.gov.za
+  // shows for the same province. Narrowing to goods is one click away.
+  const [category, setCategory] = React.useState("");
   const [rows, setRows] = React.useState<Row[] | null>(null);
-  const [scanned, setScanned] = React.useState(0);
+  const [matched, setMatched] = React.useState(0);
+  const [available, setAvailable] = React.useState(0);
+  const [sync, setSync] = React.useState<SyncState | null>(null);
+  const [syncing, setSyncing] = React.useState(false);
   const [busy, setBusy] = React.useState(false);
   const [importing, setImporting] = React.useState<string | null>(null);
+
+  const pollRef = React.useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const refreshSync = React.useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/tender-sync");
+      if (!res.ok) return null;
+      const state = (await res.json()) as SyncState;
+      setSync(state);
+      return state;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  // Poll only while a crawl is in flight, and stop as soon as it settles.
+  React.useEffect(() => {
+    if (!sync?.running && !syncing) {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+      return;
+    }
+    if (pollRef.current) return;
+    pollRef.current = setInterval(async () => {
+      const state = await refreshSync();
+      if (state && !state.running) setSyncing(false);
+    }, 5000);
+    return () => {
+      if (pollRef.current) {
+        clearInterval(pollRef.current);
+        pollRef.current = null;
+      }
+    };
+  }, [sync?.running, syncing, refreshSync]);
+
+  React.useEffect(() => {
+    void refreshSync();
+  }, [refreshSync]);
+
+  async function startSync() {
+    setSyncing(true);
+    try {
+      const res = await fetch("/api/admin/tender-sync", { method: "POST" });
+      if (!res.ok) throw new Error("Could not start the sync");
+      toast.success("Sync started — this takes a few minutes against a slow feed");
+      await refreshSync();
+    } catch (err) {
+      setSyncing(false);
+      toast.error(err instanceof Error ? err.message : "Could not start the sync");
+    }
+  }
 
   async function search(e?: React.FormEvent) {
     e?.preventDefault();
@@ -82,12 +203,16 @@ export function TenderSearch() {
       const res = await fetch(`/api/admin/tender-search?${params}`);
       const data = (await res.json()) as {
         tenders?: Row[];
-        scanned?: number;
+        matched?: number;
+        available?: number;
+        sync?: SyncState;
         error?: string;
       };
       if (!res.ok) throw new Error(data.error ?? "Search failed");
       setRows(data.tenders ?? []);
-      setScanned(data.scanned ?? 0);
+      setMatched(data.matched ?? 0);
+      setAvailable(data.available ?? 0);
+      if (data.sync) setSync(data.sync);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Search failed");
     } finally {
@@ -119,6 +244,12 @@ export function TenderSearch() {
 
   return (
     <div className="space-y-6">
+      <SyncBar
+        sync={sync}
+        syncing={syncing}
+        onSync={startSync}
+      />
+
       <form onSubmit={search} className="space-y-4 rounded-lg border p-4">
         <div className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-2">
@@ -157,10 +288,10 @@ export function TenderSearch() {
               onChange={(e) => setCategory(e.target.value)}
               className={selectClass}
             >
+              <option value="">All types</option>
               <option value="goods">Goods — supply &amp; delivery</option>
               <option value="services">Services</option>
               <option value="works">Works / construction</option>
-              <option value="">All types</option>
             </select>
           </div>
         </div>
@@ -179,14 +310,17 @@ export function TenderSearch() {
 
       {rows === null ? null : rows.length === 0 ? (
         <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-          Nothing open matched. {scanned} adverts from the last 60 days were
-          checked — try fewer keywords, or switch the type to “All types”.
+          Nothing matched.{" "}
+          {available
+            ? `${available} open tenders are held locally — try fewer keywords, or switch the type to “All types”.`
+            : "Nothing has been synced yet. Run a sync above."}
         </p>
       ) : (
         <>
           <p className="text-sm text-muted-foreground">
-            {rows.length} open {rows.length === 1 ? "tender" : "tenders"} from{" "}
-            {scanned} recent adverts.
+            {matched} open {matched === 1 ? "tender" : "tenders"} matched
+            {matched > rows.length ? `, showing the first ${rows.length}` : ""} ·{" "}
+            {available} open in total.
           </p>
           <ul className="divide-y rounded-lg border">
             {rows.map((row) => {

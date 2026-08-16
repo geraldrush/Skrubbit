@@ -1,50 +1,58 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { searchTenders } from "@/lib/etenders";
+import { getSyncState, runSyncBatch, syncIsDue } from "@/lib/etenders-sync";
 import { findImportedOcids } from "@/lib/tenders";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Searches live adverts on the National Treasury eTenders feed.
+ * Searches the mirrored eTenders feed.
  *
- * Proxied through the Worker rather than called from the browser: it keeps the
- * upstream behind our own admin gate, lets responses be cached at the edge
- * instead of once per admin, and avoids depending on the feed's CORS policy.
+ * Reads D1 rather than the live feed, so a search is instant and returns every
+ * open tender rather than whatever one slow page happened to contain. "Open"
+ * means the closing date has not passed, regardless of when the tender was
+ * advertised — the same basis etenders.gov.za lists on.
+ *
+ * If the mirror is stale, a crawl batch is kicked off in the background after
+ * the response goes out. The search still answers from what is already there,
+ * so a stale mirror degrades to slightly old data rather than to a spinner.
  */
 export async function GET(req: Request) {
-  const { env } = getCloudflareContext();
+  const { env, ctx } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
 
   const url = new URL(req.url);
-  const days = Number(url.searchParams.get("days"));
 
   try {
-    const { tenders, scanned } = await searchTenders({
-      keyword: url.searchParams.get("q") ?? "",
-      province: url.searchParams.get("province") ?? "",
-      category: url.searchParams.get("category") ?? "",
-      advertisedWithinDays: Number.isFinite(days) && days > 0 ? Math.min(days, 180) : 60,
-      openOnly: url.searchParams.get("all") !== "1",
-    });
+    const [result, state] = await Promise.all([
+      searchTenders({
+        keyword: url.searchParams.get("q") ?? "",
+        province: url.searchParams.get("province") ?? "",
+        category: url.searchParams.get("category") ?? "",
+      }),
+      getSyncState(),
+    ]);
 
-    // Mark the ones already in the register so they render as imported rather
-    // than inviting a duplicate.
-    const imported = await findImportedOcids(tenders.map((t) => t.ocid));
+    const imported = await findImportedOcids(result.tenders.map((t) => t.ocid));
+
+    if (await syncIsDue()) {
+      ctx.waitUntil(
+        runSyncBatch().catch((err) => console.error("[tender-search] sync failed", err))
+      );
+    }
 
     return Response.json({
-      scanned,
-      tenders: tenders.map((t) => ({ ...t, imported: imported.has(t.ocid) })),
+      matched: result.matched,
+      available: result.available,
+      sync: state,
+      tenders: result.tenders.map((t) => ({ ...t, imported: imported.has(t.ocid) })),
     });
   } catch (err) {
-    // The feed is a third party; a bad day there must not look like a bug here.
     const message = err instanceof Error ? err.message : String(err);
-    console.error("[tender-search] upstream failed", message);
-    return Response.json(
-      { error: `Could not reach the eTenders feed. ${message}` },
-      { status: 502 }
-    );
+    console.error("[tender-search] failed", message);
+    return Response.json({ error: `Search failed. ${message}` }, { status: 500 });
   }
 }

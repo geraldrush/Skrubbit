@@ -1,16 +1,16 @@
 /**
- * Client for the National Treasury eTenders OCDS API.
+ * Reading the mirrored National Treasury eTenders feed.
  *
- * https://ocds-api.etenders.gov.za — the official publication of South African
- * public procurement, released under a public-domain dedication (PDDL). Using
- * it rather than scraping etenders.gov.za means a stable contract, no terms
+ * Source: https://ocds-api.etenders.gov.za — the official publication of South
+ * African public procurement, under a public-domain dedication (PDDL). Using it
+ * rather than scraping etenders.gov.za means a stable contract, no terms
  * problem, and fields we can trust rather than parsed HTML.
  *
- * The API filters only by release date and page, so keyword, province and
- * category narrowing happens here after fetching.
+ * Fetching and crawling live here in lib/etenders-sync.ts; this module only
+ * reads the local copy, plus the timestamp correction both sides depend on.
  */
 
-const BASE = "https://ocds-api.etenders.gov.za/api/OCDSReleases";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /* ------------------------- the timestamp problem ------------------------- */
 
@@ -69,192 +69,129 @@ export interface RemoteTender {
   sourceUrl: string;
 }
 
-interface OcdsRelease {
-  ocid?: string;
-  buyer?: { name?: string };
-  tender?: {
-    id?: string;
-    title?: string;
-    description?: string;
-    status?: string;
-    province?: string;
-    deliveryLocation?: string;
-    mainProcurementCategory?: string;
-    value?: { amount?: number };
-    tenderPeriod?: { endDate?: string };
-    briefingSession?: {
-      isSession?: boolean;
-      compulsory?: boolean;
-      date?: string;
-      venue?: string;
-    };
-    contactPerson?: { name?: string; email?: string; telephoneNumber?: string };
-    procuringEntity?: { name?: string };
-    documents?: Array<{ title?: string; url?: string }>;
-  };
-}
-
-const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
-
-function normalise(release: OcdsRelease): RemoteTender | null {
-  const t = release.tender;
-  const ocid = str(release.ocid);
-  if (!t || !ocid) return null;
-
-  const briefing = t.briefingSession;
-  const briefingAt = briefing?.isSession ? ocdsToSast(briefing.date) : null;
-
-  return {
-    ocid,
-    reference: str(t.title) || str(t.id),
-    // OCDS puts the tender number in `title` and the actual subject in
-    // `description`, which is the opposite of what those names suggest.
-    title: str(t.description) || str(t.title),
-    description: str(t.description),
-    department: str(release.buyer?.name) || str(t.procuringEntity?.name),
-    closingAt: ocdsToSast(t.tenderPeriod?.endDate),
-    briefingAt,
-    briefingCompulsory: Boolean(briefing?.isSession && briefing?.compulsory),
-    briefingVenue: briefing?.isSession ? str(briefing.venue) : "",
-    province: str(t.province),
-    category: str(t.mainProcurementCategory),
-    deliveryLocation: str(t.deliveryLocation),
-    valueAmount: typeof t.value?.amount === "number" ? t.value.amount : 0,
-    contactName: str(t.contactPerson?.name),
-    contactEmail: str(t.contactPerson?.email),
-    contactPhone: str(t.contactPerson?.telephoneNumber),
-    documents: (t.documents ?? [])
-      .map((d) => ({ title: str(d.title), url: str(d.url) }))
-      .filter((d) => d.url),
-    sourceUrl: `https://www.etenders.gov.za/Home/TenderOpportunities/`,
-  };
-}
-
-function ymd(d: Date): string {
-  return d.toISOString().slice(0, 10);
-}
-
-async function fetchPage(
-  dateFrom: string,
-  dateTo: string,
-  page: number,
-  pageSize: number
-): Promise<OcdsRelease[]> {
-  const url = `${BASE}?PageNumber=${page}&PageSize=${pageSize}&dateFrom=${dateFrom}&dateTo=${dateTo}`;
-  const res = await fetch(url, {
-    // Adverts change slowly and this is a third-party service we don't want to
-    // hammer on every keystroke; 10 minutes at the edge is plenty fresh for a
-    // deadline that is days or weeks away.
-    cf: { cacheTtl: 600, cacheEverything: true },
-    signal: AbortSignal.timeout(20_000),
-    headers: { accept: "application/json" },
-  } as RequestInit);
-
-  if (!res.ok) {
-    throw new Error(`eTenders API returned ${res.status}`);
-  }
-  const body = (await res.json()) as { releases?: OcdsRelease[] };
-  return body.releases ?? [];
-}
-
 export interface SearchOptions {
-  /** Free text matched against subject, tender number and department. */
+  /** Free text; every word must appear. */
   keyword?: string;
   province?: string;
-  /** OCDS mainProcurementCategory: goods | services | works. */
+  /** goods | services | works */
   category?: string;
-  /** How far back to look for adverts. */
-  advertisedWithinDays?: number;
-  /** Drop anything whose closing date has already passed. */
-  openOnly?: boolean;
   limit?: number;
 }
 
 export interface SearchResult {
   tenders: RemoteTender[];
-  /** How many adverts were examined before filtering. */
-  scanned: number;
+  /** How many open tenders match before the limit is applied. */
+  matched: number;
+  /** How many open tenders are mirrored in total. */
+  available: number;
+}
+
+interface LocalRow {
+  ocid: string;
+  reference: string;
+  title: string;
+  description: string;
+  department: string;
+  closing_at: string | null;
+  briefing_at: string | null;
+  briefing_compulsory: number;
+  briefing_venue: string;
+  province: string;
+  category: string;
+  delivery_location: string;
+  value_amount: number;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
+  document_url: string;
+}
+
+function fromRow(r: LocalRow): RemoteTender {
+  return {
+    ocid: r.ocid,
+    reference: r.reference,
+    title: r.title,
+    description: r.description,
+    department: r.department,
+    closingAt: r.closing_at,
+    briefingAt: r.briefing_at,
+    briefingCompulsory: r.briefing_compulsory === 1,
+    briefingVenue: r.briefing_venue,
+    province: r.province,
+    category: r.category,
+    deliveryLocation: r.delivery_location,
+    valueAmount: r.value_amount,
+    contactName: r.contact_name,
+    contactEmail: r.contact_email,
+    contactPhone: r.contact_phone,
+    documents: r.document_url ? [{ title: "Tender document", url: r.document_url }] : [],
+    sourceUrl: "https://www.etenders.gov.za/Home/TenderOpportunities/",
+  };
 }
 
 /**
- * Searches recently advertised tenders.
+ * Searches the mirrored feed.
  *
- * Paged through rather than requested wholesale so one slow upstream page
- * doesn't stall the request, and capped so a wide search can't run away.
+ * "Open" means the closing date has not passed — the same definition
+ * etenders.gov.za lists by. It deliberately does not consider when a tender was
+ * advertised: one advertised months ago that closes next week is still open and
+ * must appear.
+ *
+ * Runs against D1 rather than the live feed, which is too slow and too
+ * unreliable to crawl while someone waits. See lib/etenders-sync.ts.
  */
 export async function searchTenders(
   options: SearchOptions = {}
 ): Promise<SearchResult> {
-  const {
-    keyword = "",
-    province = "",
-    category = "",
-    advertisedWithinDays = 60,
-    openOnly = true,
-    limit = 60,
-  } = options;
+  const { keyword = "", province = "", category = "", limit = 300 } = options;
+  const d = getCloudflareContext().env.DB;
 
-  const now = new Date();
-  const from = new Date(now.getTime() - advertisedWithinDays * 864e5);
-  const dateFrom = ymd(from);
-  // A day ahead, since adverts are stamped at midnight.
-  const dateTo = ymd(new Date(now.getTime() + 864e5));
+  const where: string[] = ["closing_at IS NOT NULL", "closing_at > ?"];
+  const binds: unknown[] = [new Date().toISOString()];
 
-  const raw: OcdsRelease[] = [];
-  const PAGE_SIZE = 100;
-  const MAX_PAGES = 6;
-  for (let page = 1; page <= MAX_PAGES; page++) {
-    const batch = await fetchPage(dateFrom, dateTo, page, PAGE_SIZE);
-    raw.push(...batch);
-    if (batch.length < PAGE_SIZE) break;
+  if (province) {
+    where.push("province = ?");
+    binds.push(province);
+  }
+  if (category) {
+    where.push("category = ?");
+    binds.push(category);
+  }
+  for (const term of keyword.toLowerCase().split(/\s+/).filter(Boolean)) {
+    // Every word must appear, so extra words narrow rather than widen.
+    where.push("search_text LIKE ?");
+    binds.push(`%${term}%`);
   }
 
-  const terms = keyword
-    .toLowerCase()
-    .split(/\s+/)
-    .map((t) => t.trim())
-    .filter(Boolean);
+  const clause = where.join(" AND ");
 
-  const seen = new Set<string>();
-  const tenders: RemoteTender[] = [];
+  const [rows, matched, available] = await Promise.all([
+    d
+      .prepare(`SELECT * FROM remote_tenders WHERE ${clause} ORDER BY closing_at ASC LIMIT ?`)
+      .bind(...binds, limit)
+      .all<LocalRow>(),
+    d
+      .prepare(`SELECT COUNT(*) AS n FROM remote_tenders WHERE ${clause}`)
+      .bind(...binds)
+      .first<{ n: number }>(),
+    d
+      .prepare("SELECT COUNT(*) AS n FROM remote_tenders WHERE closing_at > ?")
+      .bind(new Date().toISOString())
+      .first<{ n: number }>(),
+  ]);
 
-  for (const release of raw) {
-    const t = normalise(release);
-    if (!t || seen.has(t.ocid)) continue;
-
-    if (openOnly) {
-      if (!t.closingAt) continue;
-      if (new Date(t.closingAt).getTime() < now.getTime()) continue;
-    }
-    if (province && t.province.toLowerCase() !== province.toLowerCase()) continue;
-    if (category && t.category.toLowerCase() !== category.toLowerCase()) continue;
-
-    if (terms.length) {
-      const haystack = `${t.title} ${t.reference} ${t.department} ${t.deliveryLocation}`.toLowerCase();
-      // Every term must appear, so extra words narrow rather than widen.
-      if (!terms.every((term) => haystack.includes(term))) continue;
-    }
-
-    seen.add(t.ocid);
-    tenders.push(t);
-  }
-
-  // Soonest deadline first: that is the one that needs a decision today.
-  tenders.sort((a, b) => (a.closingAt ?? "").localeCompare(b.closingAt ?? ""));
-
-  return { tenders: tenders.slice(0, limit), scanned: raw.length };
+  return {
+    tenders: rows.results.map(fromRow),
+    matched: matched?.n ?? 0,
+    available: available?.n ?? 0,
+  };
 }
 
-/** Fetches a single advert by ocid, for import. */
+/** A single mirrored advert, for import. */
 export async function getRemoteTender(ocid: string): Promise<RemoteTender | null> {
-  const res = await fetch(`${BASE}/release/${encodeURIComponent(ocid)}`, {
-    cf: { cacheTtl: 600, cacheEverything: true },
-    signal: AbortSignal.timeout(20_000),
-    headers: { accept: "application/json" },
-  } as RequestInit);
-
-  if (!res.ok) return null;
-  const body = (await res.json()) as { releases?: OcdsRelease[] } & OcdsRelease;
-  const release = body.releases?.[0] ?? body;
-  return normalise(release);
+  const row = await getCloudflareContext()
+    .env.DB.prepare("SELECT * FROM remote_tenders WHERE ocid = ?")
+    .bind(ocid)
+    .first<LocalRow>();
+  return row ? fromRow(row) : null;
 }
