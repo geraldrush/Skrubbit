@@ -60,6 +60,15 @@ export interface Tender {
   status: TenderStatus;
   notes: string;
   createdAt: string;
+  /* Import provenance — set when the tender came from the eTenders feed, and
+     not editable by hand, so the record always points back at its advert. */
+  ocid: string | null;
+  sourceUrl: string;
+  province: string;
+  category: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
 }
 
 export interface TenderItem {
@@ -363,6 +372,29 @@ export function assessTender(
   return issues;
 }
 
+export interface Progress {
+  done: number;
+  total: number;
+  /** 0-100, and 100 when nothing is required (there is nothing left to do). */
+  pct: number;
+}
+
+/**
+ * How much of the matrix is actually finished.
+ *
+ * A row counts as done only when it is attached *and*, where a signature is
+ * needed, signed — the same bar the readiness check applies, so the progress
+ * bar can never read 100% while the bid is still blocked.
+ */
+export function matrixProgress(items: TenderItem[]): Progress {
+  const required = items.filter((i) => i.required);
+  const done = required.filter(
+    (i) => i.attached && (!i.signatureRequired || i.signed)
+  ).length;
+  const total = required.length;
+  return { done, total, pct: total ? Math.round((done / total) * 100) : 100 };
+}
+
 export interface Readiness {
   blockers: number;
   warnings: number;
@@ -393,6 +425,13 @@ interface TenderRow {
   status: string;
   notes: string;
   created_at: string;
+  ocid: string | null;
+  source_url: string;
+  province: string;
+  category: string;
+  contact_name: string;
+  contact_email: string;
+  contact_phone: string;
 }
 
 function toTender(r: TenderRow): Tender {
@@ -412,6 +451,13 @@ function toTender(r: TenderRow): Tender {
     status: r.status as TenderStatus,
     notes: r.notes,
     createdAt: r.created_at,
+    ocid: r.ocid,
+    sourceUrl: r.source_url ?? "",
+    province: r.province ?? "",
+    category: r.category ?? "",
+    contactName: r.contact_name ?? "",
+    contactEmail: r.contact_email ?? "",
+    contactPhone: r.contact_phone ?? "",
   };
 }
 
@@ -524,6 +570,26 @@ export interface TenderInput {
   notes: string;
 }
 
+/** The seeded compliance matrix, shared by manual creation and import. */
+function matrixStatements(d: D1Database, tenderId: number): D1PreparedStatement[] {
+  return defaultMatrix().map((item, i) =>
+    d
+      .prepare(
+        `INSERT INTO tender_items
+           (tender_id, category, label, required, signature_required, position)
+         VALUES (?, ?, ?, ?, ?, ?)`
+      )
+      .bind(
+        tenderId,
+        item.category,
+        item.label,
+        item.required === false ? 0 : 1,
+        item.signatureRequired ? 1 : 0,
+        i
+      )
+  );
+}
+
 /** Creates the tender and seeds its matrix in one batch. */
 export async function createTender(input: TenderInput): Promise<number> {
   const d = db();
@@ -555,25 +621,88 @@ export async function createTender(input: TenderInput): Promise<number> {
 
   const id = inserted!.id;
 
-  await d.batch(
-    defaultMatrix().map((item, i) =>
-      d
-        .prepare(
-          `INSERT INTO tender_items
-             (tender_id, category, label, required, signature_required, position)
-           VALUES (?, ?, ?, ?, ?, ?)`
-        )
-        .bind(
-          id,
-          item.category,
-          item.label,
-          item.required === false ? 0 : 1,
-          item.signatureRequired ? 1 : 0,
-          i
-        )
-    )
-  );
+  await d.batch(matrixStatements(d, id));
+  return id;
+}
 
+/** Which of these adverts are already in the register. */
+export async function findImportedOcids(ocids: string[]): Promise<Set<string>> {
+  if (!ocids.length) return new Set();
+  const placeholders = ocids.map(() => "?").join(",");
+  const { results } = await db()
+    .prepare(`SELECT ocid FROM tenders WHERE ocid IN (${placeholders})`)
+    .bind(...ocids)
+    .all<{ ocid: string }>();
+  return new Set(results.map((r) => r.ocid));
+}
+
+export interface RemoteImport {
+  ocid: string;
+  reference: string;
+  title: string;
+  description: string;
+  department: string;
+  closingAt: string;
+  briefingAt: string | null;
+  briefingCompulsory: boolean;
+  submissionDetail: string;
+  province: string;
+  category: string;
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
+  sourceUrl: string;
+}
+
+/**
+ * Creates a tender from an eTenders advert, matrix and all.
+ *
+ * Returns the existing id if this advert is already in the register, so a
+ * double-click or a second import from a stale search page is a no-op rather
+ * than a duplicate bid to keep track of.
+ */
+export async function importTender(remote: RemoteImport): Promise<number> {
+  const d = db();
+
+  const existing = await d
+    .prepare("SELECT id FROM tenders WHERE ocid = ?")
+    .bind(remote.ocid)
+    .first<{ id: number }>();
+  if (existing) return existing.id;
+
+  const inserted = await d
+    .prepare(
+      `INSERT INTO tenders
+         (reference, title, department, description, closing_at, briefing_at,
+          briefing_compulsory, briefing_attended, submission_method,
+          submission_detail, bbbee_claimed_level, status, notes,
+          ocid, source_url, province, category,
+          contact_name, contact_email, contact_phone)
+       VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'physical', ?, NULL, 'preparing', '',
+               ?, ?, ?, ?, ?, ?, ?)
+       RETURNING id`
+    )
+    .bind(
+      remote.reference,
+      remote.title,
+      remote.department,
+      remote.description,
+      remote.closingAt,
+      remote.briefingAt,
+      remote.briefingCompulsory ? 1 : 0,
+      remote.submissionDetail,
+      remote.ocid,
+      remote.sourceUrl,
+      remote.province,
+      remote.category,
+      remote.contactName,
+      remote.contactEmail,
+      remote.contactPhone
+    )
+    .first<{ id: number }>();
+
+  const id = inserted!.id;
+  await d.batch(matrixStatements(d, id));
   return id;
 }
 
