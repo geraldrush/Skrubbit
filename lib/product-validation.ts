@@ -56,8 +56,11 @@ export function validateProductBody(
   variants.forEach((v, i) => {
     if (!v.size) errors.push(`Variant ${i + 1}: size is required.`);
     if (!v.sku) errors.push(`Variant ${i + 1}: SKU is required.`);
-    if (!Number.isFinite(v.price) || v.price < 0) {
-      errors.push(`Variant ${i + 1}: price must be a positive number.`);
+    // Zero is rejected, not just negatives: an empty price field arrives as
+    // Number("") === 0, which is finite and non-negative, so `< 0` let a
+    // skipped price through and shipped the product at R0.00.
+    if (!Number.isFinite(v.price) || v.price <= 0) {
+      errors.push(`Variant ${i + 1}: price must be greater than 0.`);
     }
   });
 

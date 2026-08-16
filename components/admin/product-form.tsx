@@ -311,10 +311,12 @@ export function ProductForm({
             </div>
             <div className="space-y-1">
               <Label className="text-xs text-muted-foreground">Price (R)</Label>
+              {/* min matches the server rule (price must exceed 0) so the
+                  browser catches a zero price before the round trip. */}
               <Input
                 type="number"
                 step="0.01"
-                min="0"
+                min="0.01"
                 value={v.price}
                 onChange={(e) => updateVariant(i, { price: e.target.value })}
                 placeholder="94.90"
