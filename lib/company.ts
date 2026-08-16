@@ -18,6 +18,9 @@ export interface CompanyProfile {
   tradingName: string;
   registrationNumber: string;
   vatNumber: string;
+  /** Explicit, not inferred from the VAT number: a bid must never quote VAT
+      that cannot lawfully be charged. */
+  vatRegistered: boolean;
   physicalAddress: string;
   postalAddress: string;
   signatoryName: string;
@@ -33,6 +36,7 @@ interface ProfileRow {
   trading_name: string;
   registration_number: string;
   vat_number: string;
+  vat_registered: number;
   physical_address: string;
   postal_address: string;
   signatory_name: string;
@@ -48,6 +52,7 @@ const EMPTY: CompanyProfile = {
   tradingName: "",
   registrationNumber: "",
   vatNumber: "",
+  vatRegistered: false,
   physicalAddress: "",
   postalAddress: "",
   signatoryName: "",
@@ -69,6 +74,7 @@ export async function getCompanyProfile(): Promise<CompanyProfile> {
     tradingName: row.trading_name,
     registrationNumber: row.registration_number,
     vatNumber: row.vat_number,
+    vatRegistered: row.vat_registered === 1,
     physicalAddress: row.physical_address,
     postalAddress: row.postal_address,
     signatoryName: row.signatory_name,
@@ -85,7 +91,7 @@ export async function updateCompanyProfile(p: CompanyProfile): Promise<void> {
     .prepare(
       `UPDATE company_profile SET
          legal_name = ?, trading_name = ?, registration_number = ?,
-         vat_number = ?, physical_address = ?, postal_address = ?,
+         vat_number = ?, vat_registered = ?, physical_address = ?, postal_address = ?,
          signatory_name = ?, signatory_position = ?, phone = ?, email = ?,
          website = ?, profile_text = ?, updated_at = datetime('now')
        WHERE id = 1`
@@ -95,6 +101,7 @@ export async function updateCompanyProfile(p: CompanyProfile): Promise<void> {
       p.tradingName,
       p.registrationNumber,
       p.vatNumber,
+      p.vatRegistered ? 1 : 0,
       p.physicalAddress,
       p.postalAddress,
       p.signatoryName,
@@ -123,5 +130,12 @@ export function missingProfileFields(p: CompanyProfile): string[] {
     ["phone", "Telephone number"],
     ["email", "Email address"],
   ];
-  return required.filter(([key]) => !p[key].trim()).map(([, label]) => label);
+  return required
+    .filter(([key]) => {
+      const value = p[key];
+      // Only text fields are checked for emptiness; vatRegistered is a boolean
+      // and false is a valid, complete answer rather than a missing one.
+      return typeof value === "string" && !value.trim();
+    })
+    .map(([, label]) => label);
 }

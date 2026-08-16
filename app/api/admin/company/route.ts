@@ -26,6 +26,9 @@ export async function PUT(req: Request) {
     tradingName: str(body.tradingName, 200),
     registrationNumber: str(body.registrationNumber, 60),
     vatNumber: str(body.vatNumber, 60),
+    // Defaults to false on anything but an explicit true, so the safe case
+    // (quote no VAT) is what a malformed payload produces.
+    vatRegistered: body.vatRegistered === true,
     physicalAddress: str(body.physicalAddress, 500),
     postalAddress: str(body.postalAddress, 500),
     signatoryName: str(body.signatoryName, 200),

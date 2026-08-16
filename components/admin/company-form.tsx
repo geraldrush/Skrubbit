@@ -88,9 +88,23 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
             value={form.vatNumber}
             onChange={set("vatNumber")}
             placeholder="4123456789"
+            disabled={!form.vatRegistered}
           />
+          <label className="flex items-center gap-2 text-sm font-medium">
+            <input
+              type="checkbox"
+              className="h-4 w-4 rounded border-border"
+              checked={form.vatRegistered}
+              onChange={(e) =>
+                setForm((f) => ({ ...f, vatRegistered: e.target.checked }))
+              }
+            />
+            We are registered for VAT
+          </label>
           <p className="text-xs text-muted-foreground">
-            Leave blank if not VAT registered.
+            Tick only if actually registered. Every pricing schedule adds 15%
+            VAT when this is on — quoting VAT you cannot charge can invalidate
+            a bid.
           </p>
         </div>
       </div>

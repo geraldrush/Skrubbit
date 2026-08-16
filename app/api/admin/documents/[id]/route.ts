@@ -1,6 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import { deleteDocument, listDocuments, updateDocument } from "@/lib/tenders";
+import { deleteDocument, getDocument, listDocuments, updateDocument } from "@/lib/tenders";
 import { validateDocumentBody } from "@/lib/tender-validation";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -55,6 +55,14 @@ export async function DELETE(
   const id = parseId((await params).id);
   if (id === null || !(await exists(id))) {
     return Response.json({ error: "Not found" }, { status: 404 });
+  }
+
+  // Remove the stored certificate too. Unlike product images — which are
+  // shared and cheap to orphan — these are tax documents, so deleting the
+  // record must not leave the file sitting in the bucket.
+  const doc = await getDocument(id);
+  if (doc?.fileKey) {
+    await env.PRODUCT_IMAGES.delete(doc.fileKey).catch(() => {});
   }
 
   await deleteDocument(id);

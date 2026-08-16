@@ -94,6 +94,11 @@ export interface CompanyDocument {
   location: string;
   notes: string;
   updatedAt: string;
+  /** R2 object key under `documents/`, or null when no file is stored. */
+  fileKey: string | null;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
 }
 
 export const CATEGORY_LABELS: Record<ItemCategory, string> = {
@@ -499,6 +504,10 @@ interface DocRow {
   location: string;
   notes: string;
   updated_at: string;
+  file_key: string | null;
+  file_name: string;
+  file_type: string;
+  file_size: number;
 }
 
 function toDoc(r: DocRow): CompanyDocument {
@@ -513,6 +522,10 @@ function toDoc(r: DocRow): CompanyDocument {
     location: r.location,
     notes: r.notes,
     updatedAt: r.updated_at,
+    fileKey: r.file_key,
+    fileName: r.file_name ?? "",
+    fileType: r.file_type ?? "",
+    fileSize: r.file_size ?? 0,
   };
 }
 
@@ -963,4 +976,40 @@ export async function updateDocument(
 
 export async function deleteDocument(id: number): Promise<void> {
   await db().prepare("DELETE FROM company_documents WHERE id = ?").bind(id).run();
+}
+
+export async function getDocument(id: number): Promise<CompanyDocument | null> {
+  const row = await db()
+    .prepare("SELECT * FROM company_documents WHERE id = ?")
+    .bind(id)
+    .first<DocRow>();
+  return row ? toDoc(row) : null;
+}
+
+/** Records the stored file against a document, replacing any previous one. */
+export async function setDocumentFile(
+  id: number,
+  file: { key: string; name: string; type: string; size: number }
+): Promise<void> {
+  await db()
+    .prepare(
+      `UPDATE company_documents
+          SET file_key = ?, file_name = ?, file_type = ?, file_size = ?,
+              updated_at = datetime('now')
+        WHERE id = ?`
+    )
+    .bind(file.key, file.name, file.type, file.size, id)
+    .run();
+}
+
+export async function clearDocumentFile(id: number): Promise<void> {
+  await db()
+    .prepare(
+      `UPDATE company_documents
+          SET file_key = NULL, file_name = '', file_type = '', file_size = 0,
+              updated_at = datetime('now')
+        WHERE id = ?`
+    )
+    .bind(id)
+    .run();
 }

@@ -83,8 +83,13 @@ export default async function PackPage({
 
   const { tender, items } = loaded;
   const totals = priceTotals(pricing);
+  // What the buyer actually pays. VAT is only added when we are registered to
+  // charge it — quoting VAT otherwise is an unlawful charge, not a rounding
+  // detail, and can invalidate the bid.
+  const payable = profile.vatRegistered ? totals.incl : totals.excl;
   const today = sastToday();
   const missing = missingProfileFields(profile);
+  const enclosures = documents.filter((d) => d.fileKey);
 
   const csd = documents.find((d) => d.kind === "csd_report");
   const bbbee = documents.find((d) => d.kind === "bbbee");
@@ -136,6 +141,14 @@ export default async function PackPage({
               <ChevronLeft className="h-4 w-4" /> Back to tender
             </Link>
             <div className="flex flex-wrap gap-2">
+              {enclosures.length ? (
+                <a
+                  href="/api/admin/documents/enclosures.zip"
+                  className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium hover:bg-secondary"
+                >
+                  <Download className="mr-2 h-4 w-4" /> Enclosures ({enclosures.length})
+                </a>
+              ) : null}
               <a
                 href={`/api/admin/tenders/${tender.id}/pricing.csv`}
                 className="inline-flex h-10 items-center rounded-md border px-4 text-sm font-medium hover:bg-secondary"
@@ -172,6 +185,24 @@ export default async function PackPage({
               <Link href="/admin/documents" className="mt-2 inline-block font-medium underline">
                 Fill them in →
               </Link>
+            </div>
+          ) : null}
+
+          {documents.length && enclosures.length < documents.length ? (
+            <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
+              <p className="flex items-center gap-2 font-semibold text-[#8a5a00] dark:text-[#fab219]">
+                <AlertTriangle className="h-4 w-4" />
+                {documents.length - enclosures.length} of {documents.length}{" "}
+                documents have no file uploaded
+              </p>
+              <p className="mt-1 text-muted-foreground">
+                They appear on the enclosure schedule, but there is nothing to
+                print for them.{" "}
+                <Link href="/admin/documents" className="font-medium underline">
+                  Upload the certificates
+                </Link>
+                .
+              </p>
             </div>
           ) : null}
 
@@ -244,7 +275,7 @@ export default async function PackPage({
                     JSX expressions renders as a space, which would print
                     "including VAT ." with a gap before the full stop. */}
                 {totals.incl > 0
-                  ? `Our pricing is set out in the enclosed pricing schedule and is ${formatZAR(totals.incl)} including VAT.`
+                  ? `Our pricing is set out in the enclosed pricing schedule and is ${formatZAR(payable)}${profile.vatRegistered ? " including VAT" : ". We are not registered for VAT"}.`
                   : "Our pricing is set out in the enclosed pricing schedule [pricing to be completed]."}{" "}
                 This offer is valid for the period stipulated in the tender
                 document, and we confirm our capacity to supply and deliver
@@ -367,14 +398,62 @@ export default async function PackPage({
             )}
           </Sheet>
 
+          {/* --------------------------- enclosure schedule ------------- */}
+          <Sheet>
+            <h2 className="mb-1 text-xl font-bold">Schedule of enclosed documents</h2>
+            <p className="mb-6 text-sm">
+              Company documents submitted with this bid, with their reference
+              numbers and validity.
+            </p>
+
+            <table className="grid-table text-sm">
+              <thead>
+                <tr>
+                  <th style={{ width: "6%" }}>No.</th>
+                  <th>Document</th>
+                  <th style={{ width: "24%" }}>Reference</th>
+                  <th style={{ width: "18%" }}>Valid until</th>
+                </tr>
+              </thead>
+              <tbody>
+                {documents.length ? (
+                  documents.map((doc, i) => (
+                    <tr key={doc.id}>
+                      <td>{i + 1}</td>
+                      <td>
+                        {doc.label}
+                        {doc.bbbeeLevel ? ` — Level ${doc.bbbeeLevel}` : ""}
+                      </td>
+                      <td>{doc.reference || "—"}</td>
+                      <td>{doc.expiresOn ?? "Does not expire"}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan={4} className="italic">
+                      [No company documents recorded.]
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+
+            <p className="mt-6 text-xs italic">
+              Certified copies of the documents listed above are enclosed behind
+              the relevant dividers.
+            </p>
+          </Sheet>
+
           {/* ---------------------------- pricing schedule -------------- */}
           <Sheet>
             <h2 className="mb-1 text-xl font-bold">Pricing schedule</h2>
             <p className="mb-6 text-sm">
               {tender.reference} — {tender.title}
               <br />
-              All amounts in South African Rand. VAT at{" "}
-              {(VAT_RATE * 100).toFixed(0)}%.
+              All amounts in South African Rand.{" "}
+              {profile.vatRegistered
+                ? `VAT at ${(VAT_RATE * 100).toFixed(0)}%.`
+                : "Not registered for VAT — no VAT is charged."}
             </p>
 
             <table className="grid-table text-sm">
@@ -409,28 +488,41 @@ export default async function PackPage({
                     </td>
                   </tr>
                 )}
-                <tr>
-                  <td colSpan={5} className="num">
-                    <strong>Subtotal (excl VAT)</strong>
-                  </td>
-                  <td className="num">
-                    <strong>{formatZAR(totals.excl)}</strong>
-                  </td>
-                </tr>
-                <tr>
-                  <td colSpan={5} className="num">
-                    VAT @ {(VAT_RATE * 100).toFixed(0)}%
-                  </td>
-                  <td className="num">{formatZAR(totals.vat)}</td>
-                </tr>
-                <tr>
-                  <td colSpan={5} className="num">
-                    <strong>Total (incl VAT)</strong>
-                  </td>
-                  <td className="num">
-                    <strong>{formatZAR(totals.incl)}</strong>
-                  </td>
-                </tr>
+                {profile.vatRegistered ? (
+                  <>
+                    <tr>
+                      <td colSpan={5} className="num">
+                        <strong>Subtotal (excl VAT)</strong>
+                      </td>
+                      <td className="num">
+                        <strong>{formatZAR(totals.excl)}</strong>
+                      </td>
+                    </tr>
+                    <tr>
+                      <td colSpan={5} className="num">
+                        VAT @ {(VAT_RATE * 100).toFixed(0)}%
+                      </td>
+                      <td className="num">{formatZAR(totals.vat)}</td>
+                    </tr>
+                    <tr>
+                      <td colSpan={5} className="num">
+                        <strong>Total (incl VAT)</strong>
+                      </td>
+                      <td className="num">
+                        <strong>{formatZAR(totals.incl)}</strong>
+                      </td>
+                    </tr>
+                  </>
+                ) : (
+                  <tr>
+                    <td colSpan={5} className="num">
+                      <strong>Total (no VAT — not VAT registered)</strong>
+                    </td>
+                    <td className="num">
+                      <strong>{formatZAR(totals.excl)}</strong>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
 

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Plus, Save, Trash2, X } from "lucide-react";
+import { FileUp, Loader2, Paperclip, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -214,6 +214,103 @@ function DocumentFields({
   );
 }
 
+/**
+ * Upload / view / remove the stored certificate for one document.
+ *
+ * Files go to R2 under `documents/` and are readable only through the
+ * admin-gated download route — never the public image path.
+ */
+function FileControl({ doc, busy, setBusy }: {
+  doc: CompanyDocument;
+  busy: boolean;
+  setBusy: (b: boolean) => void;
+}) {
+  const router = useRouter();
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  async function upload(file: File) {
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/admin/documents/${doc.id}/file`, {
+        method: "POST",
+        body: fd,
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      toast.success("Certificate uploaded");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function removeFile() {
+    if (!window.confirm(`Remove the uploaded file for "${doc.label}"?`)) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/documents/${doc.id}/file`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Could not remove the file");
+      toast.success("File removed");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not remove");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="mt-1 flex flex-wrap items-center gap-2 text-xs">
+      {doc.fileKey ? (
+        <>
+          <a
+            href={`/api/admin/documents/${doc.id}/file`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 font-medium underline hover:text-accent"
+          >
+            <Paperclip className="h-3.5 w-3.5" />
+            {doc.fileName || "View file"}
+          </a>
+          <span className="text-muted-foreground">
+            {(doc.fileSize / 1024).toFixed(0)} KB
+          </span>
+          <button
+            type="button"
+            onClick={removeFile}
+            disabled={busy}
+            className="text-muted-foreground underline hover:text-destructive"
+          >
+            remove
+          </button>
+        </>
+      ) : (
+        <span className="inline-flex items-center gap-1 text-muted-foreground">
+          <FileUp className="h-3.5 w-3.5" /> No file uploaded
+        </span>
+      )}
+      <input
+        ref={inputRef}
+        type="file"
+        accept="application/pdf,image/png,image/jpeg,image/webp"
+        disabled={busy}
+        onChange={(e) => {
+          const f = e.target.files?.[0];
+          if (f) void upload(f);
+        }}
+        className="max-w-[13rem] text-xs file:mr-2 file:rounded file:border file:bg-secondary file:px-2 file:py-1 file:text-xs"
+      />
+    </div>
+  );
+}
+
 export function DocumentManager({
   documents,
   today,
@@ -304,6 +401,7 @@ export function DocumentManager({
                     {doc.bbbeeLevel ? ` · Level ${doc.bbbeeLevel}` : ""}
                     {doc.location ? ` · ${doc.location}` : ""}
                   </p>
+                  <FileControl doc={doc} busy={busy} setBusy={setBusy} />
                 </div>
                 <span className={`text-sm ${state.tone}`}>{state.label}</span>
                 <div className="flex gap-1">
