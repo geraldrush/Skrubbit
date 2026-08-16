@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 
 import { listDocuments, sastToday } from "@/lib/tenders";
+import { getCompanyProfile } from "@/lib/company";
 import { adminGate } from "@/components/admin/admin-gate";
 import { AdminNav } from "@/components/admin/admin-nav";
+import { CompanyForm } from "@/components/admin/company-form";
 import { DocumentManager } from "@/components/admin/document-manager";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +18,10 @@ export default async function DocumentsPage() {
   const gate = await adminGate();
   if (gate) return gate;
 
-  const documents = await listDocuments();
+  const [documents, profile] = await Promise.all([
+    listDocuments(),
+    getCompanyProfile(),
+  ]);
 
   return (
     <div className="container max-w-4xl py-10">
@@ -33,7 +38,19 @@ export default async function DocumentsPage() {
         stored here.
       </p>
 
-      <DocumentManager documents={documents} today={sastToday()} />
+      <section className="mb-10">
+        <h2 className="mb-3 font-display text-xl font-bold">Compliance register</h2>
+        <DocumentManager documents={documents} today={sastToday()} />
+      </section>
+
+      <section>
+        <h2 className="mb-1 font-display text-xl font-bold">Company details</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          Printed on every generated cover letter, company profile and pricing
+          schedule.
+        </p>
+        <CompanyForm profile={profile} />
+      </section>
     </div>
   );
 }

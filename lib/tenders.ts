@@ -780,6 +780,121 @@ export async function deleteTender(id: number): Promise<void> {
   ]);
 }
 
+/* ---------------------------- pricing schedule --------------------------- */
+
+/** South African VAT. */
+export const VAT_RATE = 0.15;
+
+export interface PricingLine {
+  id: number;
+  description: string;
+  unit: string;
+  quantity: number;
+  /** What we pay. Never printed on the submitted schedule. */
+  costPrice: number;
+  /** What we quote, excluding VAT. */
+  unitPrice: number;
+  productSlug: string | null;
+  position: number;
+}
+
+export interface PricingTotals {
+  excl: number;
+  vat: number;
+  incl: number;
+  /** Quoted minus cost. Internal only — margin never goes in the envelope. */
+  margin: number;
+  marginPct: number;
+}
+
+export function priceTotals(lines: PricingLine[]): PricingTotals {
+  const excl = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0);
+  const cost = lines.reduce((s, l) => s + l.quantity * l.costPrice, 0);
+  const vat = excl * VAT_RATE;
+  const margin = excl - cost;
+  return {
+    excl,
+    vat,
+    incl: excl + vat,
+    margin,
+    marginPct: excl > 0 ? (margin / excl) * 100 : 0,
+  };
+}
+
+interface PricingRow {
+  id: number;
+  description: string;
+  unit: string;
+  quantity: number;
+  cost_price: number;
+  unit_price: number;
+  product_slug: string | null;
+  position: number;
+}
+
+export async function getPricing(tenderId: number): Promise<PricingLine[]> {
+  const { results } = await db()
+    .prepare("SELECT * FROM tender_pricing WHERE tender_id = ? ORDER BY position")
+    .bind(tenderId)
+    .all<PricingRow>();
+
+  return results.map((r) => ({
+    id: r.id,
+    description: r.description,
+    unit: r.unit,
+    quantity: r.quantity,
+    costPrice: r.cost_price,
+    unitPrice: r.unit_price,
+    productSlug: r.product_slug,
+    position: r.position,
+  }));
+}
+
+export interface PricingInput {
+  description: string;
+  unit: string;
+  quantity: number;
+  costPrice: number;
+  unitPrice: number;
+  productSlug: string | null;
+}
+
+/**
+ * Replaces the whole schedule.
+ *
+ * Same wholesale approach as the compliance matrix and product variants: the
+ * line set is small, rows are reordered and deleted freely while quoting, and
+ * a full replace is easier to reason about than diffing by id.
+ */
+export async function replacePricing(
+  tenderId: number,
+  lines: PricingInput[]
+): Promise<void> {
+  const d = db();
+  await d.batch([
+    d.prepare("DELETE FROM tender_pricing WHERE tender_id = ?").bind(tenderId),
+    ...lines.map((l, i) =>
+      d
+        .prepare(
+          `INSERT INTO tender_pricing
+             (tender_id, description, unit, quantity, cost_price, unit_price,
+              product_slug, position)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          tenderId,
+          l.description,
+          l.unit,
+          l.quantity,
+          l.costPrice,
+          l.unitPrice,
+          l.productSlug,
+          i
+        )
+    ),
+  ]);
+}
+
 export async function listDocuments(): Promise<CompanyDocument[]> {
   const { results } = await db()
     .prepare(
