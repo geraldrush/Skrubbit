@@ -12,9 +12,40 @@ export const dynamic = "force-dynamic";
 /** After this many consecutive failures the IP is locked out for a while. */
 const MAX_FAILURES = 5;
 const LOCKOUT_SECONDS = 15 * 60;
+/**
+ * Failures stop counting once they are this old, so isolated typos days apart
+ * never accumulate into a lockout. Longer than the lockout on purpose: it caps
+ * a patient attacker at MAX_FAILURES - 1 guesses per hour from one address.
+ */
+const FAILURE_WINDOW_SECONDS = 60 * 60;
+
+interface AttemptRecord {
+  failures: number;
+  locked_until: number;
+  updated_at: number;
+}
 
 function clientIp(req: Request): string {
   return req.headers.get("cf-connecting-ip") ?? "unknown";
+}
+
+/**
+ * How many past failures still count against this address.
+ *
+ * Reaching the call site means any lockout has already expired. Two things
+ * reset the tally, and with neither of them the counter only ever went up:
+ *
+ *   - A lockout that has been served. Otherwise the stored count stays at
+ *     MAX_FAILURES forever, so the very next failure lands back on the
+ *     threshold and re-locks — permanently, 15 minutes at a time, locking the
+ *     real admin out of their own console over a single typo.
+ *   - A quiet period longer than the failure window, so old failures age out.
+ */
+function carriedFailures(record: AttemptRecord | null, now: number): number {
+  if (!record) return 0;
+  if (record.locked_until > 0) return 0;
+  if (now - record.updated_at > FAILURE_WINDOW_SECONDS) return 0;
+  return record.failures;
 }
 
 export async function POST(req: Request) {
@@ -31,10 +62,10 @@ export async function POST(req: Request) {
   const now = Math.floor(Date.now() / 1000);
 
   const record = await env.DB.prepare(
-    "SELECT failures, locked_until FROM login_attempts WHERE ip = ?"
+    "SELECT failures, locked_until, updated_at FROM login_attempts WHERE ip = ?"
   )
     .bind(ip)
-    .first<{ failures: number; locked_until: number }>();
+    .first<AttemptRecord>();
 
   if (record && record.locked_until > now) {
     const mins = Math.ceil((record.locked_until - now) / 60);
@@ -53,7 +84,7 @@ export async function POST(req: Request) {
   }
 
   if (!(await checkPassword(password, env))) {
-    const failures = (record?.failures ?? 0) + 1;
+    const failures = carriedFailures(record, now) + 1;
     const lockedUntil = failures >= MAX_FAILURES ? now + LOCKOUT_SECONDS : 0;
     await env.DB.prepare(
       `INSERT INTO login_attempts (ip, failures, locked_until, updated_at)
