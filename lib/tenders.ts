@@ -681,13 +681,17 @@ export async function createTender(input: TenderInput): Promise<number> {
   return id;
 }
 
-/** Which of these adverts are already in the register. */
-export async function findImportedOcids(ocids: string[]): Promise<Set<string>> {
-  if (!ocids.length) return new Set();
-  const placeholders = ocids.map(() => "?").join(",");
+/**
+ * Which adverts are already in the register.
+ *
+ * Reads every imported ocid rather than binding one parameter per candidate:
+ * D1 caps a query at 100 bound parameters, so a search returning more results
+ * than that failed outright with a 500. The register only holds bids actually
+ * being pursued, so this set stays small and the matching is done in memory.
+ */
+export async function findImportedOcids(): Promise<Set<string>> {
   const { results } = await db()
-    .prepare(`SELECT ocid FROM tenders WHERE ocid IN (${placeholders})`)
-    .bind(...ocids)
+    .prepare("SELECT ocid FROM tenders WHERE ocid IS NOT NULL")
     .all<{ ocid: string }>();
   return new Set(results.map((r) => r.ocid));
 }

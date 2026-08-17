@@ -36,7 +36,7 @@ export async function GET(req: Request) {
       getSyncState(),
     ]);
 
-    const imported = await findImportedOcids(result.tenders.map((t) => t.ocid));
+    const imported = await findImportedOcids();
 
     if (await syncIsDue()) {
       ctx.waitUntil(

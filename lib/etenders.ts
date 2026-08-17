@@ -157,7 +157,10 @@ export async function searchTenders(
     where.push("category = ?");
     binds.push(category);
   }
-  for (const term of keyword.toLowerCase().split(/\s+/).filter(Boolean)) {
+  // Each term is a bound parameter and D1 allows only 100 per query, so the
+  // number of terms is capped well below that rather than trusting the input.
+  const terms = keyword.toLowerCase().split(/\s+/).filter(Boolean).slice(0, 8);
+  for (const term of terms) {
     // Every word must appear, so extra words narrow rather than widen.
     where.push("search_text LIKE ?");
     binds.push(`%${term}%`);
