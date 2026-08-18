@@ -2,12 +2,13 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Loader2, Plus, Save, Trash2, Undo2 } from "lucide-react";
+import { FileText, Loader2, Paperclip, Plus, Save, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   CATEGORY_LABELS,
   CATEGORY_ORDER,
+  type CompanyDocument,
   type ItemCategory,
   type Tender,
   type TenderItem,
@@ -36,6 +37,7 @@ interface Draft {
   signed: boolean;
   required: boolean;
   note: string;
+  documentId: number | null;
 }
 
 /** A row added in the editor, before the server has given it an id. */
@@ -50,9 +52,13 @@ interface NewRow {
 export function TenderForm({
   tender,
   items = [],
+  documents = [],
 }: {
   tender?: Tender;
   items?: TenderItem[];
+  /** The compliance register, so a row can point at the certificate that
+   *  evidences it instead of relying on a tick. */
+  documents?: CompanyDocument[];
 }) {
   const router = useRouter();
   const isEdit = Boolean(tender);
@@ -104,10 +110,22 @@ export function TenderForm({
     Object.fromEntries(
       items.map((i) => [
         i.id,
-        { attached: i.attached, signed: i.signed, required: i.required, note: i.note },
+        {
+          attached: i.attached,
+          signed: i.signed,
+          required: i.required,
+          note: i.note,
+          documentId: i.documentId,
+        },
       ])
     )
   );
+
+  /** True when the linked document actually has a file behind it. */
+  function evidenceFor(documentId: number | null): boolean {
+    if (documentId === null) return false;
+    return Boolean(documents.find((doc) => doc.id === documentId)?.fileKey);
+  }
 
   function patch(id: number, change: Partial<Draft>) {
     setDrafts((d) => ({ ...d, [id]: { ...d[id], ...change } }));
@@ -130,7 +148,13 @@ export function TenderForm({
   function addRow(category: ItemCategory) {
     setNewRows((rows) => [
       ...rows,
-      { key: `new-${Date.now()}-${rows.length}`, category, label: "", required: true, signatureRequired: false },
+      {
+        key: `new-${Date.now()}-${rows.length}`,
+        category,
+        label: "",
+        required: true,
+        signatureRequired: false,
+      },
     ]);
   }
 
@@ -439,12 +463,41 @@ export function TenderForm({
                           {item.label}
                         </p>
                         {isRemoved ? null : (
-                          <Input
-                            value={d.note}
-                            onChange={(e) => patch(item.id, { note: e.target.value })}
-                            placeholder={d.required ? "Note (optional)" : 'e.g. "N/A — not construction"'}
-                            className="mt-1.5 h-8 text-sm"
-                          />
+                          <>
+                            <Input
+                              value={d.note}
+                              onChange={(e) => patch(item.id, { note: e.target.value })}
+                              placeholder={d.required ? "Note (optional)" : 'e.g. "N/A — not construction"'}
+                              className="mt-1.5 h-8 text-sm"
+                            />
+                            {documents.length && category !== "submission" ? (
+                              <div className="mt-1.5 flex flex-wrap items-center gap-2">
+                                <select
+                                  value={d.documentId ?? ""}
+                                  onChange={(e) =>
+                                    patch(item.id, {
+                                      documentId: e.target.value ? Number(e.target.value) : null,
+                                    })
+                                  }
+                                  className="h-8 max-w-[18rem] rounded-md border border-input bg-background px-2 text-xs"
+                                  aria-label={`Evidence for ${item.label}`}
+                                >
+                                  <option value="">Not linked to a stored document</option>
+                                  {documents.map((doc) => (
+                                    <option key={doc.id} value={doc.id}>
+                                      {doc.label}
+                                      {doc.fileKey ? "" : " (no file uploaded)"}
+                                    </option>
+                                  ))}
+                                </select>
+                                {evidenceFor(d.documentId) ? (
+                                  <span className="inline-flex items-center gap-1 text-xs font-medium text-[#006300] dark:text-[#0ca30c]">
+                                    <Paperclip className="h-3 w-3" /> Evidenced by file
+                                  </span>
+                                ) : null}
+                              </div>
+                            ) : null}
+                          </>
                         )}
                       </div>
                       <div className="flex flex-wrap items-start gap-4 text-sm sm:pl-4">

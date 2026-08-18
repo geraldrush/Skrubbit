@@ -97,6 +97,8 @@ export interface TenderItem {
   signed: boolean;
   note: string;
   position: number;
+  /** Company document that evidences this row, when one does. */
+  documentId: number | null;
 }
 
 export interface CompanyDocument {
@@ -323,13 +325,24 @@ export function assessTender(
   }
 
   /* 3 & 4. Attachments and signatures. */
-  const missing = items.filter((i) => i.required && !i.attached);
+  const missing = items.filter((i) => i.required && !isSatisfied(i, docs));
   for (const item of missing) {
     issues.push({ severity: "blocker", message: `Not attached: ${item.label}` });
   }
 
+  // A linked document with no file uploaded is a claim dressed as evidence.
+  for (const item of items.filter((i) => i.required && i.documentId !== null)) {
+    const doc = docs.find((d) => d.id === item.documentId);
+    if (doc && !doc.fileKey && !item.attached) {
+      issues.push({
+        severity: "warning",
+        message: `${item.label} is linked to "${doc.label}", but no file has been uploaded for it.`,
+      });
+    }
+  }
+
   const unsigned = items.filter(
-    (i) => i.required && i.attached && i.signatureRequired && !i.signed
+    (i) => i.required && isSatisfied(i, docs) && i.signatureRequired && !i.signed
   );
   for (const item of unsigned) {
     issues.push({
@@ -344,7 +357,10 @@ export function assessTender(
   // drown the ones that matter.
   const blank = items.filter(
     (i) =>
-      i.category !== "submission" && !i.required && !i.attached && !i.note.trim()
+      i.category !== "submission" &&
+      !i.required &&
+      !isSatisfied(i, docs) &&
+      !i.note.trim()
   );
   for (const item of blank) {
     issues.push({
@@ -449,6 +465,24 @@ export function assessTender(
   return issues;
 }
 
+/**
+ * Whether a checklist row is actually satisfied.
+ *
+ * A tick is a claim; a linked company document with a stored file is evidence.
+ * Either counts, because plenty of returnables are forms completed on the day
+ * and will never have a file — but where a file exists, the row no longer
+ * depends on somebody remembering to tick it.
+ */
+export function isSatisfied(
+  item: TenderItem,
+  documents: CompanyDocument[] = []
+): boolean {
+  if (item.attached) return true;
+  if (item.documentId === null) return false;
+  const doc = documents.find((d) => d.id === item.documentId);
+  return Boolean(doc?.fileKey);
+}
+
 export interface Progress {
   done: number;
   total: number;
@@ -463,10 +497,13 @@ export interface Progress {
  * needed, signed — the same bar the readiness check applies, so the progress
  * bar can never read 100% while the bid is still blocked.
  */
-export function matrixProgress(items: TenderItem[]): Progress {
+export function matrixProgress(
+  items: TenderItem[],
+  documents: CompanyDocument[] = []
+): Progress {
   const required = items.filter((i) => i.required);
   const done = required.filter(
-    (i) => i.attached && (!i.signatureRequired || i.signed)
+    (i) => isSatisfied(i, documents) && (!i.signatureRequired || i.signed)
   ).length;
   const total = required.length;
   return { done, total, pct: total ? Math.round((done / total) * 100) : 100 };
@@ -573,6 +610,7 @@ interface ItemRow {
   signed: number;
   note: string;
   position: number;
+  document_id: number | null;
 }
 
 function toItem(r: ItemRow): TenderItem {
@@ -586,6 +624,7 @@ function toItem(r: ItemRow): TenderItem {
     signed: r.signed === 1,
     note: r.note,
     position: r.position,
+    documentId: r.document_id,
   };
 }
 
@@ -877,6 +916,7 @@ export interface ItemPatch {
   signed: boolean;
   required: boolean;
   note: string;
+  documentId: number | null;
 }
 
 /** Saves the whole matrix at once; ticking boxes shouldn't be N requests. */
@@ -891,7 +931,7 @@ export async function updateItems(
       d
         .prepare(
           `UPDATE tender_items
-             SET attached = ?, signed = ?, required = ?, note = ?
+             SET attached = ?, signed = ?, required = ?, note = ?, document_id = ?
            WHERE id = ? AND tender_id = ?`
         )
         .bind(
@@ -899,6 +939,7 @@ export async function updateItems(
           p.signed ? 1 : 0,
           p.required ? 1 : 0,
           p.note,
+          p.documentId,
           p.id,
           tenderId
         )
@@ -973,12 +1014,117 @@ export async function deleteItems(tenderId: number, ids: number[]): Promise<void
   );
 }
 
+/* --------------------------- tender file vault --------------------------- */
+
+export type TenderFileKind =
+  | "tender_document"
+  | "official_forms"
+  | "boq"
+  | "briefing_proof"
+  | "addendum"
+  | "correspondence"
+  | "other";
+
+export const TENDER_FILE_LABELS: Record<TenderFileKind, string> = {
+  tender_document: "Tender document / advert",
+  official_forms: "Official MBD / SBD forms",
+  boq: "Bill of quantities / specification",
+  briefing_proof: "Briefing attendance proof",
+  addendum: "Addendum / clarification",
+  correspondence: "Correspondence with the buyer",
+  other: "Other",
+};
+
+export interface TenderFile {
+  id: number;
+  kind: TenderFileKind;
+  label: string;
+  fileKey: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  uploadedAt: string;
+}
+
+interface TenderFileRow {
+  id: number;
+  kind: string;
+  label: string;
+  file_key: string;
+  file_name: string;
+  file_type: string;
+  file_size: number;
+  uploaded_at: string;
+}
+
+export async function listTenderFiles(tenderId: number): Promise<TenderFile[]> {
+  const { results } = await db()
+    .prepare("SELECT * FROM tender_files WHERE tender_id = ? ORDER BY uploaded_at DESC, id DESC")
+    .bind(tenderId)
+    .all<TenderFileRow>();
+
+  return results.map((r) => ({
+    id: r.id,
+    kind: r.kind as TenderFileKind,
+    label: r.label,
+    fileKey: r.file_key,
+    fileName: r.file_name,
+    fileType: r.file_type,
+    fileSize: r.file_size,
+    uploadedAt: r.uploaded_at,
+  }));
+}
+
+export async function getTenderFile(
+  tenderId: number,
+  fileId: number
+): Promise<TenderFile | null> {
+  const row = await db()
+    .prepare("SELECT * FROM tender_files WHERE id = ? AND tender_id = ?")
+    .bind(fileId, tenderId)
+    .first<TenderFileRow>();
+  if (!row) return null;
+  return {
+    id: row.id,
+    kind: row.kind as TenderFileKind,
+    label: row.label,
+    fileKey: row.file_key,
+    fileName: row.file_name,
+    fileType: row.file_type,
+    fileSize: row.file_size,
+    uploadedAt: row.uploaded_at,
+  };
+}
+
+export async function addTenderFile(
+  tenderId: number,
+  file: { kind: TenderFileKind; label: string; key: string; name: string; type: string; size: number }
+): Promise<void> {
+  await db()
+    .prepare(
+      `INSERT INTO tender_files
+         (tender_id, kind, label, file_key, file_name, file_type, file_size)
+       VALUES (?, ?, ?, ?, ?, ?, ?)`
+    )
+    .bind(tenderId, file.kind, file.label, file.key, file.name, file.type, file.size)
+    .run();
+}
+
+export async function deleteTenderFile(tenderId: number, fileId: number): Promise<void> {
+  await db()
+    .prepare("DELETE FROM tender_files WHERE id = ? AND tender_id = ?")
+    .bind(fileId, tenderId)
+    .run();
+}
+
 export async function deleteTender(id: number): Promise<void> {
   const d = db();
   // Explicit rather than relying on ON DELETE CASCADE, which only fires when
   // SQLite foreign-key enforcement is on — same reasoning as lib/products.ts.
   await d.batch([
     d.prepare("DELETE FROM tender_items WHERE tender_id = ?").bind(id),
+    d.prepare("DELETE FROM tender_pricing WHERE tender_id = ?").bind(id),
+    d.prepare("DELETE FROM tender_files WHERE tender_id = ?").bind(id),
     d.prepare("DELETE FROM tenders WHERE id = ?").bind(id),
   ]);
 }

@@ -10,11 +10,13 @@ import {
   getPricing,
   getTender,
   listDocuments,
+  listTenderFiles,
 } from "@/lib/tenders";
 import { adminGate } from "@/components/admin/admin-gate";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { ReadinessPanel } from "@/components/admin/readiness-panel";
 import { PricingEditor } from "@/components/admin/pricing-editor";
+import { TenderFiles } from "@/components/admin/tender-files";
 import { DeleteTenderButton, TenderForm } from "@/components/admin/tender-form";
 
 export const dynamic = "force-dynamic";
@@ -35,12 +37,13 @@ export default async function TenderPage({
   const id = Number((await params).id);
   if (!Number.isInteger(id) || id <= 0) notFound();
 
-  const [loaded, documents, pricing, products, profile] = await Promise.all([
+  const [loaded, documents, pricing, products, profile, files] = await Promise.all([
     getTender(id),
     listDocuments(),
     getPricing(id),
     getProducts(),
     getCompanyProfile(),
+    listTenderFiles(id),
   ]);
   if (!loaded) notFound();
 
@@ -98,7 +101,17 @@ export default async function TenderPage({
         />
       </section>
 
-      <TenderForm tender={tender} items={items} />
+      <section className="mb-10">
+        <h2 className="mb-1 font-display text-xl font-bold">Tender documents</h2>
+        <p className="mb-3 text-sm text-muted-foreground">
+          The buyer&apos;s own paperwork for this bid — the advert, the blank
+          official forms, addenda, briefing proof. Kept here rather than in an
+          email thread.
+        </p>
+        <TenderFiles tenderId={tender.id} files={files} />
+      </section>
+
+      <TenderForm tender={tender} items={items} documents={documents} />
     </div>
   );
 }

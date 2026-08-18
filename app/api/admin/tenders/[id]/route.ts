@@ -68,6 +68,13 @@ export async function PUT(
           signed: raw.signed === true,
           required: raw.required === true,
           note: typeof raw.note === "string" ? raw.note.trim().slice(0, 500) : "",
+          // Which company document evidences this row, if any. Existence is
+          // not checked here; a link to a document since deleted simply stops
+          // counting as evidence.
+          documentId:
+            Number.isInteger(Number(raw.documentId)) && Number(raw.documentId) > 0
+              ? Number(raw.documentId)
+              : null,
         }))
     : [];
 
