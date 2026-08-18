@@ -34,6 +34,9 @@ const KINDS: DocumentKind[] = [
 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
+/** How a bid physically reached the buyer. */
+const METHODS = ["bid_box", "courier", "hand", "portal"];
+
 /**
  * Normalises a datetime-local value ("2026-09-01T11:00") to an explicit SAST
  * offset. Deadlines are the one field that must never be ambiguous, and a bare
@@ -106,6 +109,22 @@ export function validateTenderBody(
     "Claimed B-BBEE level"
   );
 
+  const rawSubmitted = str(body.submittedAt);
+  const submittedAt = rawSubmitted ? toSastIso(rawSubmitted) : null;
+  if (rawSubmitted && !submittedAt) {
+    errors.push("Submission date is not a valid date and time.");
+  }
+
+  let submittedAmount: number | null = null;
+  if (body.submittedAmount !== null && body.submittedAmount !== undefined && body.submittedAmount !== "") {
+    const amount = Number(body.submittedAmount);
+    if (!Number.isFinite(amount) || amount < 0) {
+      errors.push("Submitted amount must be a positive number.");
+    } else {
+      submittedAmount = amount;
+    }
+  }
+
   if (errors.length) return { errors };
 
   return {
@@ -127,6 +146,13 @@ export function validateTenderBody(
       profileOverride: str(body.profileOverride).slice(0, 20000),
       methodology: str(body.methodology).slice(0, 20000),
       experience: str(body.experience).slice(0, 20000),
+      submittedAt,
+      submittedBy: str(body.submittedBy).slice(0, 200),
+      submittedMethod: METHODS.includes(str(body.submittedMethod))
+        ? str(body.submittedMethod)
+        : "",
+      submittedAmount,
+      submittedReference: str(body.submittedReference).slice(0, 200),
     },
   };
 }

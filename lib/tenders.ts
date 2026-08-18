@@ -31,7 +31,9 @@ export type ItemCategory =
   | "sbd"
   | "sector"
   | "technical"
-  | "financial";
+  | "financial"
+  /** Final actions before the envelope goes in — not returnable documents. */
+  | "submission";
 
 export type DocumentKind =
   | "cipc"
@@ -73,6 +75,16 @@ export interface Tender {
   profileOverride: string;
   methodology: string;
   experience: string;
+  /* What was actually submitted, and the proof of it. */
+  submittedAt: string | null;
+  submittedBy: string;
+  submittedMethod: string;
+  submittedAmount: number | null;
+  submittedReference: string;
+  receiptFileKey: string | null;
+  receiptFileName: string;
+  receiptFileType: string;
+  receiptFileSize: number;
 }
 
 export interface TenderItem {
@@ -117,6 +129,7 @@ export const CATEGORY_LABELS: Record<ItemCategory, string> = {
   sector: "Sector Specific",
   technical: "Technical / Functionality",
   financial: "Financial / Pricing",
+  submission: "Before you submit",
 };
 
 export const CATEGORY_ORDER: ItemCategory[] = [
@@ -127,6 +140,7 @@ export const CATEGORY_ORDER: ItemCategory[] = [
   "technical",
   "financial",
   "sector",
+  "submission",
 ];
 
 export const DOCUMENT_KIND_LABELS: Record<DocumentKind, string> = {
@@ -192,6 +206,18 @@ const DEFAULT_MATRIX: SeedItem[] = [
   { category: "sector", label: "CIDB certificate (construction only)", required: false },
   { category: "sector", label: "COIDA letter of good standing", required: false },
   { category: "sector", label: "Professional body registration (PSIRA, SAPC, …)", required: false },
+
+  // Actions for the day of submission, not returnable documents. required:false
+  // keeps them out of the printed pack and out of the readiness blockers, where
+  // they would otherwise sit as permanent noise from the day a tender is added.
+  { category: "submission", label: "Pack printed in full and every page present", required: false },
+  { category: "submission", label: "Official MBD/SBD forms completed and inserted behind the matching dividers", required: false },
+  { category: "submission", label: "Every signature page signed by hand, in black ink", required: false },
+  { category: "submission", label: "Certified copies enclosed where the tender requires them", required: false },
+  { category: "submission", label: "All pages numbered", required: false },
+  { category: "submission", label: "No blank fields anywhere — N/A written where something does not apply", required: false },
+  { category: "submission", label: "Envelope sealed and marked with the bid number and description", required: false },
+  { category: "submission", label: "Delivered to the tender box or portal, with time to spare", required: false },
 ];
 
 export function defaultMatrix(): SeedItem[] {
@@ -313,7 +339,13 @@ export function assessTender(
   }
 
   /* 5. "If a section does not apply, write N/A rather than leaving it empty." */
-  const blank = items.filter((i) => !i.required && !i.attached && !i.note.trim());
+  // Submission steps are excluded: they are actions to take on the day, not
+  // returnables needing an N/A decision, and eight permanent warnings would
+  // drown the ones that matter.
+  const blank = items.filter(
+    (i) =>
+      i.category !== "submission" && !i.required && !i.attached && !i.note.trim()
+  );
   for (const item of blank) {
     issues.push({
       severity: "warning",
@@ -393,6 +425,16 @@ export function assessTender(
     }
   }
 
+  /* 8b. A submitted bid with no record of what went in is the position you
+        least want to be in if the municipality later says nothing arrived. */
+  if (tender.status === "submitted" && !tender.submittedAt) {
+    issues.push({
+      severity: "warning",
+      message:
+        "Marked submitted, but no submission date, method or proof of delivery is recorded.",
+    });
+  }
+
   /* 9. Somewhere to actually deliver it. */
   if (!tender.submissionDetail.trim()) {
     issues.push({
@@ -470,6 +512,15 @@ interface TenderRow {
   profile_override: string;
   methodology: string;
   experience: string;
+  submitted_at: string | null;
+  submitted_by: string;
+  submitted_method: string;
+  submitted_amount: number | null;
+  submitted_reference: string;
+  receipt_file_key: string | null;
+  receipt_file_name: string;
+  receipt_file_type: string;
+  receipt_file_size: number;
 }
 
 function toTender(r: TenderRow): Tender {
@@ -499,6 +550,15 @@ function toTender(r: TenderRow): Tender {
     profileOverride: r.profile_override ?? "",
     methodology: r.methodology ?? "",
     experience: r.experience ?? "",
+    submittedAt: r.submitted_at,
+    submittedBy: r.submitted_by ?? "",
+    submittedMethod: r.submitted_method ?? "",
+    submittedAmount: r.submitted_amount,
+    submittedReference: r.submitted_reference ?? "",
+    receiptFileKey: r.receipt_file_key,
+    receiptFileName: r.receipt_file_name ?? "",
+    receiptFileType: r.receipt_file_type ?? "",
+    receiptFileSize: r.receipt_file_size ?? 0,
   };
 }
 
@@ -624,6 +684,11 @@ export interface TenderInput {
   profileOverride: string;
   methodology: string;
   experience: string;
+  submittedAt: string | null;
+  submittedBy: string;
+  submittedMethod: string;
+  submittedAmount: number | null;
+  submittedReference: string;
 }
 
 /** The seeded compliance matrix, shared by manual creation and import. */
@@ -774,7 +839,9 @@ export async function updateTender(id: number, input: TenderInput): Promise<void
          closing_at = ?, briefing_at = ?, briefing_compulsory = ?,
          briefing_attended = ?, submission_method = ?, submission_detail = ?,
          bbbee_claimed_level = ?, status = ?, notes = ?,
-         profile_override = ?, methodology = ?, experience = ?
+         profile_override = ?, methodology = ?, experience = ?,
+         submitted_at = ?, submitted_by = ?, submitted_method = ?,
+         submitted_amount = ?, submitted_reference = ?
        WHERE id = ?`
     )
     .bind(
@@ -794,6 +861,11 @@ export async function updateTender(id: number, input: TenderInput): Promise<void
       input.profileOverride,
       input.methodology,
       input.experience,
+      input.submittedAt,
+      input.submittedBy,
+      input.submittedMethod,
+      input.submittedAmount,
+      input.submittedReference,
       id
     )
     .run();

@@ -86,6 +86,19 @@ export function TenderForm({
   const [methodology, setMethodology] = React.useState(tender?.methodology ?? "");
   const [experience, setExperience] = React.useState(tender?.experience ?? "");
   const [saving, setSaving] = React.useState(false);
+  const [submittedAt, setSubmittedAt] = React.useState(
+    toLocalInput(tender?.submittedAt ?? null)
+  );
+  const [submittedBy, setSubmittedBy] = React.useState(tender?.submittedBy ?? "");
+  const [submittedMethod, setSubmittedMethod] = React.useState(
+    tender?.submittedMethod ?? ""
+  );
+  const [submittedAmount, setSubmittedAmount] = React.useState(
+    tender?.submittedAmount != null ? String(tender.submittedAmount) : ""
+  );
+  const [submittedReference, setSubmittedReference] = React.useState(
+    tender?.submittedReference ?? ""
+  );
 
   const [drafts, setDrafts] = React.useState<Record<number, Draft>>(() =>
     Object.fromEntries(
@@ -149,6 +162,11 @@ export function TenderForm({
         items: items
           .filter((i) => !removed.has(i.id))
           .map((i) => ({ id: i.id, ...drafts[i.id] })),
+        submittedAt,
+        submittedBy,
+        submittedMethod,
+        submittedAmount: submittedAmount === "" ? null : Number(submittedAmount),
+        submittedReference,
         removedIds: [...removed],
         newItems: newRows
           .filter((r) => r.label.trim())
@@ -551,6 +569,79 @@ export function TenderForm({
 
 
       {isEdit ? (
+        <section className="space-y-4 rounded-lg border p-6">
+          <div>
+            <h2 className="font-display text-xl font-bold">Submission record</h2>
+            <p className="text-sm text-muted-foreground">
+              Fill this in on the day you deliver. It is the record you produce
+              if the buyer later says the bid never arrived.
+            </p>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="space-y-2">
+              <Label htmlFor="submittedAt">Delivered on</Label>
+              <Input
+                id="submittedAt"
+                type="datetime-local"
+                value={submittedAt}
+                onChange={(e) => setSubmittedAt(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="submittedMethod">How</Label>
+              <select
+                id="submittedMethod"
+                value={submittedMethod}
+                onChange={(e) => setSubmittedMethod(e.target.value)}
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              >
+                <option value="">Not recorded</option>
+                <option value="bid_box">Bid box</option>
+                <option value="hand">Hand delivered</option>
+                <option value="courier">Courier</option>
+                <option value="portal">Electronic portal</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div className="space-y-2">
+              <Label htmlFor="submittedBy">Delivered by</Label>
+              <Input
+                id="submittedBy"
+                value={submittedBy}
+                onChange={(e) => setSubmittedBy(e.target.value)}
+                placeholder="Who physically took it"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="submittedAmount">Amount offered (R)</Label>
+              <Input
+                id="submittedAmount"
+                type="number"
+                min="0"
+                step="0.01"
+                value={submittedAmount}
+                onChange={(e) => setSubmittedAmount(e.target.value)}
+                placeholder="Final bid total"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="submittedReference">Receipt / waybill no.</Label>
+              <Input
+                id="submittedReference"
+                value={submittedReference}
+                onChange={(e) => setSubmittedReference(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <ReceiptUpload tender={tender!} />
+        </section>
+      ) : null}
+
+      {isEdit ? (
         <section className="space-y-4">
           <div>
             <h2 className="font-display text-xl font-bold">Written sections</h2>
@@ -605,6 +696,99 @@ export function TenderForm({
         )}
       </Button>
     </form>
+  );
+}
+
+/** Proof of delivery — upload, view or replace. */
+function ReceiptUpload({ tender }: { tender: Tender }) {
+  const router = useRouter();
+  const [busy, setBusy] = React.useState(false);
+  const inputRef = React.useRef<HTMLInputElement>(null);
+
+  async function upload(file: File) {
+    setBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/admin/tenders/${tender.id}/receipt`, {
+        method: "POST",
+        body: fd,
+      });
+      const data = (await res.json()) as { error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Upload failed");
+      toast.success("Proof of delivery saved");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Upload failed");
+    } finally {
+      setBusy(false);
+      if (inputRef.current) inputRef.current.value = "";
+    }
+  }
+
+  async function remove() {
+    if (!window.confirm("Remove the stored proof of delivery?")) return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/tenders/${tender.id}/receipt`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Could not remove it");
+      toast.success("Removed");
+      router.refresh();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not remove it");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="space-y-2">
+      <Label>Proof of delivery</Label>
+      <div className="flex flex-wrap items-center gap-3 text-sm">
+        {tender.receiptFileKey ? (
+          <>
+            <a
+              href={`/api/admin/tenders/${tender.id}/receipt`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium underline hover:text-accent"
+            >
+              {tender.receiptFileName || "View receipt"}
+            </a>
+            <span className="text-xs text-muted-foreground">
+              {(tender.receiptFileSize / 1024).toFixed(0)} KB
+            </span>
+            <button
+              type="button"
+              onClick={remove}
+              disabled={busy}
+              className="text-xs text-muted-foreground underline hover:text-destructive"
+            >
+              remove
+            </button>
+          </>
+        ) : (
+          <span className="text-muted-foreground">Nothing uploaded</span>
+        )}
+        <input
+          ref={inputRef}
+          type="file"
+          accept="application/pdf,image/png,image/jpeg,image/webp"
+          disabled={busy}
+          onChange={(e) => {
+            const f = e.target.files?.[0];
+            if (f) void upload(f);
+          }}
+          className="max-w-[14rem] text-xs file:mr-2 file:rounded file:border file:bg-secondary file:px-2 file:py-1 file:text-xs"
+        />
+      </div>
+      <p className="text-xs text-muted-foreground">
+        A stamped bid box slip, courier waybill or portal confirmation. Stored
+        privately, behind this login.
+      </p>
+    </div>
   );
 }
 
