@@ -1,5 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
+import { getCompanyProfile } from "@/lib/company";
 import { getPricing, getTender, priceTotals, VAT_RATE } from "@/lib/tenders";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -37,7 +38,7 @@ export async function GET(
   const loaded = await getTender(id);
   if (!loaded) return new Response("Not found", { status: 404 });
 
-  const lines = await getPricing(id);
+  const [lines, profile] = await Promise.all([getPricing(id), getCompanyProfile()]);
   const totals = priceTotals(lines);
 
   const rows: string[] = [];
@@ -57,9 +58,17 @@ export async function GET(
     );
   });
   rows.push("");
-  rows.push([" ", " ", " ", " ", "Subtotal (excl VAT)", totals.excl.toFixed(2)].map(cell).join(","));
-  rows.push([" ", " ", " ", " ", `VAT @ ${(VAT_RATE * 100).toFixed(0)}%`, totals.vat.toFixed(2)].map(cell).join(","));
-  rows.push([" ", " ", " ", " ", "Total (incl VAT)", totals.incl.toFixed(2)].map(cell).join(","));
+  // VAT only appears when we are registered to charge it. This file is one
+  // careless forward away from the buyer, and a quoted VAT amount from a
+  // vendor that cannot lawfully charge it is a pricing error on a binding
+  // offer, not a display detail.
+  if (profile.vatRegistered) {
+    rows.push([" ", " ", " ", " ", "Subtotal (excl VAT)", totals.excl.toFixed(2)].map(cell).join(","));
+    rows.push([" ", " ", " ", " ", `VAT @ ${(VAT_RATE * 100).toFixed(0)}%`, totals.vat.toFixed(2)].map(cell).join(","));
+    rows.push([" ", " ", " ", " ", "Total (incl VAT)", totals.incl.toFixed(2)].map(cell).join(","));
+  } else {
+    rows.push([" ", " ", " ", " ", "Total (no VAT - not VAT registered)", totals.excl.toFixed(2)].map(cell).join(","));
+  }
 
   const safeRef = loaded.tender.reference.replace(/[^A-Za-z0-9._-]+/g, "-") || "tender";
 

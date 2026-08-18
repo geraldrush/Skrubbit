@@ -65,10 +65,15 @@ export function PricingEditor({
   tenderId,
   lines,
   catalogue,
+  vatRegistered,
 }: {
   tenderId: number;
   lines: PricingLine[];
   catalogue: CatalogueOption[];
+  /** Quoting VAT we are not registered to charge is an unlawful charge on a
+   *  binding offer, so the schedule follows registration rather than always
+   *  adding 15%. */
+  vatRegistered: boolean;
 }) {
   const router = useRouter();
   const [drafts, setDrafts] = React.useState<Draft[]>(
@@ -83,7 +88,7 @@ export function PricingEditor({
   const totals = React.useMemo(() => {
     const excl = drafts.reduce((s, d) => s + n(d.quantity) * n(d.unitPrice), 0);
     const cost = drafts.reduce((s, d) => s + n(d.quantity) * n(d.costPrice), 0);
-    const vat = excl * VAT_RATE;
+    const vat = vatRegistered ? excl * VAT_RATE : 0;
     const margin = excl - cost;
     return {
       excl,
@@ -93,7 +98,7 @@ export function PricingEditor({
       marginPct: excl > 0 ? (margin / excl) * 100 : 0,
       anyCost: cost > 0,
     };
-  }, [drafts]);
+  }, [drafts, vatRegistered]);
 
   async function save() {
     setSaving(true);
@@ -264,18 +269,33 @@ export function PricingEditor({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <dl className="space-y-1 rounded-lg border p-4 text-sm">
-          <div className="flex justify-between">
-            <dt>Subtotal (excl VAT)</dt>
-            <dd className="font-medium tabular-nums">{formatZAR(totals.excl)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt>VAT @ {(VAT_RATE * 100).toFixed(0)}%</dt>
-            <dd className="font-medium tabular-nums">{formatZAR(totals.vat)}</dd>
-          </div>
-          <div className="flex justify-between border-t pt-1 text-base font-bold">
-            <dt>Total (incl VAT)</dt>
-            <dd className="tabular-nums">{formatZAR(totals.incl)}</dd>
-          </div>
+          {vatRegistered ? (
+            <>
+              <div className="flex justify-between">
+                <dt>Subtotal (excl VAT)</dt>
+                <dd className="font-medium tabular-nums">{formatZAR(totals.excl)}</dd>
+              </div>
+              <div className="flex justify-between">
+                <dt>VAT @ {(VAT_RATE * 100).toFixed(0)}%</dt>
+                <dd className="font-medium tabular-nums">{formatZAR(totals.vat)}</dd>
+              </div>
+              <div className="flex justify-between border-t pt-1 text-base font-bold">
+                <dt>Total (incl VAT)</dt>
+                <dd className="tabular-nums">{formatZAR(totals.incl)}</dd>
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex justify-between border-t-0 text-base font-bold">
+                <dt>Total</dt>
+                <dd className="tabular-nums">{formatZAR(totals.excl)}</dd>
+              </div>
+              <p className="pt-1 text-xs text-muted-foreground">
+                No VAT added — not registered for VAT. Change this under
+                Documents → Company details if that is wrong.
+              </p>
+            </>
+          )}
         </dl>
 
         <div className="rounded-lg border border-dashed p-4 text-sm">

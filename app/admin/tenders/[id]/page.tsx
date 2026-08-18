@@ -4,6 +4,7 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, FileText } from "lucide-react";
 
 import { getProducts } from "@/lib/products";
+import { getCompanyProfile } from "@/lib/company";
 import {
   assessTender,
   getPricing,
@@ -34,11 +35,12 @@ export default async function TenderPage({
   const id = Number((await params).id);
   if (!Number.isInteger(id) || id <= 0) notFound();
 
-  const [loaded, documents, pricing, products] = await Promise.all([
+  const [loaded, documents, pricing, products, profile] = await Promise.all([
     getTender(id),
     listDocuments(),
     getPricing(id),
     getProducts(),
+    getCompanyProfile(),
   ]);
   if (!loaded) notFound();
 
@@ -92,6 +94,7 @@ export default async function TenderPage({
           tenderId={tender.id}
           lines={pricing}
           catalogue={catalogue}
+          vatRegistered={profile.vatRegistered}
         />
       </section>
 

@@ -32,10 +32,12 @@ export default async function DocumentsPage() {
       />
 
       <p className="mb-6 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">
-        This records <strong>details only</strong> — reference numbers, validity
-        dates and where each file is kept. The documents themselves stay where
-        they are; certified ID copies and tax documents are deliberately not
-        stored here.
+        Reference numbers and validity dates, and — where you upload one — the
+        certificate itself. <strong>Uploaded files are stored privately</strong>:
+        they sit behind this admin login, are never served on a public URL, and
+        are excluded from search engines and shared caches. They are attached to
+        the generated tender pack and to the enclosures download, so a bid can
+        be assembled and printed from one place.
       </p>
 
       <section className="mb-10">
