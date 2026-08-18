@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { FileText, Loader2, Plus, Save, Trash2 } from "lucide-react";
+import { FileText, Loader2, Plus, Save, Trash2, Undo2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -36,6 +36,15 @@ interface Draft {
   signed: boolean;
   required: boolean;
   note: string;
+}
+
+/** A row added in the editor, before the server has given it an id. */
+interface NewRow {
+  key: string;
+  category: ItemCategory;
+  label: string;
+  required: boolean;
+  signatureRequired: boolean;
 }
 
 export function TenderForm({
@@ -91,6 +100,31 @@ export function TenderForm({
     setDrafts((d) => ({ ...d, [id]: { ...d[id], ...change } }));
   }
 
+  // Rows the user has added or removed in this editing session. Nothing is
+  // written until Save, so a mistaken removal is undoable up to that point.
+  const [newRows, setNewRows] = React.useState<NewRow[]>([]);
+  const [removed, setRemoved] = React.useState<Set<number>>(new Set());
+
+  function toggleRemoved(id: number) {
+    setRemoved((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function addRow(category: ItemCategory) {
+    setNewRows((rows) => [
+      ...rows,
+      { key: `new-${Date.now()}-${rows.length}`, category, label: "", required: true, signatureRequired: false },
+    ]);
+  }
+
+  function patchNew(key: string, change: Partial<NewRow>) {
+    setNewRows((rows) => rows.map((r) => (r.key === key ? { ...r, ...change } : r)));
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setSaving(true);
@@ -112,7 +146,18 @@ export function TenderForm({
         profileOverride,
         methodology,
         experience,
-        items: items.map((i) => ({ id: i.id, ...drafts[i.id] })),
+        items: items
+          .filter((i) => !removed.has(i.id))
+          .map((i) => ({ id: i.id, ...drafts[i.id] })),
+        removedIds: [...removed],
+        newItems: newRows
+          .filter((r) => r.label.trim())
+          .map((r) => ({
+            category: r.category,
+            label: r.label.trim(),
+            required: r.required,
+            signatureRequired: r.signatureRequired,
+          })),
       };
 
       const res = await fetch(
@@ -123,10 +168,29 @@ export function TenderForm({
           body: JSON.stringify(payload),
         }
       );
-      const data = (await res.json()) as { error?: string; id?: number };
+      const data = (await res.json()) as {
+        error?: string;
+        id?: number;
+        added?: number;
+        removed?: number;
+      };
       if (!res.ok) throw new Error(data.error ?? "Could not save");
 
-      toast.success(isEdit ? "Tender saved" : `${title} added`);
+      const added = data.added ?? 0;
+      const gone = data.removed ?? 0;
+      const extra = [
+        added ? `${added} row${added === 1 ? "" : "s"} added` : "",
+        gone ? `${gone} removed` : "",
+      ]
+        .filter(Boolean)
+        .join(", ");
+      toast.success(
+        isEdit ? `Tender saved${extra ? ` — ${extra}` : ""}` : `${title} added`
+      );
+      // The server owns row ids, so clear local additions/removals and let the
+      // refreshed page supply the real rows.
+      setNewRows([]);
+      setRemoved(new Set());
       if (!isEdit && data.id) router.push(`/admin/tenders/${data.id}`);
       router.refresh();
     } catch (err) {
@@ -328,7 +392,10 @@ export function TenderForm({
             </p>
           </div>
 
-          {CATEGORY_ORDER.filter((c) => byCategory.has(c)).map((category) => (
+          {/* Every category renders, not only those with rows — otherwise a
+              tender asking for something in an empty section would have
+              nowhere to add it. */}
+          {CATEGORY_ORDER.map((category) => (
             <div key={category} className="rounded-lg border">
               <h3 className="border-b bg-muted/40 px-4 py-2 text-sm font-semibold">
                 {CATEGORY_LABELS[category]}
@@ -337,22 +404,30 @@ export function TenderForm({
                 {(byCategory.get(category) ?? []).map((item) => {
                   const d = drafts[item.id];
                   if (!d) return null;
+                  const isRemoved = removed.has(item.id);
                   return (
-                    <li key={item.id} className="grid gap-2 p-3 sm:grid-cols-[1fr_auto]">
+                    <li
+                      key={item.id}
+                      className={`grid gap-2 p-3 sm:grid-cols-[1fr_auto] ${
+                        isRemoved ? "opacity-50" : ""
+                      }`}
+                    >
                       <div>
                         <p
-                          className={
+                          className={`${
                             d.required ? "font-medium" : "font-medium text-muted-foreground"
-                          }
+                          } ${isRemoved ? "line-through" : ""}`}
                         >
                           {item.label}
                         </p>
-                        <Input
-                          value={d.note}
-                          onChange={(e) => patch(item.id, { note: e.target.value })}
-                          placeholder={d.required ? "Note (optional)" : 'e.g. "N/A — not construction"'}
-                          className="mt-1.5 h-8 text-sm"
-                        />
+                        {isRemoved ? null : (
+                          <Input
+                            value={d.note}
+                            onChange={(e) => patch(item.id, { note: e.target.value })}
+                            placeholder={d.required ? "Note (optional)" : 'e.g. "N/A — not construction"'}
+                            className="mt-1.5 h-8 text-sm"
+                          />
+                        )}
                       </div>
                       <div className="flex flex-wrap items-start gap-4 text-sm sm:pl-4">
                         <label className="flex items-center gap-1.5 font-medium">
@@ -384,10 +459,90 @@ export function TenderForm({
                             Signed
                           </label>
                         ) : null}
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => toggleRemoved(item.id)}
+                          aria-label={
+                            isRemoved ? `Keep ${item.label}` : `Remove ${item.label}`
+                          }
+                          title={isRemoved ? "Keep this row" : "Remove this row"}
+                        >
+                          {isRemoved ? (
+                            <Undo2 className="h-4 w-4" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
+                        </Button>
                       </div>
                     </li>
                   );
                 })}
+
+                {newRows
+                  .filter((r) => r.category === category)
+                  .map((r) => (
+                    <li key={r.key} className="grid gap-2 bg-secondary/40 p-3 sm:grid-cols-[1fr_auto]">
+                      <div>
+                        <Input
+                          value={r.label}
+                          onChange={(e) => patchNew(r.key, { label: e.target.value })}
+                          placeholder="What else does this tender ask for?"
+                          className="h-8 text-sm"
+                          autoFocus
+                        />
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          New row — saved when you save the tender.
+                        </p>
+                      </div>
+                      <div className="flex flex-wrap items-start gap-4 text-sm sm:pl-4">
+                        <label className="flex items-center gap-1.5 font-medium">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-border"
+                            checked={r.required}
+                            onChange={(e) => patchNew(r.key, { required: e.target.checked })}
+                          />
+                          Required
+                        </label>
+                        <label className="flex items-center gap-1.5 font-medium">
+                          <input
+                            type="checkbox"
+                            className="h-4 w-4 rounded border-border"
+                            checked={r.signatureRequired}
+                            onChange={(e) =>
+                              patchNew(r.key, { signatureRequired: e.target.checked })
+                            }
+                          />
+                          Needs signature
+                        </label>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          onClick={() =>
+                            setNewRows((rows) => rows.filter((x) => x.key !== r.key))
+                          }
+                          aria-label="Discard this new row"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+
+                <li className="p-2">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => addRow(category)}
+                  >
+                    <Plus className="mr-1 h-4 w-4" /> Add a row to{" "}
+                    {CATEGORY_LABELS[category]}
+                  </Button>
+                </li>
               </ul>
             </div>
           ))}

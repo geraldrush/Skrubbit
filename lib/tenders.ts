@@ -834,6 +834,73 @@ export async function updateItems(
   );
 }
 
+export interface NewItemInput {
+  category: ItemCategory;
+  label: string;
+  required: boolean;
+  signatureRequired: boolean;
+}
+
+/**
+ * Appends rows to a tender's matrix.
+ *
+ * Real tender packs carry returnables the seeded checklist cannot know about —
+ * a JV agreement, municipal rates clearance, a sector certificate. Without
+ * this the only way to add one was editing the database by hand, which is not
+ * a thing the person assembling a bid at 9pm can do.
+ */
+export async function addItems(
+  tenderId: number,
+  items: NewItemInput[]
+): Promise<void> {
+  if (!items.length) return;
+  const d = db();
+
+  const last = await d
+    .prepare("SELECT COALESCE(MAX(position), -1) AS p FROM tender_items WHERE tender_id = ?")
+    .bind(tenderId)
+    .first<{ p: number }>();
+  let position = (last?.p ?? -1) + 1;
+
+  await d.batch(
+    items.map((item) =>
+      d
+        .prepare(
+          `INSERT INTO tender_items
+             (tender_id, category, label, required, signature_required, position)
+           VALUES (?, ?, ?, ?, ?, ?)`
+        )
+        .bind(
+          tenderId,
+          item.category,
+          item.label,
+          item.required ? 1 : 0,
+          item.signatureRequired ? 1 : 0,
+          position++
+        )
+    )
+  );
+}
+
+/**
+ * Removes rows from a tender's matrix.
+ *
+ * One statement per id rather than an IN list: D1 caps a query at 100 bound
+ * parameters, and a long selection would fail outright. Each delete is scoped
+ * by tender_id as well, so an id from another tender cannot be removed.
+ */
+export async function deleteItems(tenderId: number, ids: number[]): Promise<void> {
+  if (!ids.length) return;
+  const d = db();
+  await d.batch(
+    ids.map((id) =>
+      d
+        .prepare("DELETE FROM tender_items WHERE id = ? AND tender_id = ?")
+        .bind(id, tenderId)
+    )
+  );
+}
+
 export async function deleteTender(id: number): Promise<void> {
   const d = db();
   // Explicit rather than relying on ON DELETE CASCADE, which only fires when

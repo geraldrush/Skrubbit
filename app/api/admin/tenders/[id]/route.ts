@@ -1,11 +1,16 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import {
+  addItems,
+  CATEGORY_LABELS,
+  deleteItems,
   deleteTender,
   getTender,
   updateItems,
   updateTender,
+  type ItemCategory,
   type ItemPatch,
+  type NewItemInput,
 } from "@/lib/tenders";
 import { validateTenderBody } from "@/lib/tender-validation";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -66,10 +71,42 @@ export async function PUT(
         }))
     : [];
 
+  // Rows the user removed. Scoped to ids this tender actually owns, and
+  // applied before inserts so a remove-and-re-add in one save behaves.
+  const removedIds: number[] = Array.isArray(body.removedIds)
+    ? (body.removedIds as unknown[])
+        .map((n) => Number(n))
+        .filter((n) => Number.isInteger(n) && valid.has(n))
+    : [];
+
+  // Rows the user added. A row with no label is an empty box left behind,
+  // not data.
+  const categories = Object.keys(CATEGORY_LABELS) as ItemCategory[];
+  const newItems: NewItemInput[] = Array.isArray(body.newItems)
+    ? (body.newItems as Record<string, unknown>[])
+        .slice(0, 50)
+        .map((raw) => ({
+          category: categories.includes(String(raw.category) as ItemCategory)
+            ? (String(raw.category) as ItemCategory)
+            : "sbd",
+          label: typeof raw.label === "string" ? raw.label.trim().slice(0, 300) : "",
+          required: raw.required !== false,
+          signatureRequired: raw.signatureRequired === true,
+        }))
+        .filter((i) => i.label)
+    : [];
+
   await updateTender(id, result.value);
   await updateItems(id, patches);
+  if (removedIds.length) await deleteItems(id, removedIds);
+  if (newItems.length) await addItems(id, newItems);
 
-  return Response.json({ ok: true, id });
+  return Response.json({
+    ok: true,
+    id,
+    added: newItems.length,
+    removed: removedIds.length,
+  });
 }
 
 export async function DELETE(
