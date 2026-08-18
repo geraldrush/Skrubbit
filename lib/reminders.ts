@@ -16,6 +16,7 @@ import {
 
 export type ReminderKind =
   | "briefing"
+  | "closing_10d"
   | "closing_7d"
   | "closing_48h"
   | "closing_24h";
@@ -114,12 +115,29 @@ export function dueReminders(
   const hoursLeft = hoursUntil(tender.closingAt, now);
   if (hoursLeft <= 0) return out;
 
+  // Whole days left, for the wording. The thresholds below are "at or past",
+  // so a step fires on the first run inside its window rather than exactly on
+  // it — a bid caught at 171 hours is on the ten-day step but must not be told
+  // it "closes in ten days", which it plainly does not.
+  const daysLeft = Math.max(1, Math.round(hoursLeft / 24));
+
   // Most urgent first, and only one closing reminder per run: sending the
   // 7-day and 48-hour warnings in the same batch would be noise.
   const steps: Array<[ReminderKind, number, string, string]> = [
     ["closing_24h", 24, "closes in under 24 hours", "Last chance to deliver it."],
     ["closing_48h", 48, "closes in under 48 hours", "Allow travel time for a physical drop-off."],
-    ["closing_7d", 168, "closes in a week", "Time to chase anything still outstanding."],
+    [
+      "closing_7d",
+      168,
+      `closes in ${daysLeft} days`,
+      "Time to chase anything still outstanding.",
+    ],
+    [
+      "closing_10d",
+      240,
+      `closes in ${daysLeft} days`,
+      "Early warning — still time to order a rates clearance or chase a signature.",
+    ],
   ];
 
   // Only the most urgent applicable step, and never fall back to a gentler one.

@@ -2,7 +2,7 @@
   "name": "skrubbit-reminders",
   "private": true,
   "version": "0.1.0",
-  "description": "Daily cron that asks the Skrubbit app to send tender deadline reminders",
+  "description": "Daily cron that refreshes the eTenders mirror and asks the Skrubbit app to send deadline reminders and new-advert alerts",
   "scripts": {
     "deploy": "wrangler deploy",
     "tail": "wrangler tail",

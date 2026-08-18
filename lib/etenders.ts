@@ -55,6 +55,8 @@ export interface RemoteTender {
   description: string;
   department: string;
   closingAt: string | null;
+  /** When it was advertised, from the OCDS release date. */
+  publishedAt: string | null;
   briefingAt: string | null;
   briefingCompulsory: boolean;
   briefingVenue: string;
@@ -93,6 +95,7 @@ interface LocalRow {
   description: string;
   department: string;
   closing_at: string | null;
+  published_at: string | null;
   briefing_at: string | null;
   briefing_compulsory: number;
   briefing_venue: string;
@@ -114,6 +117,7 @@ function fromRow(r: LocalRow): RemoteTender {
     description: r.description,
     department: r.department,
     closingAt: r.closing_at,
+    publishedAt: r.published_at,
     briefingAt: r.briefing_at,
     briefingCompulsory: r.briefing_compulsory === 1,
     briefingVenue: r.briefing_venue,

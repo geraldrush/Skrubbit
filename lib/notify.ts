@@ -20,7 +20,10 @@ export interface EmailEnv {
 }
 
 export interface Message {
-  to: string;
+  /** One address, or several. Sent as one message with several recipients:
+   *  these are colleagues on the same CSD profile, not a mailing list, so
+   *  seeing each other on it is correct and halves the send volume. */
+  to: string | string[];
   subject: string;
   html: string;
   text: string;
@@ -29,6 +32,20 @@ export interface Message {
 export interface SendResult {
   ok: boolean;
   detail: string;
+}
+
+/**
+ * Splits the stored notification address into recipients.
+ *
+ * Stored as one comma-separated field rather than its own table: it is two or
+ * three colleagues, and a table would be a join to maintain for no gain.
+ */
+export function parseRecipients(value: string): string[] {
+  return value
+    .split(/[,;]/)
+    .map((address) => address.trim())
+    .filter((address) => address.includes("@"))
+    .slice(0, 10);
 }
 
 /** Whether email is configured at all, so callers can fail quietly. */
@@ -61,7 +78,9 @@ export async function sendEmail(env: EmailEnv, message: Message): Promise<SendRe
           email: env.BREVO_SENDER,
           name: env.BREVO_SENDER_NAME || "Skrubb-it Tenders",
         },
-        to: [{ email: message.to }],
+        to: (Array.isArray(message.to) ? message.to : [message.to]).map((email) => ({
+          email,
+        })),
         subject: message.subject.slice(0, 200),
         htmlContent: message.html,
         textContent: message.text,

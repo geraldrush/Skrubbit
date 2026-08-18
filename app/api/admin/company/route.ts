@@ -38,7 +38,8 @@ export async function PUT(req: Request) {
     website: str(body.website, 200),
     // The reusable profile paragraphs, so this one is allowed to be long.
     profileText: str(body.profileText, 8000),
-    notifyEmail: str(body.notifyEmail, 200),
+    notifyEmail: str(body.notifyEmail, 400),
+    alertProvinces: str(body.alertProvinces, 200),
   };
 
   await updateCompanyProfile(profile);

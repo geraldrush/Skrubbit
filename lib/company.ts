@@ -32,6 +32,9 @@ export interface CompanyProfile {
   /** Where deadline reminders go. Separate from `email`, which is the business
    *  address printed on bid documents and is often an unwatched shared inbox. */
   notifyEmail: string;
+  /** Provinces whose new adverts are worth an email, comma-separated. Empty
+   *  turns the new-tender alerts off; the deadline reminders are unaffected. */
+  alertProvinces: string;
 }
 
 interface ProfileRow {
@@ -49,6 +52,7 @@ interface ProfileRow {
   website: string;
   profile_text: string;
   notify_email: string;
+  alert_provinces: string;
 }
 
 const EMPTY: CompanyProfile = {
@@ -66,6 +70,7 @@ const EMPTY: CompanyProfile = {
   website: "",
   profileText: "",
   notifyEmail: "",
+  alertProvinces: "",
 };
 
 export async function getCompanyProfile(): Promise<CompanyProfile> {
@@ -89,6 +94,7 @@ export async function getCompanyProfile(): Promise<CompanyProfile> {
     website: row.website,
     profileText: row.profile_text,
     notifyEmail: row.notify_email ?? "",
+    alertProvinces: row.alert_provinces ?? "",
   };
 }
 
@@ -99,7 +105,8 @@ export async function updateCompanyProfile(p: CompanyProfile): Promise<void> {
          legal_name = ?, trading_name = ?, registration_number = ?,
          vat_number = ?, vat_registered = ?, physical_address = ?, postal_address = ?,
          signatory_name = ?, signatory_position = ?, phone = ?, email = ?,
-         website = ?, profile_text = ?, notify_email = ?, updated_at = datetime('now')
+         website = ?, profile_text = ?, notify_email = ?, alert_provinces = ?,
+         updated_at = datetime('now')
        WHERE id = 1`
     )
     .bind(
@@ -116,7 +123,8 @@ export async function updateCompanyProfile(p: CompanyProfile): Promise<void> {
       p.email,
       p.website,
       p.profileText,
-      p.notifyEmail
+      p.notifyEmail,
+      p.alertProvinces
     )
     .run();
 }

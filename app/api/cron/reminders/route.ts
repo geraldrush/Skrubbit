@@ -1,53 +1,38 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { getCompanyProfile } from "@/lib/company";
-import { emailConfigured, sendEmail } from "@/lib/notify";
+import { requireCron } from "@/lib/cron-auth";
+import { emailConfigured, parseRecipients, sendEmail } from "@/lib/notify";
 import { dueReminders, type ReminderKind } from "@/lib/reminders";
+import {
+  buildDigest,
+  markAnnounced,
+  parseProvinces,
+  unannouncedAdverts,
+} from "@/lib/tender-alerts";
 import { itemsByTender, listDocuments, listTenders } from "@/lib/tenders";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Sends deadline reminders. Called daily by the cron worker.
+ * The daily notification pass, called by the cron worker.
  *
- * Not behind the admin session — a cron has no cookie — so it authenticates on
- * a shared secret instead, compared in constant time. Without CRON_SECRET set
- * the endpoint refuses outright rather than running open, so a missing secret
- * fails closed instead of exposing a send loop to the internet.
+ * Two jobs, one run and one recipient lookup: deadline reminders for tenders
+ * already in the register, then a digest of adverts newly published in the
+ * provinces being watched. Both go to the same address and neither is worth a
+ * schedule of its own.
  */
-
-function timingSafeEqual(a: string, b: string): boolean {
-  const ab = new TextEncoder().encode(a);
-  const bb = new TextEncoder().encode(b);
-  let diff = ab.length ^ bb.length;
-  for (let i = 0; i < Math.max(ab.length, bb.length); i++) {
-    diff |= (ab[i] ?? 0) ^ (bb[i] ?? 0);
-  }
-  return diff === 0;
-}
 
 export async function POST(req: Request) {
   const { env } = getCloudflareContext();
-  const secret = (env as { CRON_SECRET?: string }).CRON_SECRET;
-
-  if (!secret) {
-    return Response.json(
-      { error: "Reminders are not configured (CRON_SECRET unset)." },
-      { status: 503 }
-    );
-  }
-
-  const supplied =
-    req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ??
-    req.headers.get("x-cron-secret") ??
-    "";
-  if (!timingSafeEqual(supplied, secret)) {
-    return Response.json({ error: "Forbidden" }, { status: 403 });
-  }
+  const denied = requireCron(req, env as { CRON_SECRET?: string });
+  if (denied) return denied;
 
   const profile = await getCompanyProfile();
-  const recipient = profile.notifyEmail || profile.email;
-  if (!recipient) {
+  const recipients = parseRecipients(profile.notifyEmail || profile.email);
+  // Kept as a string for the ledgers, which record who a warning went to.
+  const recipient = recipients.join(", ");
+  if (!recipients.length) {
     return Response.json(
       { ok: true, skipped: "No notification address set under Company details." },
       { status: 200 }
@@ -95,7 +80,7 @@ export async function POST(req: Request) {
 
     for (const reminder of due) {
       const result = await sendEmail(env, {
-        to: recipient,
+        to: recipients,
         subject: reminder.subject,
         html: reminder.html,
         text: reminder.text,
@@ -126,5 +111,42 @@ export async function POST(req: Request) {
     }
   }
 
-  return Response.json({ ok: true, sent, failed, checked: tenders.length });
+  /* ---------------------- new adverts worth knowing about ---------------- */
+
+  const provinces = parseProvinces(profile.alertProvinces);
+  let announced = 0;
+
+  if (provinces.length) {
+    const adverts = await unannouncedAdverts(provinces, now);
+    const digest = buildDigest(adverts, provinces, baseUrl, now);
+
+    if (digest) {
+      const result = await sendEmail(env, {
+        to: recipients,
+        subject: digest.subject,
+        html: digest.html,
+        text: digest.text,
+      });
+
+      // Marked either way, for the same reason the reminders are: an advert
+      // whose email failed and was not written down is re-announced every
+      // morning until it drops out of the window.
+      await markAnnounced(digest.ocids, recipient, result.ok, result.detail);
+
+      if (result.ok) announced = digest.ocids.length;
+      else {
+        failed++;
+        console.error("[alerts] digest failed", result.detail);
+      }
+    }
+  }
+
+  return Response.json({
+    ok: true,
+    sent,
+    failed,
+    checked: tenders.length,
+    announced,
+    watching: provinces,
+  });
 }

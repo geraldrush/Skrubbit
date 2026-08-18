@@ -33,6 +33,21 @@ const WINDOW_DAYS = 365;
 /** A run that started longer ago than this is assumed dead. */
 const STALE_RUN_MS = 10 * 60 * 1000;
 
+/* --------------------------- the freshness poll --------------------------- */
+
+/** How far back the freshness poll asks for adverts. Wider than the daily
+ *  cadence it runs on, so a missed or failed run doesn't lose a day's tenders. */
+const RECENT_DAYS = 4;
+/** Enough to reach the end of that window and see the empty page that proves
+ *  it. A live run took eight pages to cover four days (430 records) — right on
+ *  the old cap, which meant stopping without knowing whether the oldest day had
+ *  been reached. The window slides daily, so a day truncated here is never
+ *  looked at again; the headroom is what stops that. */
+const RECENT_MAX_PAGES = 12;
+/** A narrow window is a different request from a year-wide one — the same feed
+ *  that takes 75s for a full page answers these in 8-30s. */
+const RECENT_TIMEOUT_MS = 60_000;
+
 function db(): D1Database {
   return getCloudflareContext().env.DB;
 }
@@ -109,18 +124,24 @@ export async function syncIsDue(): Promise<boolean> {
 
 interface RawRelease {
   ocid?: string;
+  /** OCDS release date — on this feed, when the tender was advertised. */
+  date?: string;
   buyer?: { name?: string };
   tender?: Record<string, unknown>;
 }
 
-async function fetchPage(page: number): Promise<RawRelease[] | null> {
-  const from = new Date(Date.now() - WINDOW_DAYS * 864e5).toISOString().slice(0, 10);
+async function fetchPage(
+  page: number,
+  windowDays: number = WINDOW_DAYS,
+  timeoutMs: number = PAGE_TIMEOUT_MS
+): Promise<RawRelease[] | null> {
+  const from = new Date(Date.now() - windowDays * 864e5).toISOString().slice(0, 10);
   const to = new Date(Date.now() + 864e5).toISOString().slice(0, 10);
   const url = `${BASE}?PageNumber=${page}&PageSize=${PAGE_SIZE}&dateFrom=${from}&dateTo=${to}`;
 
   try {
     const res = await fetch(url, {
-      signal: AbortSignal.timeout(PAGE_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
       headers: { accept: "application/json" },
       // The mirror is the cache; caching the upstream too would only serve
       // this crawl stale pages.
@@ -146,6 +167,7 @@ interface Mapped {
   description: string;
   department: string;
   closingAt: string | null;
+  publishedAt: string | null;
   briefingAt: string | null;
   briefingCompulsory: number;
   briefingVenue: string;
@@ -180,6 +202,11 @@ function map(release: RawRelease): Mapped | null {
     description: str(t.description),
     department,
     closingAt: ocdsToSast(t.tenderPeriod?.endDate),
+    // When the tender was advertised. `date` is the OCDS release date; on this
+    // feed it is the advert date and is what dateFrom/dateTo filter on.
+    // tenderPeriod.startDate says the same thing and covers the odd release
+    // that omits it.
+    publishedAt: ocdsToSast(release.date) ?? ocdsToSast(t.tenderPeriod?.startDate),
     briefingAt: isSession ? ocdsToSast(briefing?.date) : null,
     briefingCompulsory: isSession && briefing?.compulsory ? 1 : 0,
     briefingVenue: isSession ? str(briefing?.venue) : "",
@@ -204,16 +231,19 @@ async function upsert(rows: Mapped[]): Promise<void> {
         .prepare(
           `INSERT INTO remote_tenders
              (ocid, reference, title, description, department, closing_at,
-              briefing_at, briefing_compulsory, briefing_venue, province,
-              category, delivery_location, value_amount, contact_name,
+              published_at, briefing_at, briefing_compulsory, briefing_venue,
+              province, category, delivery_location, value_amount, contact_name,
               contact_email, contact_phone, document_url, search_text, synced_at)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, datetime('now'))
            ON CONFLICT(ocid) DO UPDATE SET
              reference = excluded.reference,
              title = excluded.title,
              description = excluded.description,
              department = excluded.department,
              closing_at = excluded.closing_at,
+             -- Never overwritten with NULL: an older mirrored row that predates
+             -- this column would otherwise keep losing the advert date it has.
+             published_at = COALESCE(excluded.published_at, published_at),
              briefing_at = excluded.briefing_at,
              briefing_compulsory = excluded.briefing_compulsory,
              briefing_venue = excluded.briefing_venue,
@@ -230,12 +260,35 @@ async function upsert(rows: Mapped[]): Promise<void> {
         )
         .bind(
           r.ocid, r.reference, r.title, r.description, r.department, r.closingAt,
-          r.briefingAt, r.briefingCompulsory, r.briefingVenue, r.province,
-          r.category, r.deliveryLocation, r.valueAmount, r.contactName,
+          r.publishedAt, r.briefingAt, r.briefingCompulsory, r.briefingVenue,
+          r.province, r.category, r.deliveryLocation, r.valueAmount, r.contactName,
           r.contactEmail, r.contactPhone, r.documentUrl, r.searchText
         )
     )
   );
+}
+
+/**
+ * Takes the crawl lock.
+ *
+ * One lock for every walk of the feed, not one per caller: fetching pages
+ * concurrently is what makes this feed start refusing requests, and the
+ * freshness poll and the background crawl are both walks of the same feed.
+ * The started_at guard lets a run that died without clearing the flag be
+ * taken over rather than wedging the crawl forever.
+ */
+async function claimRun(d: D1Database): Promise<boolean> {
+  const claimed = await d
+    .prepare(
+      `UPDATE sync_state
+          SET running = 1, started_at = datetime('now')
+        WHERE id = 1
+          AND (running = 0
+               OR started_at IS NULL
+               OR started_at < datetime('now', '-10 minutes'))`
+    )
+    .run();
+  return Boolean(claimed.meta.changes);
 }
 
 /**
@@ -251,18 +304,7 @@ export async function runSyncBatch(): Promise<{
 }> {
   const d = db();
 
-  // Claim the run. The started_at guard lets a crashed run be taken over.
-  const claimed = await d
-    .prepare(
-      `UPDATE sync_state
-          SET running = 1, started_at = datetime('now')
-        WHERE id = 1
-          AND (running = 0
-               OR started_at IS NULL
-               OR started_at < datetime('now', '-10 minutes'))`
-    )
-    .run();
-  if (!claimed.meta.changes) {
+  if (!(await claimRun(d))) {
     return { pages: 0, records: 0, sweepComplete: false };
   }
 
@@ -366,4 +408,62 @@ export async function runSyncBatch(): Promise<{
   }
 
   return { pages, records, sweepComplete };
+}
+
+/**
+ * Tops the mirror up with the last few days of adverts.
+ *
+ * The resumable crawl above is built for completeness, not freshness: it walks
+ * a year-wide window two slow pages at a time and only returns to page one
+ * after a full sweep, which on a feed this slow can take days. That is fine for
+ * a search over open tenders — a tender advertised last week is still there to
+ * be found once the crawl reaches it — and useless for an alert, which has to
+ * know about an advert while it is new.
+ *
+ * So this asks a different question: everything advertised in the last few
+ * days. Narrowing the window makes the feed behave — measured at 8–30s per page
+ * against 43–75s for the crawl's — and the whole window fits in five short
+ * pages, so it can be walked to the end in one go.
+ *
+ * Upserts into the same table, so a tender the crawl has already mirrored is
+ * simply refreshed rather than duplicated.
+ */
+export async function syncRecentAdverts(): Promise<{
+  pages: number;
+  records: number;
+  claimed: boolean;
+}> {
+  const d = db();
+  if (!(await claimRun(d))) {
+    // The background crawl is mid-walk. Skipping is right: the poll runs daily
+    // and its window is four days wide, so nothing is lost by missing one.
+    return { pages: 0, records: 0, claimed: false };
+  }
+
+  let pages = 0;
+  let records = 0;
+
+  try {
+    for (let page = 1; page <= RECENT_MAX_PAGES; page++) {
+      const releases = await fetchPage(page, RECENT_DAYS, RECENT_TIMEOUT_MS);
+      // A failed page ends the run rather than being retried: unlike the crawl,
+      // this window is re-asked in full tomorrow, so a lost page comes back.
+      if (releases === null) break;
+      pages++;
+      // Short pages are normal on this feed; only an empty one means the end.
+      if (releases.length === 0) break;
+
+      const mapped = releases
+        .map(map)
+        .filter((m): m is Mapped => m !== null && Boolean(m.closingAt));
+      await upsert(mapped);
+      records += mapped.length;
+    }
+  } finally {
+    // Released whatever happened — holding the lock through a thrown error
+    // would block the background crawl for ten minutes.
+    await d.prepare("UPDATE sync_state SET running = 0 WHERE id = 1").run();
+  }
+
+  return { pages, records, claimed: true };
 }
