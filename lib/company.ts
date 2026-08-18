@@ -29,6 +29,9 @@ export interface CompanyProfile {
   email: string;
   website: string;
   profileText: string;
+  /** Where deadline reminders go. Separate from `email`, which is the business
+   *  address printed on bid documents and is often an unwatched shared inbox. */
+  notifyEmail: string;
 }
 
 interface ProfileRow {
@@ -45,6 +48,7 @@ interface ProfileRow {
   email: string;
   website: string;
   profile_text: string;
+  notify_email: string;
 }
 
 const EMPTY: CompanyProfile = {
@@ -61,6 +65,7 @@ const EMPTY: CompanyProfile = {
   email: "",
   website: "",
   profileText: "",
+  notifyEmail: "",
 };
 
 export async function getCompanyProfile(): Promise<CompanyProfile> {
@@ -83,6 +88,7 @@ export async function getCompanyProfile(): Promise<CompanyProfile> {
     email: row.email,
     website: row.website,
     profileText: row.profile_text,
+    notifyEmail: row.notify_email ?? "",
   };
 }
 
@@ -93,7 +99,7 @@ export async function updateCompanyProfile(p: CompanyProfile): Promise<void> {
          legal_name = ?, trading_name = ?, registration_number = ?,
          vat_number = ?, vat_registered = ?, physical_address = ?, postal_address = ?,
          signatory_name = ?, signatory_position = ?, phone = ?, email = ?,
-         website = ?, profile_text = ?, updated_at = datetime('now')
+         website = ?, profile_text = ?, notify_email = ?, updated_at = datetime('now')
        WHERE id = 1`
     )
     .bind(
@@ -109,7 +115,8 @@ export async function updateCompanyProfile(p: CompanyProfile): Promise<void> {
       p.phone,
       p.email,
       p.website,
-      p.profileText
+      p.profileText,
+      p.notifyEmail
     )
     .run();
 }

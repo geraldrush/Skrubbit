@@ -1,0 +1,11 @@
+{
+  "name": "skrubbit-reminders",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Daily cron that asks the Skrubbit app to send tender deadline reminders",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "tail": "wrangler tail",
+    "typecheck": "tsc --noEmit"
+  }
+}

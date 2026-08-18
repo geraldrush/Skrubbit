@@ -1,0 +1,21 @@
+{
+  "$schema": "../node_modules/wrangler/config-schema.json",
+  "name": "skrubbit-reminders",
+  "main": "src/index.ts",
+  "compatibility_date": "2025-03-25",
+  "observability": { "enabled": true },
+
+  // 06:00 UTC = 08:00 SAST — early enough that a 24-hour warning still leaves
+  // a working day to act on it, and well before an 11:00 tender box deadline.
+  "triggers": {
+    "crons": ["0 6 * * *"]
+  },
+
+  "vars": {
+    "APP_URL": "https://skrubbit.co.za"
+  }
+
+  // CRON_SECRET is a secret, not a var:
+  //   cd cron && npx wrangler secret put CRON_SECRET
+  // The same value must be set on the main Worker.
+}

@@ -168,6 +168,23 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
       </div>
 
       <div className="space-y-2">
+        <Label htmlFor="notifyEmail">Send deadline reminders to</Label>
+        <Input
+          id="notifyEmail"
+          type="email"
+          value={form.notifyEmail}
+          onChange={set("notifyEmail")}
+          placeholder="you@example.com"
+          className="sm:max-w-sm"
+        />
+        <p className="text-xs text-muted-foreground">
+          An inbox you actually watch. Warnings go out a week, 48 hours and 24
+          hours before closing, and before a compulsory briefing. Leave empty to
+          fall back to the email above.
+        </p>
+      </div>
+
+      <div className="space-y-2">
         <Label htmlFor="profileText">Company profile</Label>
         <Textarea
           id="profileText"
