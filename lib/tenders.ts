@@ -1125,6 +1125,7 @@ export async function deleteTender(id: number): Promise<void> {
     d.prepare("DELETE FROM tender_items WHERE tender_id = ?").bind(id),
     d.prepare("DELETE FROM tender_pricing WHERE tender_id = ?").bind(id),
     d.prepare("DELETE FROM tender_files WHERE tender_id = ?").bind(id),
+    d.prepare("DELETE FROM tender_reminders WHERE tender_id = ?").bind(id),
     d.prepare("DELETE FROM tenders WHERE id = ?").bind(id),
   ]);
 }
