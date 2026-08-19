@@ -328,3 +328,82 @@ export const DashboardIcons = {
   XCircle,
   AlertTriangle,
 };
+
+/* ----------------------------- daily run ------------------------------- */
+
+/**
+ * Whether the nightly notification pass is alive.
+ *
+ * This strip exists because the rest of the notification path is silent by
+ * design: it emails only when a deadline is close or an advert is new, so an
+ * empty inbox is either a quiet week or a dead cron, and those are not things
+ * to guess about when the thing going unsaid is a closing date. The ledger
+ * behind it records every run, so this can say "ran, nothing due" — which is
+ * the sentence the inbox cannot say.
+ *
+ * Deliberately a full-width strip rather than a fifth tile: it is a health
+ * line, not a metric, and it needs room for a reason when something is wrong.
+ */
+export function RunStatus({
+  run,
+  overdueHours,
+  now = new Date(),
+}: {
+  run: { ranAt: string; ok: boolean; syncOk: boolean; sent: number; announced: number; checked: number; detail: string } | null;
+  overdueHours: number;
+  now?: Date;
+}) {
+  const stamp = (utc: string) => {
+    const shifted = new Date(new Date(`${utc.replace(" ", "T")}Z`).getTime() + 2 * 36e5);
+    return `${shifted.toISOString().slice(0, 10)} ${shifted.toISOString().slice(11, 16)}`;
+  };
+  const hours = run
+    ? (now.getTime() - new Date(`${run.ranAt.replace(" ", "T")}Z`).getTime()) / 36e5
+    : Infinity;
+
+  let tone: Tone;
+  let headline: string;
+  let reason = "";
+
+  if (!run) {
+    tone = "warning";
+    headline = "The daily tender check has not run yet";
+    reason = "It runs at 08:00 SAST. Nothing has been recorded so far.";
+  } else if (hours > overdueHours) {
+    tone = "critical";
+    headline = `No daily check since ${stamp(run.ranAt)}`;
+    reason =
+      "Deadline reminders and new-advert alerts are not going out. The scheduled worker is the thing to look at.";
+  } else if (!run.ok) {
+    tone = "critical";
+    headline = `The daily check failed at ${stamp(run.ranAt)}`;
+    reason = run.detail || "The run did not complete.";
+  } else if (!run.syncOk) {
+    tone = "warning";
+    headline = `Ran ${stamp(run.ranAt)} — the tender feed could not be polled`;
+    reason = "Reminders went out as normal, but new adverts may be missing.";
+  } else {
+    tone = "good";
+    const did =
+      run.sent || run.announced
+        ? `${run.sent} reminder${run.sent === 1 ? "" : "s"} and ${run.announced} new advert${run.announced === 1 ? "" : "s"} sent`
+        : `${run.checked} bid${run.checked === 1 ? "" : "s"} checked, nothing due`;
+    headline = `Daily check ran ${stamp(run.ranAt)} — ${did}`;
+  }
+
+  const Icon =
+    tone === "good" ? CheckCircle2 : tone === "critical" ? XCircle : AlertTriangle;
+
+  return (
+    <section
+      className="mb-6 flex items-start gap-3 rounded-lg border bg-card px-4 py-3"
+      aria-label="Daily tender check"
+    >
+      <Icon className={`mt-0.5 h-4 w-4 shrink-0 ${TONE_TEXT[tone]}`} />
+      <div className="min-w-0">
+        <p className={`text-sm font-medium ${TONE_TEXT[tone]}`}>{headline}</p>
+        {reason ? <p className="mt-0.5 text-xs text-muted-foreground">{reason}</p> : null}
+      </div>
+    </section>
+  );
+}

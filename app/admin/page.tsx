@@ -9,6 +9,7 @@ import {
   XCircle,
 } from "lucide-react";
 
+import { OVERDUE_HOURS, lastRun } from "@/lib/cron-runs";
 import { getProducts } from "@/lib/products";
 import { getRecentContactMessages, getRecentOrders } from "@/lib/enquiries";
 import {
@@ -27,6 +28,7 @@ import {
   Deadlines,
   DocumentStatus,
   Panel,
+  RunStatus,
   ShopSummary,
   StatTile,
   type ComplianceRow,
@@ -59,14 +61,16 @@ export default async function DashboardPage() {
   const gate = await adminGate();
   if (gate) return gate;
 
-  const [tenders, items, documents, orders, messages, products] = await Promise.all([
-    listTenders(),
-    itemsByTender(),
-    listDocuments(),
-    getRecentOrders(),
-    getRecentContactMessages(),
-    getProducts(),
-  ]);
+  const [tenders, items, documents, orders, messages, products, run] =
+    await Promise.all([
+      listTenders(),
+      itemsByTender(),
+      listDocuments(),
+      getRecentOrders(),
+      getRecentContactMessages(),
+      getProducts(),
+      lastRun(),
+    ]);
 
   const now = new Date();
   const today = sastToday(now);
@@ -125,6 +129,8 @@ export default async function DashboardPage() {
         title="Dashboard"
         description="Where every bid stands, and what needs attention first."
       />
+
+      <RunStatus run={run} overdueHours={OVERDUE_HOURS} now={now} />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatTile
