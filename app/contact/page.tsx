@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 
 import { site } from "@/data/site";
-import { ContactForm } from "@/components/contact-form";
+import { EnquiryForm } from "@/components/enquiry-form";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -49,7 +49,7 @@ export default function ContactPage() {
 
       <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
         <div>
-          <ContactForm />
+          <EnquiryForm />
         </div>
 
         <aside className="space-y-6">

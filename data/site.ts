@@ -20,12 +20,14 @@ export const site = {
     // This drives the WhatsApp order enquiry, so it must be WhatsApp-enabled.
     whatsapp: "27659669657",
     phoneDisplay: "+27 65 966 9657",
-    email: "orders@skrubbit.co.za",
+    email: "info@skrubbit.co.za",
     location: "Limpopo, South Africa",
   },
 
   socials: {
-    facebook: "https://www.facebook.com/skrubbit",
+    // Facebook's own canonical URL for the page. The numeric id also works;
+    // this form shows the business name when the link is pasted anywhere.
+    facebook: "https://www.facebook.com/people/Skrubb-it-Products/61561886054197/",
     takealot: "https://www.takealot.com",
     instagram: "",
   },

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Save } from "lucide-react";
+import { Download, Loader2, Save } from "lucide-react";
 import { toast } from "sonner";
 
 import type { CompanyProfile } from "@/lib/company";
@@ -240,6 +240,40 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
         </p>
       </div>
 
+      <div className="grid gap-4 sm:grid-cols-3">
+        <div className="space-y-2">
+          <Label htmlFor="taxNumber">Income tax number</Label>
+          <Input id="taxNumber" value={form.taxNumber} onChange={set("taxNumber")} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="csdNumber">CSD supplier number</Label>
+          <Input id="csdNumber" value={form.csdNumber} onChange={set("csdNumber")} placeholder="MAAA…" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="annualTurnover">Annual turnover</Label>
+          <Input
+            id="annualTurnover"
+            value={form.annualTurnover}
+            onChange={set("annualTurnover")}
+            placeholder="Less than R1 000 000"
+          />
+        </div>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="bbbeeStatus">B-BBEE status</Label>
+        <Textarea id="bbbeeStatus" value={form.bbbeeStatus} onChange={set("bbbeeStatus")} rows={2} />
+        <p className="text-xs text-muted-foreground">
+          Copy it from the affidavit word for word, expiry date included. A buyer
+          checks this against the certificate you attach.
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="bankDetails">Banking</Label>
+        <Input id="bankDetails" value={form.bankDetails} onChange={set("bankDetails")} />
+      </div>
+
       <div className="space-y-2">
         <Label htmlFor="profileText">Company profile</Label>
         <Textarea
@@ -250,8 +284,21 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
           placeholder="What the business does, how long it has traded, capacity, delivery footprint, notable clients…"
         />
         <p className="text-xs text-muted-foreground">
-          Printed in the technical section of every pack. The guide advises
-          tailoring it per tender — edit here, or adjust the printed copy.
+          Printed in the technical section of every tender pack, and the body of
+          the downloadable profile. Start a line with{" "}
+          <code className="rounded bg-muted px-1">## </code> for a heading or{" "}
+          <code className="rounded bg-muted px-1">- </code> for a bullet;
+          everything else becomes a paragraph.
+        </p>
+        <a
+          href="/api/admin/company/profile.pdf"
+          className="inline-flex w-fit items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium hover:bg-muted"
+        >
+          <Download className="h-4 w-4" /> Download company profile (PDF)
+        </a>
+        <p className="text-xs text-muted-foreground">
+          Save your changes first — the PDF is built from what is stored, not
+          from what is on screen.
         </p>
       </div>
 

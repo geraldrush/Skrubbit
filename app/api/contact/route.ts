@@ -1,11 +1,13 @@
 import { NextResponse } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { LIMITS, clamp, recordContactMessage } from "@/lib/enquiries";
+import { notifyEnquiry } from "@/lib/enquiry-mail";
 
 export const dynamic = "force-dynamic";
 
 /**
- * Stores a contact-form enquiry.
+ * Stores a contact-form enquiry and tells somebody about it.
  *
  * Unlike /api/orders there is no second channel here — if this write fails the
  * message is gone — so a persistence failure is reported as a 5xx rather than
@@ -44,6 +46,16 @@ export async function POST(req: Request) {
       { status: 503 }
     );
   }
+
+  // Emailed after the write, and never allowed to fail the request: the
+  // message is already saved, and telling the customer their enquiry failed
+  // because our mail provider is down would be a lie.
+  const { env, ctx } = getCloudflareContext();
+  ctx.waitUntil(
+    notifyEnquiry(env, { name, email, phone, message }).catch((err) =>
+      console.error("[contact] could not send notification", err)
+    )
+  );
 
   return NextResponse.json({ ok: true });
 }

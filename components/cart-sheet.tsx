@@ -1,12 +1,12 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, ShoppingBag, Trash2 } from "lucide-react";
 
 import { formatZAR } from "@/lib/utils";
 import { site } from "@/data/site";
 import { useCart, cartSubtotal, cartCount } from "@/store/cart";
+import { ProductImage } from "@/components/product-image";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -52,10 +52,10 @@ export function CartSheet() {
                 {items.map((item) => (
                   <li key={item.sku} className="flex gap-3 py-4">
                     <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-md border bg-white">
-                      <Image
+                      <ProductImage
                         src={item.image}
-                        alt={item.name}
-                        fill
+                        name={item.name}
+                        size={item.size}
                         sizes="64px"
                         className="object-contain p-1"
                       />
@@ -126,7 +126,7 @@ export function CartSheet() {
               <Separator className="my-1" />
               <SheetClose asChild>
                 <Button asChild size="lg" variant="accent" className="w-full">
-                  <Link href="/checkout">Checkout via WhatsApp</Link>
+                  <Link href="/checkout">Submit your order</Link>
                 </Button>
               </SheetClose>
               <SheetClose asChild>

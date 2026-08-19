@@ -40,6 +40,11 @@ export async function PUT(req: Request) {
     profileText: str(body.profileText, 8000),
     notifyEmail: str(body.notifyEmail, 400),
     alertProvinces: str(body.alertProvinces, 200),
+    annualTurnover: str(body.annualTurnover, 100),
+    taxNumber: str(body.taxNumber, 40),
+    csdNumber: str(body.csdNumber, 40),
+    bbbeeStatus: str(body.bbbeeStatus, 500),
+    bankDetails: str(body.bankDetails, 200),
   };
 
   await updateCompanyProfile(profile);

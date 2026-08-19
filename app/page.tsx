@@ -11,7 +11,9 @@ import {
 import { site } from "@/data/site";
 import { categories } from "@/data/products";
 import { getProducts } from "@/lib/products";
+import { getCompanyProfile } from "@/lib/company";
 import { Button } from "@/components/ui/button";
+import { Credentials } from "@/components/credentials";
 import { Badge } from "@/components/ui/badge";
 import { ProductCard } from "@/components/product-card";
 
@@ -42,7 +44,8 @@ const perks = [
 export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
-  const featured = (await getProducts()).filter((p) => p.featured);
+  const [products, profile] = await Promise.all([getProducts(), getCompanyProfile()]);
+  const featured = products.filter((p) => p.featured);
 
   return (
     <>
@@ -90,6 +93,35 @@ export default async function HomePage() {
               className="relative object-contain drop-shadow-xl"
             />
           </div>
+        </div>
+      </section>
+
+      {/* Who we are, for a buyer sizing up a supplier */}
+      <section className="border-b bg-background">
+        <div className="container py-10">
+          <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
+            <div>
+              <h2 className="font-display text-2xl font-extrabold">
+                A registered, compliant supplier
+              </h2>
+              <p className="mt-1 max-w-xl text-muted-foreground">
+                We manufacture in Vhembe and supply households, businesses and
+                the public sector across Limpopo.
+              </p>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              <Button asChild variant="accent">
+                <Link href="/public-sector">
+                  For government &amp; institutions
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
+              <Button asChild variant="outline">
+                <Link href="/about">About the company</Link>
+              </Button>
+            </div>
+          </div>
+          <Credentials profile={profile} />
         </div>
       </section>
 

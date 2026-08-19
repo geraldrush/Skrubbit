@@ -6,8 +6,8 @@
  * purpose: they are a fixed taxonomy tied to the CategoryId union type, not
  * user-editable content.
  *
- * ⚠️  PRICES ARE PLACEHOLDERS. Replace `price` on each variant with real
- * retail pricing (ZAR) before launch. SKUs are also placeholders.
+ * Prices and SKUs on the D1 variants are the costed trade prices from the
+ * Skrubb-it costing sheet (PE Chemicals June 2026 basis), not placeholders.
  */
 
 export type CategoryId =
@@ -16,7 +16,9 @@ export type CategoryId =
   | "laundry"
   | "floors"
   | "disinfectants"
-  | "personal-care";
+  | "personal-care"
+  | "vehicle"
+  | "industrial";
 
 export interface Category {
   id: CategoryId;
@@ -31,6 +33,8 @@ export const categories: Category[] = [
   { id: "floors", name: "Floors & Surfaces", blurb: "Shine and protection." },
   { id: "disinfectants", name: "Bleach & Disinfectants", blurb: "Kill 99.9% of germs." },
   { id: "personal-care", name: "Personal Care", blurb: "Gentle everyday essentials." },
+  { id: "vehicle", name: "Vehicle Care", blurb: "Wash, degrease and finish." },
+  { id: "industrial", name: "Industrial & Workshop", blurb: "Heavy soil, hard surfaces." },
 ];
 
 export interface ProductVariant {

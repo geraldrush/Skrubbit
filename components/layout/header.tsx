@@ -21,6 +21,8 @@ import { useCart, cartCount } from "@/store/cart";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/shop", label: "Shop" },
+  { href: "/capabilities", label: "What we supply" },
+  { href: "/public-sector", label: "Government" },
   { href: "/about", label: "About" },
   { href: "/contact", label: "Contact" },
 ];

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import {
   LIMITS,
@@ -7,6 +8,7 @@ import {
   recordOrder,
   subtotalOf,
 } from "@/lib/enquiries";
+import { notifyOrder } from "@/lib/enquiry-mail";
 
 export const dynamic = "force-dynamic";
 
@@ -63,9 +65,18 @@ export async function POST(req: Request) {
     console.error("[order] could not persist", reference, err);
   }
 
-  return NextResponse.json({
-    ok: true,
-    reference,
-    subtotal: subtotalOf(items),
-  });
+  const subtotal = subtotalOf(items);
+
+  // The order is now placed by email rather than handed to WhatsApp, so this
+  // send is the checkout. It still runs in waitUntil: the customer should see
+  // their confirmation page immediately, and the order is already in D1 if the
+  // mail provider is having a bad day.
+  const { env, ctx } = getCloudflareContext();
+  ctx.waitUntil(
+    notifyOrder(env, { reference, items, subtotal, customer }).catch((err) =>
+      console.error("[order] could not send notification", reference, err)
+    )
+  );
+
+  return NextResponse.json({ ok: true, reference, subtotal });
 }

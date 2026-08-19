@@ -1,7 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
+
+import { ProductImage } from "@/components/product-image";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,10 +37,10 @@ export function ProductCard({ product }: { product: Product }) {
         href={`/shop/${product.slug}`}
         className="relative block aspect-square overflow-hidden bg-white"
       >
-        <Image
+        <ProductImage
           src={product.image}
-          alt={product.name}
-          fill
+          name={product.name}
+          size={cheapest?.size}
           sizes="(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 25vw"
           className="object-contain p-4 transition-transform duration-300 group-hover:scale-105"
         />

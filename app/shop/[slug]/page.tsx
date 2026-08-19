@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -7,6 +6,7 @@ import { Check, ChevronRight, Leaf } from "lucide-react";
 import { getCategory } from "@/data/products";
 import { getProduct, getProducts } from "@/lib/products";
 import { AddToCart } from "@/components/add-to-cart";
+import { ProductImage } from "@/components/product-image";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -69,10 +69,10 @@ export default async function ProductPage({
       <div className="grid gap-10 md:grid-cols-2">
         {/* Image */}
         <div className="relative aspect-square overflow-hidden rounded-2xl border bg-white">
-          <Image
+          <ProductImage
             src={product.image}
-            alt={product.name}
-            fill
+            name={product.name}
+            size={product.variants[0]?.size}
             priority
             sizes="(max-width: 768px) 100vw, 500px"
             className="object-contain p-8"

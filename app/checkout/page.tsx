@@ -1,20 +1,16 @@
 "use client";
 
 import * as React from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MessageCircle, Mail, ShoppingBag } from "lucide-react";
+import { CheckCircle2, Mail, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 
 import { formatZAR } from "@/lib/utils";
 import { site } from "@/data/site";
 import { useCart, cartSubtotal } from "@/store/cart";
-import {
-  buildOrderMessage,
-  buildWhatsAppLink,
-  buildMailtoLink,
-} from "@/lib/whatsapp";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
+import { ProductImage } from "@/components/product-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,6 +31,7 @@ export default function CheckoutPage() {
     note: "",
   });
   const [submitting, setSubmitting] = React.useState(false);
+  const [reference, setReference] = React.useState<string | null>(null);
 
   React.useEffect(() => setMounted(true), []);
 
@@ -49,24 +46,76 @@ export default function CheckoutPage() {
       toast.error("Please enter your name and phone number.");
       return;
     }
+    if (!form.email) {
+      toast.error("Please enter your email so we can confirm your order.");
+      return;
+    }
     setSubmitting(true);
-    const message = buildOrderMessage(items, subtotal, form);
 
-    // Record the enquiry server-side (best-effort — never blocks the order).
+    // The order is placed here, by email. Unlike the old WhatsApp hand-off,
+    // a failure is a failed order and has to be reported as one — the customer
+    // must never be told their order is in when it is not.
     try {
-      await fetch("/api/orders", {
+      const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ items, subtotal, customer: form }),
       });
-    } catch {
-      /* ignore — WhatsApp is the primary channel */
+      const data = (await res.json()) as { reference?: string; error?: string };
+      if (!res.ok || !data.reference) {
+        throw new Error(data.error ?? "Could not send your order");
+      }
+      setReference(data.reference);
+      clear();
+    } catch (err) {
+      toast.error(
+        err instanceof Error
+          ? `${err.message}. Please WhatsApp us instead.`
+          : "Could not send your order. Please WhatsApp us instead."
+      );
+    } finally {
+      setSubmitting(false);
     }
+  }
 
-    const link = buildWhatsAppLink(message);
-    window.open(link, "_blank", "noopener,noreferrer");
-    toast.success("Opening WhatsApp with your order…");
-    setSubmitting(false);
+  // Sent: the cart is empty by now, so this has to be checked before the
+  // empty-cart screen below or the customer would see "your cart is empty"
+  // instead of their confirmation.
+  if (reference) {
+    return (
+      <div className="container flex max-w-lg flex-col items-center gap-4 py-24 text-center">
+        <div className="rounded-full bg-accent/15 p-6">
+          <CheckCircle2 className="h-10 w-10 text-accent" />
+        </div>
+        <h1 className="font-display text-3xl font-extrabold">
+          Order sent to Skrubb-it
+        </h1>
+        <p className="text-muted-foreground">
+          You will be contacted shortly to confirm availability, delivery and
+          the final price. A confirmation of what you submitted is on its way to
+          your inbox.
+        </p>
+        <p className="rounded-lg border bg-secondary/40 px-4 py-2 text-sm">
+          Your reference is <strong>{reference}</strong>
+        </p>
+        <div className="mt-2 flex flex-wrap justify-center gap-3">
+          <Button asChild variant="accent">
+            <Link href="/shop">Continue shopping</Link>
+          </Button>
+          <Button asChild variant="outline">
+            <a
+              href={buildWhatsAppLink(
+                `Hi Skrubb-it, I have just sent order ${reference}.`
+              )}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              Follow up on WhatsApp
+            </a>
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (mounted && items.length === 0) {
@@ -90,9 +139,9 @@ export default function CheckoutPage() {
     <div className="container py-10">
       <h1 className="font-display text-3xl font-extrabold">Checkout</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        Fill in your details and we&apos;ll open WhatsApp with your order ready
-        to send. We&apos;ll confirm stock, delivery and payment with you
-        directly — no card details needed here.
+        Send your order to Skrubb-it and you will be contacted shortly to
+        confirm stock, delivery and the final price. No card details are needed
+        here — nothing is charged until we have spoken to you.
       </p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
@@ -160,27 +209,14 @@ export default function CheckoutPage() {
               disabled={submitting}
               className="flex-1"
             >
-              <MessageCircle className="h-5 w-5" />
-              Send order on WhatsApp
-            </Button>
-            <Button
-              type="button"
-              size="lg"
-              variant="outline"
-              onClick={() =>
-                (window.location.href = buildMailtoLink(
-                  "Skrubb-it order enquiry",
-                  buildOrderMessage(items, subtotal, form)
-                ))
-              }
-            >
               <Mail className="h-5 w-5" />
-              Email instead
+              Submit your order
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            By sending, WhatsApp opens with your order pre-filled to{" "}
-            {site.contact.phoneDisplay}. You can review before sending.
+            Your order goes straight to {site.contact.email} and a copy is
+            emailed to you. We will be in touch to confirm stock, delivery and
+            the final price.
           </p>
         </form>
 
@@ -208,10 +244,10 @@ export default function CheckoutPage() {
                   items.map((item) => (
                     <li key={item.sku} className="flex gap-3">
                       <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded border bg-white">
-                        <Image
+                        <ProductImage
                           src={item.image}
-                          alt={item.name}
-                          fill
+                          name={item.name}
+                          size={item.size}
                           sizes="48px"
                           className="object-contain p-0.5"
                         />

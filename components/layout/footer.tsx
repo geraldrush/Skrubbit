@@ -1,112 +1,120 @@
 import Link from "next/link";
-import { Mail, MapPin, Phone, Facebook } from "lucide-react";
+import { Facebook } from "lucide-react";
 
 import { site } from "@/data/site";
-import { categories } from "@/data/products";
+import { getCompanyProfileSafe } from "@/lib/company";
 import { Logo } from "@/components/logo";
 
-export function Footer() {
+/**
+ * Centred and deliberately short.
+ *
+ * A footer earns its height by being useful, not by listing every category
+ * twice. One centred stack — mark, one line of what the company is, the links
+ * people actually follow, how to reach us — then a hairline and the
+ * registration particulars a professional buyer looks for before taking a
+ * supplier seriously.
+ *
+ * The particulars come from the company record, so they cannot drift out of
+ * step with the profile or the certificates.
+ */
+export async function Footer() {
+  const profile = await getCompanyProfileSafe();
+  const level = /Level\s*\d/i.exec(profile.bbbeeStatus)?.[0];
+
+  const links = [
+    { href: "/shop", label: "Shop" },
+    { href: "/capabilities", label: "What we supply" },
+    { href: "/public-sector", label: "Government" },
+    { href: "/about", label: "About" },
+    { href: "/contact", label: "Contact" },
+  ];
+
+  const particulars = [
+    profile.registrationNumber && `Reg. ${profile.registrationNumber}`,
+    profile.csdNumber && `CSD ${profile.csdNumber}`,
+    level && `B-BBEE ${level}`,
+    profile.vatRegistered ? `VAT ${profile.vatNumber}` : "Not VAT registered",
+  ].filter(Boolean) as string[];
+
   return (
-    <footer className="mt-16 border-t bg-secondary/50">
-      <div className="container grid gap-10 py-12 sm:grid-cols-2 lg:grid-cols-4">
-        <div className="space-y-4">
-          <Logo />
-          <p className="max-w-xs text-sm text-muted-foreground">
-            {site.description}
-          </p>
-          <p className="text-xs font-semibold uppercase tracking-wide text-accent">
-            Proudly South African
-          </p>
-        </div>
+    <footer className="mt-16 border-t bg-secondary/40">
+      <div className="container flex flex-col items-center gap-4 py-9 text-center">
+        <Logo />
 
-        <div>
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide">
-            Shop
-          </h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            {categories.map((c) => (
-              <li key={c.id}>
-                <Link
-                  href={`/shop?category=${c.id}`}
-                  className="transition-colors hover:text-accent"
-                >
-                  {c.name}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </div>
+        <p className="text-sm text-muted-foreground">
+          Cleaning chemicals and hygiene consumables, manufactured in{" "}
+          {site.contact.location}.
+        </p>
 
-        <div>
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide">
-            Company
-          </h3>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li>
-              <Link href="/about" className="hover:text-accent">
-                About us
-              </Link>
-            </li>
-            <li>
-              <Link href="/shop" className="hover:text-accent">
-                All products
-              </Link>
-            </li>
-            <li>
-              <Link href="/contact" className="hover:text-accent">
-                Contact
-              </Link>
-            </li>
-          </ul>
-        </div>
+        <nav
+          aria-label="Footer"
+          className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm font-medium"
+        >
+          {links.map((l) => (
+            <Link
+              key={l.href}
+              href={l.href}
+              className="text-muted-foreground transition-colors hover:text-accent"
+            >
+              {l.label}
+            </Link>
+          ))}
+        </nav>
 
-        <div>
-          <h3 className="mb-3 text-sm font-bold uppercase tracking-wide">
-            Get in touch
-          </h3>
-          <ul className="space-y-3 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-              <span>{site.contact.location}</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <Phone className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-              <a href={`tel:${site.contact.whatsapp}`} className="hover:text-accent">
-                {site.contact.phoneDisplay}
-              </a>
-            </li>
-            <li className="flex items-start gap-2">
-              <Mail className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-              <a
-                href={`mailto:${site.contact.email}`}
-                className="hover:text-accent"
-              >
-                {site.contact.email}
-              </a>
-            </li>
-            {site.socials.facebook && (
-              <li className="flex items-start gap-2">
-                <Facebook className="mt-0.5 h-4 w-4 shrink-0 text-accent" />
-                <a
-                  href={site.socials.facebook}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-accent"
-                >
-                  Facebook
-                </a>
-              </li>
-            )}
-          </ul>
-        </div>
+        <address className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm not-italic text-muted-foreground">
+          <a
+            href={`tel:${site.contact.whatsapp}`}
+            className="transition-colors hover:text-accent"
+          >
+            {site.contact.phoneDisplay}
+          </a>
+          <a
+            href={`mailto:${site.contact.email}`}
+            className="transition-colors hover:text-accent"
+          >
+            {site.contact.email}
+          </a>
+          {site.socials.facebook && (
+            <a
+              href={site.socials.facebook}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Facebook"
+              className="transition-colors hover:text-accent"
+            >
+              <Facebook className="h-5 w-5" />
+            </a>
+          )}
+        </address>
       </div>
 
       <div className="border-t">
-        <div className="container flex flex-col items-center justify-between gap-2 py-5 text-xs text-muted-foreground sm:flex-row">
+        <div className="container flex flex-col items-center gap-2 py-4 text-center text-xs text-muted-foreground">
+          <nav
+            aria-label="Legal"
+            className="flex flex-wrap justify-center gap-x-4 gap-y-1"
+          >
+            <Link href="/privacy" className="transition-colors hover:text-accent">
+              Privacy policy
+            </Link>
+            <Link href="/terms" className="transition-colors hover:text-accent">
+              Terms of service
+            </Link>
+            <Link href="/cookies" className="transition-colors hover:text-accent">
+              Cookies
+            </Link>
+          </nav>
+          {particulars.length > 0 && (
+            <p className="flex flex-wrap justify-center gap-x-3 gap-y-1">
+              {particulars.map((p) => (
+                <span key={p}>{p}</span>
+              ))}
+            </p>
+          )}
           <p>
-            © {new Date().getFullYear()} {site.legalName}. All rights reserved.
+            © {new Date().getFullYear()} {profile.legalName || site.legalName}.
+            All rights reserved.
           </p>
-          <p>Made in South Africa 🇿🇦</p>
         </div>
       </div>
     </footer>
