@@ -3,7 +3,7 @@ import Link from "next/link";
 import { FileText, ShieldCheck } from "lucide-react";
 
 import { site } from "@/data/site";
-import { getCompanyProfile } from "@/lib/company";
+import { getCompanyProfileSafe } from "@/lib/company";
 import { Button } from "@/components/ui/button";
 import { Credentials } from "@/components/credentials";
 import { ProfileProse } from "@/components/profile-prose";
@@ -25,7 +25,7 @@ export const metadata: Metadata = {
  * where they go once they have.
  */
 export default async function AboutPage() {
-  const profile = await getCompanyProfile();
+  const profile = await getCompanyProfileSafe();
 
   return (
     <>

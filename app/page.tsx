@@ -10,8 +10,8 @@ import {
 
 import { site } from "@/data/site";
 import { categories } from "@/data/products";
-import { getProducts } from "@/lib/products";
-import { getCompanyProfile } from "@/lib/company";
+import { getProductsSafe } from "@/lib/products";
+import { getCompanyProfileSafe } from "@/lib/company";
 import { Button } from "@/components/ui/button";
 import { Credentials } from "@/components/credentials";
 import { Badge } from "@/components/ui/badge";
@@ -43,8 +43,19 @@ const perks = [
 // Featured products come from D1.
 export const dynamic = "force-dynamic";
 
+/**
+ * Both reads degrade rather than throw. The front page is the one URL that has
+ * to answer under every condition — it is what a customer types, what an advert
+ * points at, and what a crawler comes back to — and none of what it says about
+ * the business depends on the database being reachable. The bestsellers strip
+ * and the credentials block are the only parts that do, and each is absent
+ * rather than wrong when the read fails.
+ */
 export default async function HomePage() {
-  const [products, profile] = await Promise.all([getProducts(), getCompanyProfile()]);
+  const [products, profile] = await Promise.all([
+    getProductsSafe(),
+    getCompanyProfileSafe(),
+  ]);
   const featured = products.filter((p) => p.featured);
 
   return (
@@ -172,36 +183,41 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Featured products */}
-      <section className="bg-secondary/40 py-14">
-        <div className="container">
-          <div className="mb-8 flex items-end justify-between">
-            <div>
-              <h2 className="font-display text-3xl font-extrabold">
-                Bestsellers
-              </h2>
-              <p className="mt-1 text-muted-foreground">
-                Our most popular formulas.
-              </p>
+      {/* Featured products. Dropped entirely when the catalogue is empty or
+          could not be read: a "Bestsellers" heading with nothing under it reads
+          as though the range has been discontinued, which is worse than the
+          section simply not being there. */}
+      {featured.length > 0 && (
+        <section className="bg-secondary/40 py-14">
+          <div className="container">
+            <div className="mb-8 flex items-end justify-between">
+              <div>
+                <h2 className="font-display text-3xl font-extrabold">
+                  Bestsellers
+                </h2>
+                <p className="mt-1 text-muted-foreground">
+                  Our most popular formulas.
+                </p>
+              </div>
+              <Button asChild variant="link" className="hidden sm:inline-flex">
+                <Link href="/shop">
+                  View all <ArrowRight className="h-4 w-4" />
+                </Link>
+              </Button>
             </div>
-            <Button asChild variant="link" className="hidden sm:inline-flex">
-              <Link href="/shop">
-                View all <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+              {featured.map((p) => (
+                <ProductCard key={p.slug} product={p} />
+              ))}
+            </div>
+            <div className="mt-8 text-center sm:hidden">
+              <Button asChild variant="outline">
+                <Link href="/shop">View all products</Link>
+              </Button>
+            </div>
           </div>
-          <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-            {featured.map((p) => (
-              <ProductCard key={p.slug} product={p} />
-            ))}
-          </div>
-          <div className="mt-8 text-center sm:hidden">
-            <Button asChild variant="outline">
-              <Link href="/shop">View all products</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* CTA */}
       <section className="container py-16">

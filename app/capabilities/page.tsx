@@ -3,8 +3,8 @@ import Link from "next/link";
 import { Beaker, FileText, PackageCheck, Truck } from "lucide-react";
 
 import { categories } from "@/data/products";
-import { getProducts } from "@/lib/products";
-import { getCompanyProfile } from "@/lib/company";
+import { getProductsSafe } from "@/lib/products";
+import { getCompanyProfileSafe } from "@/lib/company";
 import { Button } from "@/components/ui/button";
 
 export const dynamic = "force-dynamic";
@@ -46,7 +46,10 @@ const capabilities = [
  * products are added.
  */
 export default async function CapabilitiesPage() {
-  const [products, profile] = await Promise.all([getProducts(), getCompanyProfile()]);
+  const [products, profile] = await Promise.all([
+    getProductsSafe(),
+    getCompanyProfileSafe(),
+  ]);
   const byCategory = categories
     .map((c) => ({ ...c, items: products.filter((p) => p.category === c.id) }))
     .filter((c) => c.items.length);
@@ -61,10 +64,24 @@ export default async function CapabilitiesPage() {
           <h1 className="mt-3 max-w-3xl font-display text-4xl font-extrabold leading-tight sm:text-5xl">
             What we supply, and how
           </h1>
+          {/* The counts are dropped when the catalogue could not be read.
+              "0 products across 0 categories" is not a degraded sentence, it is
+              a false one, and this page is read by buyers deciding whether the
+              company can supply them. The range itself is a fact about the
+              business, so it is stated either way. */}
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            {products.length} products across {byCategory.length} categories —
-            cleaning chemicals, hygiene consumables, vehicle care and industrial
-            degreasers, manufactured and delivered from Vhembe.
+            {products.length > 0 ? (
+              <>
+                {products.length} products across {byCategory.length} categories
+                — cleaning chemicals, hygiene consumables, vehicle care and
+                industrial degreasers, manufactured and delivered from Vhembe.
+              </>
+            ) : (
+              <>
+                Cleaning chemicals, hygiene consumables, vehicle care and
+                industrial degreasers, manufactured and delivered from Vhembe.
+              </>
+            )}
           </p>
         </div>
       </section>

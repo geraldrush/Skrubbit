@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Check, ChevronRight, Leaf } from "lucide-react";
 
 import { getCategory } from "@/data/products";
-import { getProduct, getProducts } from "@/lib/products";
+import { getProduct, getProductsSafe } from "@/lib/products";
 import { AddToCart } from "@/components/add-to-cart";
 import { ProductImage } from "@/components/product-image";
 import { ProductCard } from "@/components/product-card";
@@ -36,11 +36,19 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+
+  // Deliberately not a safe read. `undefined` here means "no such product" and
+  // reaches notFound(); if a failed read degraded to the same value, an outage
+  // would answer 404 for a product that exists and search engines would drop
+  // the URL. A throw becomes a 500 via app/error.tsx instead, which is the
+  // honest answer and a recoverable one.
   const product = await getProduct(slug);
   if (!product) notFound();
 
   const category = getCategory(product.category);
-  const related = (await getProducts())
+  // The related strip is decoration — it can be absent without the page losing
+  // its point, unlike the product it sits under.
+  const related = (await getProductsSafe())
     .filter((p) => p.category === product.category && p.slug !== product.slug)
     .slice(0, 4);
 

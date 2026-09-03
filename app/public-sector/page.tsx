@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 
-import { getCompanyProfile } from "@/lib/company";
+import { getCompanyProfileSafe } from "@/lib/company";
 import { Button } from "@/components/ui/button";
 import { Credentials } from "@/components/credentials";
 
@@ -23,7 +23,7 @@ export const metadata: Metadata = {
  * from the company record so they match the certificates.
  */
 export default async function PublicSectorPage() {
-  const profile = await getCompanyProfile();
+  const profile = await getCompanyProfileSafe();
 
   const steps = [
     {

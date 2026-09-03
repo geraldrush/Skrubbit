@@ -89,6 +89,31 @@ export async function getProducts(): Promise<Product[]> {
     .filter((p) => p.variants.length > 0);
 }
 
+/**
+ * The catalogue, or an empty list if there is no database to ask.
+ *
+ * Same rule as `getCompanyProfileSafe`: a page whose subject is something else
+ * — the homepage's bestsellers strip, the capabilities range — should lose its
+ * product cards rather than fail to render at all. D1's row-read limit is
+ * charged per account, not per database, so an unrelated site sharing the
+ * account can exhaust it and take every read here down with it. That is not a
+ * reason for Skrubb-it to serve an error page.
+ *
+ * There is deliberately no `getProductSafe`. A product that cannot be read is
+ * not an absent product: degrading it to `undefined` would reach `notFound()`,
+ * and a passing outage would answer 404 for a product that exists — which is
+ * the answer search engines act on. That one keeps throwing, so the failure
+ * surfaces as a 500 and the URL survives it.
+ */
+export async function getProductsSafe(): Promise<Product[]> {
+  try {
+    return await getProducts();
+  } catch (error) {
+    console.error("catalogue read failed; rendering without products", error);
+    return [];
+  }
+}
+
 export async function getProduct(slug: string): Promise<Product | undefined> {
   const d = db();
   const row = await d.prepare("SELECT * FROM products WHERE slug = ?").bind(slug).first<ProductRow>();
