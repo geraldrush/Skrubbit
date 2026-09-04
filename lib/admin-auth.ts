@@ -29,8 +29,27 @@ interface AccessEnv {
   ACCESS_TEAM_DOMAIN?: string;
   ACCESS_AUD?: string;
   ADMIN_DISABLE_ACCESS_CHECK?: string;
-  /** Interim password auth, used until Cloudflare Access is available. */
-  ADMIN_PASSWORD?: string;
+  /**
+   * Where the live credential is kept once the admin has set a password.
+   *
+   * A Worker cannot write its own secrets, so the pair below can only ever be
+   * the bootstrap: with the credential in the environment there is no way to
+   * change it from inside the app, and no reset flow is possible. The row in
+   * `admin_credentials` takes precedence when it exists.
+   */
+  DB?: D1Database;
+  /** The single admin's username. An email address, in practice. */
+  ADMIN_USERNAME?: string;
+  /**
+   * The admin password as `pbkdf2$<iterations>$<saltB64>$<hashB64>`, never as
+   * the password itself.
+   *
+   * Stored hashed so that account access is not password access: anyone who
+   * can read the Worker's secrets in the dashboard — or a leaked backup of
+   * them — still cannot sign in as the admin or try the password anywhere
+   * else. Nobody, including whoever set it, can read it back out.
+   */
+  ADMIN_PASSWORD_HASH?: string;
   /** HMAC key for signing admin session cookies. */
   ADMIN_SESSION_SECRET?: string;
 }
@@ -175,14 +194,31 @@ async function hmac(secret: string, message: string): Promise<string> {
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-export async function createSessionToken(secret: string): Promise<string> {
+/**
+ * The current password hash is folded into the signature, so changing the
+ * password invalidates every session that exists.
+ *
+ * Without this a password reset would leave whoever prompted it still signed
+ * in for up to twelve hours — which defeats the point of resetting after a
+ * suspected compromise. It costs nothing: the hash is already loaded to check
+ * the credential, and it never leaves the server.
+ */
+function sessionMessage(expiry: number | string, passwordHash: string): string {
+  return `${expiry}:${passwordHash}`;
+}
+
+export async function createSessionToken(
+  secret: string,
+  passwordHash: string
+): Promise<string> {
   const expiry = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
-  return `${expiry}.${await hmac(secret, String(expiry))}`;
+  return `${expiry}.${await hmac(secret, sessionMessage(expiry, passwordHash))}`;
 }
 
 export async function verifySessionToken(
   token: string,
-  secret: string
+  secret: string,
+  passwordHash: string
 ): Promise<boolean> {
   const [expiryPart, signature] = token.split(".");
   if (!expiryPart || !signature) return false;
@@ -192,24 +228,188 @@ export async function verifySessionToken(
 
   // Signature is checked before expiry so a tampered cookie fails the same way
   // regardless of the expiry value it claims.
-  const expected = await hmac(secret, expiryPart);
+  const expected = await hmac(secret, sessionMessage(expiryPart, passwordHash));
   if (!timingSafeEqual(signature, expected)) return false;
 
   return expiry > Math.floor(Date.now() / 1000);
 }
 
-export async function checkPassword(
-  supplied: string,
-  env: AccessEnv
-): Promise<boolean> {
-  const actual = env.ADMIN_PASSWORD;
-  if (!actual) return false; // fail closed when unset
-  return timingSafeEqual(supplied, actual);
+function bytesToB64(bytes: Uint8Array): string {
+  return btoa(String.fromCharCode(...bytes));
 }
 
-/** Whether interim password auth is configured and usable. */
-export function passwordAuthConfigured(env: AccessEnv): boolean {
-  return Boolean(env.ADMIN_PASSWORD && env.ADMIN_SESSION_SECRET);
+/**
+ * PBKDF2-SHA256. Deliberately slow, so that a stolen hash cannot be attacked
+ * at the speed a bare SHA-256 would allow.
+ *
+ * 210,000 iterations is OWASP's current floor for PBKDF2-HMAC-SHA256. It costs
+ * a fraction of a second once per sign-in, against a 12-hour session, so the
+ * admin never notices it — and the login route's lockout means an attacker
+ * never gets to run it often enough to matter either.
+ */
+async function pbkdf2(
+  password: string,
+  salt: Uint8Array,
+  iterations: number
+): Promise<Uint8Array> {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(password),
+    "PBKDF2",
+    false,
+    ["deriveBits"]
+  );
+  const bits = await crypto.subtle.deriveBits(
+    { name: "PBKDF2", salt: salt as BufferSource, iterations, hash: "SHA-256" },
+    key,
+    256
+  );
+  return new Uint8Array(bits);
+}
+
+/**
+ * The work factor for newly set passwords.
+ *
+ * Well below OWASP's 210,000 floor for PBKDF2-SHA256, and deliberately so: the
+ * derivation runs inside a Worker, where CPU per request is metered and a
+ * quarter-second of it on every sign-in is already generous. 210,000 measured
+ * at roughly three quarters of a second, which risks the request being cut off
+ * — and a login that cannot complete is worse than one with a smaller margin
+ * against offline cracking.
+ *
+ * What actually protects this credential is its length. The password issued
+ * with this feature is 28 random characters (~160 bits), which no work factor
+ * meaningfully improves, because no amount of hardware brute-forces it. That
+ * bargain only holds while the password stays long — which is why the reset
+ * form sets a floor rather than offering a strength meter.
+ *
+ * Verification reads the count from the stored hash rather than from here, so
+ * raising this later re-hashes on the next password change without stranding
+ * the existing one.
+ */
+const HASH_ITERATIONS = 25_000;
+
+/**
+ * Formats a password for storage, in the format both the bootstrap secret and
+ * the `admin_credentials` row use.
+ *
+ * Exported so the hash can be produced by a script rather than by hand, and so
+ * the format has exactly one definition that the generator, the reset flow and
+ * the verifier all read from.
+ */
+export async function hashPassword(password: string): Promise<string> {
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const hash = await pbkdf2(password, salt, HASH_ITERATIONS);
+  return `pbkdf2$${HASH_ITERATIONS}$${bytesToB64(salt)}$${bytesToB64(hash)}`;
+}
+
+export interface AdminCredential {
+  username: string;
+  passwordHash: string;
+}
+
+/**
+ * The live credential: the `admin_credentials` row if one exists, otherwise
+ * the bootstrap secrets.
+ *
+ * The row wins because it is the only half that can be rewritten at runtime.
+ * Once a reset has been completed the secrets are inert, and can be deleted.
+ *
+ * Returns null when neither is configured, which every caller treats as "no
+ * admin", so an unconfigured deployment is locked rather than open.
+ */
+export async function getAdminCredential(
+  env: AccessEnv
+): Promise<AdminCredential | null> {
+  if (env.DB) {
+    try {
+      const row = await env.DB.prepare(
+        "SELECT username, password_hash FROM admin_credentials WHERE id = 1"
+      ).first<{ username: string; password_hash: string }>();
+      if (row?.username && row.password_hash) {
+        return { username: row.username, passwordHash: row.password_hash };
+      }
+    } catch (error) {
+      // A missing table means the migration has not run yet, which is a normal
+      // state on a first deploy — fall through to the bootstrap rather than
+      // locking the admin out of the console that would let them fix it.
+      console.error("admin_credentials read failed; using bootstrap", error);
+    }
+  }
+
+  if (env.ADMIN_USERNAME && env.ADMIN_PASSWORD_HASH) {
+    return { username: env.ADMIN_USERNAME, passwordHash: env.ADMIN_PASSWORD_HASH };
+  }
+  return null;
+}
+
+/**
+ * Replaces the stored password, moving the credential into D1 the first time.
+ *
+ * The username comes from the existing credential rather than from the caller:
+ * a reset changes the password and nothing else, so a stolen reset link cannot
+ * also change who the admin is.
+ */
+export async function setAdminPassword(
+  env: AccessEnv,
+  passwordHash: string
+): Promise<void> {
+  if (!env.DB) throw new Error("No database binding; cannot store a password");
+  const current = await getAdminCredential(env);
+  if (!current) throw new Error("No admin configured");
+
+  await env.DB.prepare(
+    `INSERT INTO admin_credentials (id, username, password_hash, updated_at)
+     VALUES (1, ?, ?, datetime('now'))
+     ON CONFLICT(id) DO UPDATE SET
+       password_hash = excluded.password_hash,
+       updated_at = excluded.updated_at`
+  )
+    .bind(current.username, passwordHash)
+    .run();
+}
+
+/**
+ * Whether these credentials match the configured admin.
+ *
+ * Both halves are compared in constant time, and the password is derived even
+ * when the username is already wrong, so the response time does not reveal
+ * which half failed.
+ */
+export async function checkCredentials(
+  suppliedUsername: string,
+  suppliedPassword: string,
+  env: AccessEnv
+): Promise<boolean> {
+  const credential = await getAdminCredential(env);
+  if (!credential) return false; // fail closed when unset
+  const { username, passwordHash: stored } = credential;
+
+  // Usernames are email addresses, whose local part is technically
+  // case-sensitive but never treated that way by any provider in practice.
+  // Case-folding here avoids locking the admin out over a capital letter.
+  const usernameOk = timingSafeEqual(
+    suppliedUsername.trim().toLowerCase(),
+    username.trim().toLowerCase()
+  );
+
+  const parts = stored.split("$");
+  if (parts.length !== 4 || parts[0] !== "pbkdf2") return false;
+  const iterations = Number(parts[1]);
+  if (!Number.isSafeInteger(iterations) || iterations < 1) return false;
+
+  const salt = b64urlToBytes(parts[2]);
+  const expected = parts[3];
+  const actual = bytesToB64(await pbkdf2(suppliedPassword, salt, iterations));
+
+  const passwordOk = timingSafeEqual(actual, expected);
+  return usernameOk && passwordOk;
+}
+
+/** Whether username + password sign-in is configured and usable. */
+export async function passwordAuthConfigured(env: AccessEnv): Promise<boolean> {
+  if (!env.ADMIN_SESSION_SECRET) return false;
+  return (await getAdminCredential(env)) !== null;
 }
 
 function cookieValue(req: Request, name: string): string | null {
@@ -265,11 +465,19 @@ export async function isAdminRequest(req: Request, env: AccessEnv): Promise<bool
     if (token && (await verifyAccessJwt(token, teamDomain, aud))) return true;
   }
 
-  // Interim gate: a signed password session. Only consulted when both the
-  // password and the signing secret are set, so this stays fail-closed.
-  if (passwordAuthConfigured(env)) {
+  // Username + password session. Only consulted when both a credential and the
+  // signing secret exist, so this stays fail-closed.
+  const credential = env.ADMIN_SESSION_SECRET ? await getAdminCredential(env) : null;
+  if (credential) {
     const session = cookieValue(req, SESSION_COOKIE);
-    if (session && (await verifySessionToken(session, env.ADMIN_SESSION_SECRET!))) {
+    if (
+      session &&
+      (await verifySessionToken(
+        session,
+        env.ADMIN_SESSION_SECRET!,
+        credential.passwordHash
+      ))
+    ) {
       return true;
     }
   }

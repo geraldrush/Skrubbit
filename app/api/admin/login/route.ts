@@ -1,11 +1,12 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import {
-  checkPassword,
+  checkCredentials,
   createSessionToken,
-  passwordAuthConfigured,
+  getAdminCredential,
   sessionCookieHeader,
 } from "@/lib/admin-auth";
+import { verifyTurnstile } from "@/lib/turnstile";
 
 export const dynamic = "force-dynamic";
 
@@ -51,9 +52,10 @@ function carriedFailures(record: AttemptRecord | null, now: number): number {
 export async function POST(req: Request) {
   const { env } = getCloudflareContext();
 
-  if (!passwordAuthConfigured(env)) {
+  const credential = await getAdminCredential(env);
+  if (!credential || !env.ADMIN_SESSION_SECRET) {
     return Response.json(
-      { error: "Admin password sign-in is not configured." },
+      { error: "Admin sign-in is not configured." },
       { status: 503 }
     );
   }
@@ -75,15 +77,35 @@ export async function POST(req: Request) {
     );
   }
 
+  let username = "";
   let password = "";
+  let turnstileToken = "";
   try {
-    const body = (await req.json()) as { password?: unknown };
+    const body = (await req.json()) as {
+      username?: unknown;
+      password?: unknown;
+      turnstileToken?: unknown;
+    };
+    username = typeof body.username === "string" ? body.username : "";
     password = typeof body.password === "string" ? body.password : "";
+    turnstileToken =
+      typeof body.turnstileToken === "string" ? body.turnstileToken : "";
   } catch {
     return Response.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  if (!(await checkPassword(password, env))) {
+  // Checked before the credentials, so a script that cannot solve the
+  // challenge never reaches the password comparison at all — and never spends
+  // a lockout slot that belongs to the real admin.
+  const verified = await verifyTurnstile(req, turnstileToken, env);
+  if (!verified.ok) {
+    return Response.json(
+      { error: "Verification failed. Complete the challenge and try again." },
+      { status: 403 }
+    );
+  }
+
+  if (!(await checkCredentials(username, password, env))) {
     const failures = carriedFailures(record, now) + 1;
     const lockedUntil = failures >= MAX_FAILURES ? now + LOCKOUT_SECONDS : 0;
     await env.DB.prepare(
@@ -97,14 +119,21 @@ export async function POST(req: Request) {
       .bind(ip, failures, lockedUntil, now)
       .run();
 
-    // Deliberately vague: don't confirm whether a password was close.
-    return Response.json({ error: "Incorrect password." }, { status: 401 });
+    // Deliberately vague: one message for a wrong username and a wrong
+    // password alike, so the response never confirms that an account exists.
+    return Response.json(
+      { error: "Incorrect username or password." },
+      { status: 401 }
+    );
   }
 
   // Success clears the counter so a later typo doesn't inherit old failures.
   await env.DB.prepare("DELETE FROM login_attempts WHERE ip = ?").bind(ip).run();
 
-  const token = await createSessionToken(env.ADMIN_SESSION_SECRET!);
+  const token = await createSessionToken(
+    env.ADMIN_SESSION_SECRET,
+    credential.passwordHash
+  );
   const secure = new URL(req.url).protocol === "https:";
 
   return new Response(JSON.stringify({ ok: true }), {
