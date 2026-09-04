@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Nunito, Baloo_2 } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
 import { site } from "@/data/site";
@@ -8,17 +8,33 @@ import { Footer } from "@/components/layout/footer";
 import { CartSheet } from "@/components/cart-sheet";
 import { Toaster } from "@/components/ui/sonner";
 
-const nunito = Nunito({
-  subsets: ["latin"],
+/*
+ * Nunito and Baloo 2, served from this repo rather than fetched from Google
+ * Fonts during the build.
+ *
+ * `next/font/google` downloads the files at build time, which made every
+ * deploy depend on fonts.googleapis.com answering quickly. It stopped doing so
+ * — Baloo 2 timed out three builds in a row and no deploy could go out.
+ *
+ * These are the same latin-subset variable files Google was serving, so the
+ * rendering is unchanged. Both faces are SIL Open Font Licensed, which permits
+ * redistribution like this. It also drops a third-party request from every
+ * page load: visitors no longer fetch from fonts.gstatic.com.
+ */
+const nunito = localFont({
+  src: "./fonts/nunito.woff2",
   variable: "--font-nunito",
   display: "swap",
+  // The variable file carries the whole axis; naming the range lets the
+  // browser synthesise nothing and pick real weights.
+  weight: "200 1000",
 });
 
-const baloo = Baloo_2({
-  subsets: ["latin"],
-  weight: ["600", "700", "800"],
+const baloo = localFont({
+  src: "./fonts/baloo2.woff2",
   variable: "--font-baloo",
   display: "swap",
+  weight: "400 800",
 });
 
 export const metadata: Metadata = {
