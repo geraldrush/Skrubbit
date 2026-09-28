@@ -10,6 +10,8 @@ import { ProductImage } from "@/components/product-image";
 import { ProductCard } from "@/components/product-card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { JsonLd } from "@/components/json-ld";
+import { BUSINESS_ID, absoluteUrl, breadcrumbSchema } from "@/lib/seo";
 
 // Slugs are no longer known at build time now that products live in D1, so
 // generateStaticParams is gone and pages render per-request.
@@ -23,9 +25,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProduct(slug);
   if (!product) return { title: "Product not found" };
+  const category = getCategory(product.category);
   return {
-    title: product.name,
-    description: product.description,
+    title: `${product.name}${category ? ` — ${category.name} Cleaning Product` : ""}`,
+    description: `${product.tagline} ${product.description}`.slice(0, 300),
+    alternates: { canonical: `/shop/${product.slug}` },
     openGraph: { images: [product.image] },
   };
 }
@@ -52,8 +56,38 @@ export default async function ProductPage({
     .filter((p) => p.category === product.category && p.slug !== product.slug)
     .slice(0, 4);
 
+  const prices = product.variants.map((v) => v.price);
+  const productSchema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: product.name,
+    description: product.description,
+    image: absoluteUrl(product.image),
+    sku: product.variants[0]?.sku,
+    brand: { "@type": "Brand", name: "Skrubb-it" },
+    manufacturer: { "@id": BUSINESS_ID },
+    category: category?.name,
+    offers: {
+      "@type": "AggregateOffer",
+      priceCurrency: "ZAR",
+      lowPrice: Math.min(...prices),
+      highPrice: Math.max(...prices),
+      offerCount: prices.length,
+      availability: "https://schema.org/InStock",
+      url: absoluteUrl(`/shop/${product.slug}`),
+      seller: { "@id": BUSINESS_ID },
+    },
+  };
+
   return (
     <div className="container py-8">
+      <JsonLd data={productSchema} />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Shop", path: "/shop" },
+          { name: product.name, path: `/shop/${product.slug}` },
+        ])}
+      />
       {/* Breadcrumb */}
       <nav className="mb-6 flex items-center gap-1 text-sm text-muted-foreground">
         <Link href="/shop" className="hover:text-accent">

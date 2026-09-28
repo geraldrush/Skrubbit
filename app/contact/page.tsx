@@ -2,7 +2,9 @@ import type { Metadata } from "next";
 import { Mail, MapPin, MessageCircle, Phone } from "lucide-react";
 
 import { site } from "@/data/site";
+import { getService } from "@/data/services";
 import { EnquiryForm } from "@/components/enquiry-form";
+import { JsonLd } from "@/components/json-ld";
 import { Button } from "@/components/ui/button";
 import {
   Accordion,
@@ -12,9 +14,10 @@ import {
 } from "@/components/ui/accordion";
 
 export const metadata: Metadata = {
-  title: "Contact",
+  title: "Contact & Quotes — Cleaning Products and Services",
+  alternates: { canonical: "/contact" },
   description:
-    "Get in touch with Skrubb-it for orders, bulk pricing and stockist enquiries. Message us on WhatsApp or send us an email.",
+    "Contact Skrubb-it for cleaning product orders, bulk pricing and cleaning service quotes in Limpopo. WhatsApp, phone or email.",
 };
 
 const faqs = [
@@ -31,25 +34,65 @@ const faqs = [
     a: "Delivery is quoted based on your location and order size. We'll confirm the delivery fee (or collection details) when we process your order.",
   },
   {
+    q: "Do you offer cleaning services as well as products?",
+    a: "Yes. We do deep, heavy-duty, industrial, office and specialist cleaning, once-off or on contract, using our own products. See the services page for the full list, or tell us about the job and we'll quote it.",
+  },
+  {
     q: "Where else can I buy Skrubb-it?",
     a: "You can also find selected Skrubb-it products on Takealot.",
   },
 ];
 
-export default function ContactPage() {
+/**
+ * /contact?service=<slug> arrives from the services page with the service
+ * already named in the message; "general" is a cleaning enquiry with no
+ * particular service picked. Anything else is ignored rather than echoed into
+ * the form.
+ */
+function serviceMessage(slug: string | undefined): string {
+  if (!slug) return "";
+  if (slug === "general") {
+    return "I'd like a quote for cleaning services.\n\nPremises / location:\nWhat needs cleaning:\nOnce-off or regular:";
+  }
+  const service = getService(slug);
+  if (!service) return "";
+  return `I'd like a quote for ${service.name.toLowerCase()}.\n\nPremises / location:\nSize or number of rooms:\nPreferred date:`;
+}
+
+export default async function ContactPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ service?: string | string[] }>;
+}) {
+  const { service } = await searchParams;
+  const initialMessage = serviceMessage(
+    Array.isArray(service) ? service[0] : service
+  );
+
   return (
     <div className="container py-10">
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: faqs.map((f) => ({
+            "@type": "Question",
+            name: f.q,
+            acceptedAnswer: { "@type": "Answer", text: f.a },
+          })),
+        }}
+      />
       <header className="mb-10 max-w-2xl">
         <h1 className="font-display text-4xl font-extrabold">Get in touch</h1>
         <p className="mt-2 text-muted-foreground">
-          Questions, bulk orders or stockist enquiries — we&apos;d love to hear
+          Questions, bulk orders, cleaning services or stockist enquiries — we&apos;d love to hear
           from you. The fastest way to reach us is WhatsApp.
         </p>
       </header>
 
       <div className="grid gap-10 lg:grid-cols-[1fr_360px]">
         <div>
-          <EnquiryForm />
+          <EnquiryForm initialMessage={initialMessage} />
         </div>
 
         <aside className="space-y-6">

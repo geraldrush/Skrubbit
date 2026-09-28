@@ -11,7 +11,8 @@ import { ProfileProse } from "@/components/profile-prose";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "About the company",
+  title: "About Skrubb-it — Cleaning Products Manufacturer in Vhembe, Limpopo",
+  alternates: { canonical: "/about" },
   description:
     "Skrubb-it is a registered, CSD-listed, B-BBEE Level 1 manufacturer of cleaning chemicals and hygiene consumables, based in the Vhembe District of Limpopo.",
 };

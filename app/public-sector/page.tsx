@@ -9,7 +9,8 @@ import { Credentials } from "@/components/credentials";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Government & institutional supply",
+  title: "Government & Institutional Cleaning Supplier — CSD Registered",
+  alternates: { canonical: "/public-sector" },
   description:
     "Skrubb-it is CSD-registered, tax compliant and a B-BBEE Level 1 contributor, supplying cleaning chemicals and consumables to schools, colleges, clinics and municipalities in Limpopo.",
 };
@@ -93,7 +94,6 @@ export default async function PublicSectorPage() {
               {[
                 ["Registered name", profile.legalName],
                 ["Company registration", profile.registrationNumber],
-                ["CSD supplier number", profile.csdNumber],
                 [
                   "VAT",
                   profile.vatRegistered

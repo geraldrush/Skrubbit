@@ -12,9 +12,10 @@ import { getProducts } from "@/lib/products";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Shop",
+  title: "Shop Cleaning Products — Bleach, Pine Gel, Dishwashing Liquid",
+  alternates: { canonical: "/shop" },
   description:
-    "Browse Skrubb-it cleaning products and personal care essentials — dishwashing liquid, pine gel, bleach, toilet cleaner, fabric softener and more.",
+    "Buy Skrubb-it cleaning products online — dishwashing liquid, pine gel, bleach, toilet cleaner, fabric softener and degreasers in retail and bulk sizes. Made in Limpopo, delivered across South Africa.",
 };
 
 /**

@@ -5,6 +5,7 @@ import { site } from "@/data/site";
 import { LegalPage } from "@/components/legal-page";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/cookies" },
   title: "Cookie policy",
   description:
     "Skrubb-it uses no advertising or analytics cookies. What the site does store, and why.",

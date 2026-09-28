@@ -8,6 +8,7 @@ import { LegalPage } from "@/components/legal-page";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/terms" },
   title: "Terms of service",
   description:
     "The terms on which Skrubb-it quotes, supplies and delivers cleaning chemicals and consumables.",

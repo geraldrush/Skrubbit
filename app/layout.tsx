@@ -7,6 +7,11 @@ import { Header } from "@/components/layout/header";
 import { Footer } from "@/components/layout/footer";
 import { CartSheet } from "@/components/cart-sheet";
 import { Toaster } from "@/components/ui/sonner";
+import { JsonLd } from "@/components/json-ld";
+import { businessSchema } from "@/lib/seo";
+
+const defaultTitle =
+  "Skrubb-it | Cleaning Products & Professional Cleaning Services in Limpopo";
 
 /*
  * Nunito and Baloo 2, served from this repo rather than fetched from Google
@@ -40,18 +45,34 @@ const baloo = localFont({
 export const metadata: Metadata = {
   metadataBase: new URL(site.url),
   title: {
-    default: `${site.legalName} — ${site.tagline}`,
+    default: defaultTitle,
     template: `%s | ${site.name}`,
   },
   description: site.description,
+  applicationName: site.name,
   openGraph: {
-    title: `${site.legalName} — ${site.tagline}`,
+    title: defaultTitle,
     description: site.description,
     url: site.url,
     siteName: site.legalName,
     locale: "en_ZA",
     type: "website",
+    images: [
+      {
+        url: "/images/brand/og.jpg",
+        width: 1200,
+        height: 630,
+        alt: "The Skrubb-it range of cleaning products",
+      },
+    ],
   },
+  twitter: {
+    card: "summary_large_image",
+    title: defaultTitle,
+    description: site.description,
+    images: ["/images/brand/og.jpg"],
+  },
+  robots: { index: true, follow: true },
   icons: {
     icon: "/images/brand/logo-small.png",
   },
@@ -67,8 +88,9 @@ export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="en" className={`${nunito.variable} ${baloo.variable}`}>
+    <html lang="en-ZA" className={`${nunito.variable} ${baloo.variable}`}>
       <body className="flex min-h-dvh flex-col">
+        <JsonLd data={businessSchema()} />
         <Header />
         <main className="flex-1">{children}</main>
         <Footer />

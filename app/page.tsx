@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import {
@@ -10,6 +11,7 @@ import {
 
 import { site } from "@/data/site";
 import { categories } from "@/data/products";
+import { serviceGroups, services } from "@/data/services";
 import { getProductsSafe } from "@/lib/products";
 import { getCompanyProfileSafe } from "@/lib/company";
 import { Button } from "@/components/ui/button";
@@ -39,6 +41,10 @@ const perks = [
     body: "Black woman–owned, manufactured in South Africa.",
   },
 ];
+
+export const metadata: Metadata = {
+  alternates: { canonical: "/" },
+};
 
 // Featured products come from D1.
 export const dynamic = "force-dynamic";
@@ -73,7 +79,8 @@ export default async function HomePage() {
             </h1>
             <p className="max-w-md text-lg font-medium text-brand-ink/80">
               {site.legalName} manufactures industrial &amp; household cleaning
-              products and personal care essentials — quality you can trust, at
+              products and personal care essentials, and provides professional
+              cleaning services across Limpopo — quality you can trust, at
               prices that make sense.
             </p>
             <div className="flex flex-wrap gap-3">
@@ -151,6 +158,46 @@ export default async function HomePage() {
                 <p className="text-sm text-muted-foreground">{perk.body}</p>
               </div>
             </div>
+          ))}
+        </div>
+      </section>
+
+      {/* Cleaning services */}
+      <section className="container pt-14">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="font-display text-3xl font-extrabold">
+              Professional cleaning services
+            </h2>
+            <p className="mt-1 max-w-xl text-muted-foreground">
+              We don&apos;t just make the products — we clean with them. Homes,
+              offices, factories, schools and clinics, once-off or on contract.
+            </p>
+          </div>
+          <Button asChild variant="accent">
+            <Link href="/services">
+              All cleaning services
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+          {serviceGroups.map((g) => (
+            <Link
+              key={g.id}
+              href={`/services#${g.id}`}
+              className="rounded-xl border bg-card p-4 transition-colors hover:border-accent hover:bg-secondary"
+            >
+              <p className="font-display text-sm font-bold leading-tight">
+                {g.name}
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                {services
+                  .filter((s) => s.group === g.id)
+                  .map((s) => s.name)
+                  .join(" · ")}
+              </p>
+            </Link>
           ))}
         </div>
       </section>

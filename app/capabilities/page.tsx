@@ -10,7 +10,8 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "What we supply",
+  title: "Bulk Cleaning Chemicals Supplier — 5, 20 & 25 L",
+  alternates: { canonical: "/capabilities" },
   description:
     "Cleaning chemicals, hygiene consumables, vehicle care and industrial degreasers manufactured and supplied in bulk from Vhembe, Limpopo.",
 };

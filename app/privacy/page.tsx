@@ -8,6 +8,7 @@ import { LegalPage } from "@/components/legal-page";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
+  alternates: { canonical: "/privacy" },
   title: "Privacy policy",
   description:
     "How Skrubb-it collects, uses and protects personal information, in line with the Protection of Personal Information Act.",

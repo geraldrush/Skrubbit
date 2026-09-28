@@ -25,17 +25,20 @@ import { Textarea } from "@/components/ui/textarea";
 export function EnquiryForm({
   title = "Send us an enquiry",
   intro = "Tell us what you need and we will reply within one business day.",
+  initialMessage = "",
   className = "",
 }: {
   title?: string;
   intro?: string;
+  /** Pre-fills the message, e.g. the service picked on /services. */
+  initialMessage?: string;
   className?: string;
 }) {
   const [form, setForm] = React.useState({
     name: "",
     email: "",
     phone: "",
-    message: "",
+    message: initialMessage,
   });
   const [busy, setBusy] = React.useState(false);
   const [sent, setSent] = React.useState(false);

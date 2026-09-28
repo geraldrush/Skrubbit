@@ -23,6 +23,7 @@ export async function Footer() {
 
   const links = [
     { href: "/shop", label: "Shop" },
+    { href: "/services", label: "Cleaning services" },
     { href: "/capabilities", label: "What we supply" },
     { href: "/public-sector", label: "Government" },
     { href: "/about", label: "About" },
@@ -31,7 +32,6 @@ export async function Footer() {
 
   const particulars = [
     profile.registrationNumber && `Reg. ${profile.registrationNumber}`,
-    profile.csdNumber && `CSD ${profile.csdNumber}`,
     level && `B-BBEE ${level}`,
     profile.vatRegistered ? `VAT ${profile.vatNumber}` : "Not VAT registered",
   ].filter(Boolean) as string[];
@@ -42,8 +42,8 @@ export async function Footer() {
         <Logo />
 
         <p className="text-sm text-muted-foreground">
-          Cleaning chemicals and hygiene consumables, manufactured in{" "}
-          {site.contact.location}.
+          Cleaning chemicals, hygiene consumables and professional cleaning
+          services, from {site.contact.location}.
         </p>
 
         <nav

@@ -9,7 +9,9 @@ import type { NextRequest } from "next/server";
  * (it is what data/site.ts advertises), so www is redirected to it with a
  * 308 that preserves method and body.
  *
- * The workers.dev URL and the apex pass through untouched.
+ * The workers.dev URL is a second full copy of the site, so it is served with
+ * a noindex header: search engines should only ever list skrubbit.co.za, and
+ * two copies of every page split whatever ranking the site earns.
  */
 export function middleware(req: NextRequest) {
   const host = req.headers.get("host");
@@ -19,7 +21,11 @@ export function middleware(req: NextRequest) {
     url.port = "";
     return NextResponse.redirect(url, 308);
   }
-  return NextResponse.next();
+  const res = NextResponse.next();
+  if (host?.endsWith(".workers.dev")) {
+    res.headers.set("X-Robots-Tag", "noindex, nofollow");
+  }
+  return res;
 }
 
 export const config = {

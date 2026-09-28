@@ -1,4 +1,4 @@
-import { BadgeCheck, Building2, FileCheck2, MapPin, ShieldCheck } from "lucide-react";
+import { BadgeCheck, Building2, MapPin, ShieldCheck } from "lucide-react";
 
 import type { CompanyProfile } from "@/lib/company";
 
@@ -30,11 +30,6 @@ export function Credentials({
       label: `B-BBEE ${level}`,
       detail: recognition ?? "Exempted Micro Enterprise",
     },
-    profile.csdNumber && {
-      icon: FileCheck2,
-      label: "CSD registered",
-      detail: profile.csdNumber,
-    },
     profile.registrationNumber && {
       icon: Building2,
       label: "Registered company",
@@ -58,7 +53,7 @@ export function Credentials({
 
   return (
     <dl
-      className={`grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-3 ${className}`}
+      className={`grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4 ${className}`}
     >
       {items.map(({ icon: Icon, label, detail }) => (
         <div key={label} className="flex items-start gap-3">

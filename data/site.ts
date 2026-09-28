@@ -11,7 +11,7 @@ export const site = {
   legalName: "Skrubb-it Products",
   tagline: "Powerful cleaning, proudly South African.",
   description:
-    "Skrubb-it manufactures industrial and household cleaning products and personal care essentials in South Africa. Quality you can trust, at prices that make sense.",
+    "Skrubb-it manufactures industrial and household cleaning products and provides professional cleaning services in South Africa. Quality you can trust, at prices that make sense.",
   url: "https://skrubbit.co.za",
 
   // --- Contact ---
