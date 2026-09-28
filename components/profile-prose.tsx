@@ -6,9 +6,25 @@ import { parseProfile } from "@/lib/profile-text";
  * Same text, same markers, same source record as the downloadable PDF — so the
  * website and the document a buyer receives can never disagree about what the
  * company does.
+ *
+ * `hide` drops whole sections by heading (case-insensitive) from the page
+ * only. The PDF and tender packs still carry them.
  */
-export function ProfileProse({ text }: { text: string }) {
-  const blocks = parseProfile(text);
+export function ProfileProse({
+  text,
+  hide = [],
+}: {
+  text: string;
+  hide?: string[];
+}) {
+  const hidden = new Set(hide.map((h) => h.toLowerCase()));
+  let skipping = false;
+  const blocks = parseProfile(text).filter((block) => {
+    if (block.kind === "heading") {
+      skipping = hidden.has(block.text.toLowerCase());
+    }
+    return !skipping;
+  });
   const out: React.ReactNode[] = [];
   let bullets: string[] = [];
 

@@ -68,7 +68,11 @@ export default async function AboutPage() {
 
       <section className="container py-14 md:py-20">
         {profile.profileText ? (
-          <ProfileProse text={profile.profileText} />
+          <ProfileProse
+            text={profile.profileText}
+            // Kept in the profile PDF and tender packs, not on the public site.
+            hide={["Track record"]}
+          />
         ) : (
           <p className="text-muted-foreground">
             The company profile has not been written yet.
