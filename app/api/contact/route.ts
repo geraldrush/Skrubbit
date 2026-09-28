@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
  *
  * Unlike /api/orders there is no second channel here — if this write fails the
  * message is gone — so a persistence failure is reported as a 5xx rather than
- * swallowed. The form already tells the customer to WhatsApp instead when the
+ * swallowed. The form already tells the customer to email us directly when the
  * request fails, which is the honest outcome; the old version always answered
  * "ok" and dropped the message on the floor.
  */
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
     // we failed to store, and repeating it here would defeat the point.
     console.error("[contact] could not persist enquiry", err);
     return NextResponse.json(
-      { error: "We couldn't save your message. Please WhatsApp us instead." },
+      { error: "We couldn't save your message. Please email us at info@skrubbit.co.za instead." },
       { status: 503 }
     );
   }

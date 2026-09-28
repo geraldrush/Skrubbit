@@ -274,7 +274,7 @@ export default async function HomePage() {
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-lg font-medium text-brand-ink/80">
             We supply schools, offices, guest houses and businesses across South
-            Africa. Get a quote on WhatsApp in minutes.
+            Africa. Send an enquiry and we reply within one business day.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" variant="accent">

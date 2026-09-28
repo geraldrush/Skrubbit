@@ -29,7 +29,7 @@ export function ContactForm() {
       form.reset();
       toast.success("Thanks! We'll be in touch soon.");
     } catch {
-      toast.error("Something went wrong. Please WhatsApp us instead.");
+      toast.error("Something went wrong. Please email us at info@skrubbit.co.za instead.");
     } finally {
       setSubmitting(false);
     }

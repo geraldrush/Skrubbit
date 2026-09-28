@@ -23,11 +23,11 @@ export const metadata: Metadata = {
 const faqs = [
   {
     q: "Do you offer bulk and wholesale pricing?",
-    a: "Yes. We supply households, businesses, guest houses, schools and resellers. Send us your list on WhatsApp or the contact form and we'll quote you.",
+    a: "Yes. We supply households, businesses, guest houses, schools and resellers. Send us your list using the enquiry form and we'll email you a quote.",
   },
   {
     q: "How does ordering work?",
-    a: "Add products to your cart and check out — we'll open WhatsApp with your order pre-filled. We then confirm stock, delivery and payment with you directly.",
+    a: "Add products to your cart and check out — your order is emailed to us and you get a copy with your reference number. We then confirm stock, delivery and payment with you directly.",
   },
   {
     q: "Do you deliver?",

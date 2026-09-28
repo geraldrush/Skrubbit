@@ -43,7 +43,7 @@ export default async function ShopPage() {
         <h1 className="font-display text-4xl font-extrabold">Shop</h1>
         <p className="mt-2 max-w-xl text-muted-foreground">
           Professional-strength cleaning products and personal care essentials,
-          in retail and bulk sizes. Add to cart and check out on WhatsApp.
+          in retail and bulk sizes. Add to cart and send your order — we confirm by email.
         </p>
       </header>
       {products === null ? (

@@ -9,7 +9,6 @@ import { toast } from "sonner";
 import { formatZAR } from "@/lib/utils";
 import { site } from "@/data/site";
 import { useCart, cartSubtotal } from "@/store/cart";
-import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { ProductImage } from "@/components/product-image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,8 +51,7 @@ export default function CheckoutPage() {
     }
     setSubmitting(true);
 
-    // The order is placed here, by email. Unlike the old WhatsApp hand-off,
-    // a failure is a failed order and has to be reported as one — the customer
+    // The order is placed here, by email only. A failure is a failed order and has to be reported as one — the customer
     // must never be told their order is in when it is not.
     try {
       const res = await fetch("/api/orders", {
@@ -70,8 +68,8 @@ export default function CheckoutPage() {
     } catch (err) {
       toast.error(
         err instanceof Error
-          ? `${err.message}. Please WhatsApp us instead.`
-          : "Could not send your order. Please WhatsApp us instead."
+          ? `${err.message}. Please email us at info@skrubbit.co.za instead.`
+          : "Could not send your order. Please email us at info@skrubbit.co.za instead."
       );
     } finally {
       setSubmitting(false);
@@ -101,17 +99,6 @@ export default function CheckoutPage() {
         <div className="mt-2 flex flex-wrap justify-center gap-3">
           <Button asChild variant="accent">
             <Link href="/shop">Continue shopping</Link>
-          </Button>
-          <Button asChild variant="outline">
-            <a
-              href={buildWhatsAppLink(
-                `Hi Skrubb-it, I have just sent order ${reference}.`
-              )}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Follow up on WhatsApp
-            </a>
           </Button>
         </div>
       </div>

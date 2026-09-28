@@ -1,26 +1,20 @@
 "use client";
 
 import * as React from "react";
-import { Loader2, MessageCircle } from "lucide-react";
+import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
-import { buildWhatsAppLink } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 /**
- * One enquiry, two channels.
+ * An enquiry is recorded and emailed to Skrubb-it, and nothing else.
  *
- * The details are recorded and emailed first, then WhatsApp opens with the
- * message ready to send. Either half is enough on its own: a customer whose
- * WhatsApp never opens has still reached us, and one who prefers to chat is
- * not made to wait for an email reply.
- *
- * The order matters. WhatsApp is opened only after the record succeeds,
- * because a popup blocker eating the hand-off used to lose the enquiry
- * entirely.
+ * It used to open WhatsApp as well once the email had gone. That was removed
+ * on purpose: enquiries arrive by email only, so there is one inbox to answer
+ * from and no duplicate of every message in a chat.
  */
 export function EnquiryForm({
   title = "Send us an enquiry",
@@ -64,15 +58,6 @@ export function EnquiryForm({
       if (!res.ok) throw new Error(data.error ?? "Could not send your message");
 
       setSent(true);
-      window.open(
-        buildWhatsAppLink(
-          `Hi Skrubb-it, my name is ${form.name}.\n\n${form.message}\n\nYou can reach me on ${form.email}${
-            form.phone ? ` or ${form.phone}` : ""
-          }.`
-        ),
-        "_blank",
-        "noopener,noreferrer"
-      );
     } catch (err) {
       toast.error(
         err instanceof Error ? err.message : "Could not send your message"
@@ -183,14 +168,13 @@ export function EnquiryForm({
           {busy ? (
             <Loader2 className="h-5 w-5 animate-spin" />
           ) : (
-            <MessageCircle className="h-5 w-5" />
+            <Send className="h-5 w-5" />
           )}
           Send enquiry
         </Button>
 
         <p className="text-sm text-muted-foreground">
-          Sending opens WhatsApp with your message ready to go. Your details
-          reach us either way.
+          Your enquiry is emailed to us, and a copy is sent to you.
         </p>
       </div>
     </form>

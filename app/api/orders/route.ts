@@ -15,11 +15,8 @@ export const dynamic = "force-dynamic";
 /**
  * Records an order enquiry.
  *
- * WhatsApp is still the primary channel and is opened on the client, so this
- * endpoint must never block checkout — but it is no longer only a log line.
- * The order is written to D1 so there is a durable record even when the
- * customer never hits send in WhatsApp (popup blocked, app not installed, tab
- * closed), which used to lose the sale silently.
+ * The order is written to D1 as a durable record and emailed to Skrubb-it;
+ * email is the only channel an order is placed through.
  *
  * The subtotal is recomputed from the stored line items rather than trusting
  * the one the client sends, so a stored order always adds up to its own lines.
@@ -58,17 +55,15 @@ export async function POST(req: Request) {
   try {
     await recordOrder(reference, items, customer);
   } catch (err) {
-    // Best-effort by design: the customer is about to be handed to WhatsApp
-    // with the full order in the message, so a D1 failure must not become a
-    // failed checkout. Logged without customer details — keeping PII out of
+    // Best-effort by design: the order email below carries the full order, so
+    // a D1 failure must not become a failed checkout. Logged without customer details — keeping PII out of
     // the platform logs is half the reason these live in D1 now.
     console.error("[order] could not persist", reference, err);
   }
 
   const subtotal = subtotalOf(items);
 
-  // The order is now placed by email rather than handed to WhatsApp, so this
-  // send is the checkout. It still runs in waitUntil: the customer should see
+  // The order is placed by email, so this send is the checkout. It still runs in waitUntil: the customer should see
   // their confirmation page immediately, and the order is already in D1 if the
   // mail provider is having a bad day.
   const { env, ctx } = getCloudflareContext();
