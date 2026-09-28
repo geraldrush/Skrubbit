@@ -38,7 +38,7 @@ export function Credentials({
     {
       icon: BadgeCheck,
       label: "Tax compliant",
-      detail: "SARS status verified on the CSD",
+      detail: "SARS tax compliance status on request",
     },
     {
       icon: MapPin,

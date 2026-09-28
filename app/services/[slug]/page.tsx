@@ -166,7 +166,7 @@ export default async function ServicePage({
           <p className="mt-3 max-w-3xl text-muted-foreground">
             We manufacture cleaning chemicals in Vhembe and clean with our own
             products, so the right strength is always on hand. We are a
-            registered, CSD-listed, B-BBEE Level 1 company serving homes,
+            registered, B-BBEE Level 1 company serving homes,
             businesses, schools, clinics and government across Limpopo.
           </p>
           {related.length > 0 && (

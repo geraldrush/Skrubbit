@@ -9,10 +9,10 @@ import { Credentials } from "@/components/credentials";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Government & Institutional Cleaning Supplier — CSD Registered",
+  title: "Government & Institutional Cleaning Supplier — B-BBEE Level 1",
   alternates: { canonical: "/public-sector" },
   description:
-    "Skrubb-it is CSD-registered, tax compliant and a B-BBEE Level 1 contributor, supplying cleaning chemicals and consumables to schools, colleges, clinics and municipalities in Limpopo.",
+    "Skrubb-it is a registered, tax compliant a B-BBEE Level 1 contributor, supplying cleaning chemicals and consumables to schools, colleges, clinics and municipalities in Limpopo.",
 };
 
 /**
@@ -37,7 +37,7 @@ export default async function PublicSectorPage() {
     },
     {
       title: "Supporting documents with the quotation",
-      body: "CSD report, B-BBEE affidavit, tax compliance status, company registration and material safety data sheets, supplied together so nothing holds the submission up.",
+      body: "B-BBEE affidavit, tax compliance status, company registration and material safety data sheets, supplied together so nothing holds the submission up.",
     },
     {
       title: "Delivery to site",
@@ -56,8 +56,8 @@ export default async function PublicSectorPage() {
             A compliant local supplier for schools, clinics and municipalities
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            We are registered on the Central Supplier Database, tax compliant and
-            a B-BBEE Level 1 contributor. We manufacture in Vhembe and deliver
+            We are a registered company, tax compliant and a B-BBEE Level 1
+            contributor. We manufacture in Vhembe and deliver
             across Limpopo, which keeps freight out of the price.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
@@ -85,8 +85,7 @@ export default async function PublicSectorPage() {
           Supplier particulars
         </h2>
         <p className="mt-2 max-w-2xl text-muted-foreground">
-          Everything a supply chain officer needs to load us as a supplier or
-          verify us on the CSD.
+          Everything a supply chain officer needs to load us as a supplier.
         </p>
         <div className="mt-6 overflow-x-auto rounded-xl border">
           <table className="w-full text-sm">
@@ -106,7 +105,7 @@ export default async function PublicSectorPage() {
                 ["Email", profile.email],
                 [
                   "Tax, banking and certificates",
-                  "Verifiable on the CSD, and supplied with every quotation",
+                  "Supplied with every quotation",
                 ],
               ]
                 .filter(([, v]) => v)
