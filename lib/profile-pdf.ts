@@ -160,46 +160,21 @@ function particulars(L: Layout, fonts: Fonts, rows: string[][]): void {
   }
 }
 
-export interface ProfilePdfData {
-  profile: CompanyProfile;
-  /**
-   * Who is going to read it.
-   *
-   * "public" is the copy anyone can download from the website. It omits the
-   * things that are only ever needed inside a submission and that do real harm
-   * loose on the open web: the bank account, which with a company name is all
-   * an invoice-redirection fraud needs; the income tax number; the street
-   * address of premises that are also somebody's home; and the director's
-   * personal contact details.
-   *
-   * "internal" is the complete document, downloaded from /admin and attached
-   * to a specific supplier database or tender, where every field is asked for
-   * and the recipient is known.
-   */
-  audience?: "public" | "internal";
-  /** The logo, already fetched. Optional — the letterhead still sets without it. */
-  logo?: Uint8Array;
-  today: string;
-}
-
-export async function buildProfilePdf(data: ProfilePdfData): Promise<Uint8Array> {
-  const { profile, logo, today, audience = "internal" } = data;
-  const isPublic = audience === "public";
-  const doc = await PDFDocument.create();
-  const fonts = {
-    regular: await doc.embedFont(StandardFonts.Helvetica),
-    bold: await doc.embedFont(StandardFonts.HelveticaBold),
-  };
-
-  doc.setTitle(`${profile.legalName} — Company Profile`);
-  doc.setAuthor(profile.legalName);
-  doc.setSubject("Company profile");
-
-  const L = new Layout(doc, fonts);
-  const page = L.pages[0];
+/**
+ * The letterhead: logo, particulars on the right, and the brand rule under
+ * both. Shared with the invoices so every document that leaves the business
+ * looks like it came from the same place.
+ */
+export async function letterhead(
+  doc: PDFDocument,
+  L: Layout,
+  fonts: Fonts,
+  profile: CompanyProfile,
+  logo: Uint8Array | undefined,
+  isPublic = false
+): Promise<void> {
+  const page = live(L);
   const top = A4[1] - MARGIN;
-
-  /* ----------------------------- letterhead ------------------------------ */
 
   let logoBottom = top;
   if (logo) {
@@ -255,6 +230,48 @@ export async function buildProfilePdf(data: ProfilePdfData): Promise<Uint8Array>
   });
 
   L.space(top - ruleY + 22);
+}
+
+export interface ProfilePdfData {
+  profile: CompanyProfile;
+  /**
+   * Who is going to read it.
+   *
+   * "public" is the copy anyone can download from the website. It omits the
+   * things that are only ever needed inside a submission and that do real harm
+   * loose on the open web: the bank account, which with a company name is all
+   * an invoice-redirection fraud needs; the income tax number; the street
+   * address of premises that are also somebody's home; and the director's
+   * personal contact details.
+   *
+   * "internal" is the complete document, downloaded from /admin and attached
+   * to a specific supplier database or tender, where every field is asked for
+   * and the recipient is known.
+   */
+  audience?: "public" | "internal";
+  /** The logo, already fetched. Optional — the letterhead still sets without it. */
+  logo?: Uint8Array;
+  today: string;
+}
+
+export async function buildProfilePdf(data: ProfilePdfData): Promise<Uint8Array> {
+  const { profile, logo, today, audience = "internal" } = data;
+  const isPublic = audience === "public";
+  const doc = await PDFDocument.create();
+  const fonts = {
+    regular: await doc.embedFont(StandardFonts.Helvetica),
+    bold: await doc.embedFont(StandardFonts.HelveticaBold),
+  };
+
+  doc.setTitle(`${profile.legalName} — Company Profile`);
+  doc.setAuthor(profile.legalName);
+  doc.setSubject("Company profile");
+
+  const L = new Layout(doc, fonts);
+
+  /* ----------------------------- letterhead ------------------------------ */
+
+  await letterhead(doc, L, fonts, profile, logo, isPublic);
 
   /* ------------------------------- content ------------------------------- */
 

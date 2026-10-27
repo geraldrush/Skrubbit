@@ -27,6 +27,11 @@ export interface Message {
   subject: string;
   html: string;
   text: string;
+  /** Overrides BREVO_SENDER_NAME, e.g. the company name on an invoice. */
+  senderName?: string;
+  /** Where the customer's reply goes, when that is not the sending address. */
+  replyTo?: string;
+  attachments?: { name: string; content: Uint8Array }[];
 }
 
 export interface SendResult {
@@ -46,6 +51,16 @@ export function parseRecipients(value: string): string[] {
     .map((address) => address.trim())
     .filter((address) => address.includes("@"))
     .slice(0, 10);
+}
+
+/** Brevo takes attachments as base64. Chunked: spreading a whole PDF into
+ *  String.fromCharCode overflows the call stack. */
+function toBase64(bytes: Uint8Array): string {
+  let bin = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) {
+    bin += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  }
+  return btoa(bin);
 }
 
 /** Whether email is configured at all, so callers can fail quietly. */
@@ -76,8 +91,17 @@ export async function sendEmail(env: EmailEnv, message: Message): Promise<SendRe
       body: JSON.stringify({
         sender: {
           email: env.BREVO_SENDER,
-          name: env.BREVO_SENDER_NAME || "Skrubb-it Tenders",
+          name: message.senderName || env.BREVO_SENDER_NAME || "Skrubb-it Tenders",
         },
+        ...(message.replyTo ? { replyTo: { email: message.replyTo } } : {}),
+        ...(message.attachments?.length
+          ? {
+              attachment: message.attachments.map((a) => ({
+                name: a.name,
+                content: toBase64(a.content),
+              })),
+            }
+          : {}),
         to: (Array.isArray(message.to) ? message.to : [message.to]).map((email) => ({
           email,
         })),

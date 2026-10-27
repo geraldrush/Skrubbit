@@ -57,7 +57,15 @@ export default async function EnquiriesPage() {
                       {o.reference}
                     </span>
                   </p>
-                  <p className="font-semibold">{formatZAR(o.subtotal)}</p>
+                  <p className="flex items-baseline gap-3">
+                    <a
+                      href={`/admin/invoices#new/invoice?order=${encodeURIComponent(o.reference)}`}
+                      className="text-xs font-medium text-muted-foreground hover:text-accent"
+                    >
+                      Invoice
+                    </a>
+                    <span className="font-semibold">{formatZAR(o.subtotal)}</span>
+                  </p>
                 </div>
                 <p className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                   {o.email && (

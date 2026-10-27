@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, FileText } from "lucide-react";
+import { ChevronLeft, FileText, Receipt } from "lucide-react";
 
 import { getProducts } from "@/lib/products";
 import { getCompanyProfile } from "@/lib/company";
@@ -79,6 +79,14 @@ export default async function TenderPage({
           >
             <FileText className="mr-1.5 h-4 w-4" /> Tender pack
           </Link>
+          {(tender.status === "won" || tender.status === "submitted") && (
+            <Link
+              href={`/admin/invoices#new/invoice?tender=${tender.id}`}
+              className="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium hover:bg-secondary"
+            >
+              <Receipt className="mr-1.5 h-4 w-4" /> Invoice
+            </Link>
+          )}
           <DeleteTenderButton id={tender.id} title={tender.title} />
         </div>
       </div>
