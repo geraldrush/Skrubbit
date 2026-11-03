@@ -160,6 +160,57 @@ async function fetchPage(
 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
 
+/**
+ * Best-effort province from the buyer name, for when the feed drops the field.
+ *
+ * The eTenders API removed `tender.province` some time around September 2026.
+ * Many buyer names still carry the province as a prefix ("Limpopo - Dept of …")
+ * or contain it in the body ("Vhembe District Municipality"). National
+ * departments get an empty string — that is honest: guessing would be worse.
+ */
+const PROVINCE_PATTERNS: Array<[RegExp, string]> = [
+  [/\bLimpopo\b/i, "Limpopo"],
+  [/\bGauteng\b/i, "Gauteng"],
+  [/\bKwa-?Zulu.?Natal\b/i, "KwaZulu-Natal"],
+  [/\bWestern\s*Cape\b/i, "Western Cape"],
+  [/\bEastern\s*Cape\b/i, "Eastern Cape"],
+  [/\bFree\s*State\b/i, "Free State"],
+  [/\bMpumalanga\b/i, "Mpumalanga"],
+  [/\bNorth\s*West\b/i, "North West"],
+  [/\bNorthern\s*Cape\b/i, "Northern Cape"],
+  // Common municipal/district names that pin the province unambiguously.
+  [/\bVhembe\b/i, "Limpopo"],
+  [/\bMopani\b/i, "Limpopo"],
+  [/\bCapricorn\b/i, "Limpopo"],
+  [/\bWaterberg\b/i, "Limpopo"],
+  [/\bSekhukhune\b/i, "Limpopo"],
+  [/\bMusina\b/i, "Limpopo"],
+  [/\bThulamela\b/i, "Limpopo"],
+  [/\beThekwini\b/i, "KwaZulu-Natal"],
+  [/\bTshwane\b/i, "Gauteng"],
+  [/\bJohannesburg\b/i, "Gauteng"],
+  [/\bEkurhuleni\b/i, "Gauteng"],
+  [/\bSedibeng\b/i, "Gauteng"],
+  [/\bNelson\s*Mandela\s*Bay\b/i, "Eastern Cape"],
+  [/\bBuffalo\s*City\b/i, "Eastern Cape"],
+  [/\bMangaung\b/i, "Free State"],
+  [/\bEhlanzeni\b/i, "Mpumalanga"],
+  [/\bGert\s*Sibande\b/i, "Mpumalanga"],
+  [/\bNkangala\b/i, "Mpumalanga"],
+  [/\bCape\s*Town\b/i, "Western Cape"],
+  [/\bOverberg\b/i, "Western Cape"],
+  // "NW" abbreviation used in buyer names like "Naledi - NW Local Municipality".
+  [/\bNW\b/, "North West"],
+];
+
+function inferProvince(department: string, description: string): string {
+  const haystack = `${department} ${description}`;
+  for (const [re, province] of PROVINCE_PATTERNS) {
+    if (re.test(haystack)) return province;
+  }
+  return "";
+}
+
 interface Mapped {
   ocid: string;
   reference: string;
@@ -210,7 +261,7 @@ function map(release: RawRelease): Mapped | null {
     briefingAt: isSession ? ocdsToSast(briefing?.date) : null,
     briefingCompulsory: isSession && briefing?.compulsory ? 1 : 0,
     briefingVenue: isSession ? str(briefing?.venue) : "",
-    province: str(t.province),
+    province: str(t.province) || inferProvince(department, str(t.description)),
     category: str(t.mainProcurementCategory),
     deliveryLocation: str(t.deliveryLocation),
     valueAmount: typeof t.value?.amount === "number" ? t.value.amount : 0,

@@ -18,8 +18,8 @@ export const site = {
   contact: {
     // International format, digits only (e.g. 27 82 123 4567 -> "27821234567").
     // This drives the WhatsApp order enquiry, so it must be WhatsApp-enabled.
-    whatsapp: "27659669657",
-    phoneDisplay: "+27 65 966 9657",
+    whatsapp: "27671840963",
+    phoneDisplay: "+27 67 184 0963",
     email: "info@skrubbit.co.za",
     location: "Limpopo, South Africa",
   },

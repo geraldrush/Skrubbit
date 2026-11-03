@@ -100,7 +100,7 @@ export async function unannouncedAdverts(
       .prepare(
         `SELECT ${cols} FROM remote_tenders
           WHERE source = 'etenders'
-            AND province IN (${placeholders})
+            AND (province IN (${placeholders}) OR province = '')
             AND published_at IS NOT NULL
             AND published_at >= ?
             AND closing_at IS NOT NULL
