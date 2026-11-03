@@ -91,7 +91,7 @@ export async function sendEmail(env: EmailEnv, message: Message): Promise<SendRe
       body: JSON.stringify({
         sender: {
           email: env.BREVO_SENDER,
-          name: message.senderName || env.BREVO_SENDER_NAME || "Skrubb-it Tenders",
+          name: message.senderName || env.BREVO_SENDER_NAME || "SKRUBB IT",
         },
         ...(message.replyTo ? { replyTo: { email: message.replyTo } } : {}),
         ...(message.attachments?.length
