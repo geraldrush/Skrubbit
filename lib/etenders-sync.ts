@@ -203,7 +203,7 @@ const PROVINCE_PATTERNS: Array<[RegExp, string]> = [
   [/\bNW\b/, "North West"],
 ];
 
-function inferProvince(department: string, description: string): string {
+export function inferProvince(department: string, description: string): string {
   const haystack = `${department} ${description}`;
   for (const [re, province] of PROVINCE_PATTERNS) {
     if (re.test(haystack)) return province;
@@ -517,4 +517,41 @@ export async function syncRecentAdverts(): Promise<{
   }
 
   return { pages, records, claimed: true };
+}
+
+/**
+ * One-time backfill: infer province on mirrored tenders that have an empty one.
+ *
+ * The eTenders API dropped the province field around September 2026. Every
+ * tender already in the mirror was stored with an empty province. This walks
+ * the table once and fills in what can be inferred from the buyer name.
+ */
+export async function backfillProvinces(): Promise<number> {
+  const d = db();
+  const { results } = await d
+    .prepare(
+      `SELECT ocid, department, title FROM remote_tenders
+        WHERE province = '' AND source = 'etenders'`
+    )
+    .all<{ ocid: string; department: string; title: string }>();
+
+  let updated = 0;
+  const batch: D1PreparedStatement[] = [];
+  for (const row of results) {
+    const province = inferProvince(row.department, row.title);
+    if (province) {
+      batch.push(
+        d
+          .prepare("UPDATE remote_tenders SET province = ? WHERE ocid = ?")
+          .bind(province, row.ocid)
+      );
+      updated++;
+    }
+  }
+
+  // D1 batch limit is 128 statements.
+  for (let i = 0; i < batch.length; i += 100) {
+    await d.batch(batch.slice(i, i + 100));
+  }
+  return updated;
 }

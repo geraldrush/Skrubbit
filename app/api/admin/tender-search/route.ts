@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { searchTenders } from "@/lib/etenders";
-import { getSyncState, runSyncBatch, syncIsDue } from "@/lib/etenders-sync";
+import { backfillProvinces, getSyncState, runSyncBatch, syncIsDue } from "@/lib/etenders-sync";
 import { findImportedOcids } from "@/lib/tenders";
 import { requireAdmin } from "@/lib/admin-auth";
 
@@ -27,6 +27,9 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
 
   try {
+    // Backfill provinces on existing tenders (no-op once done).
+    await backfillProvinces();
+
     const [result, state] = await Promise.all([
       searchTenders({
         keyword: url.searchParams.get("q") ?? "",

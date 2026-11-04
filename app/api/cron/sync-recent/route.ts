@@ -1,7 +1,7 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { requireCron } from "@/lib/cron-auth";
-import { syncRecentAdverts } from "@/lib/etenders-sync";
+import { backfillProvinces, syncRecentAdverts } from "@/lib/etenders-sync";
 import { syncLocalSources } from "@/lib/local-sources";
 
 export const dynamic = "force-dynamic";
@@ -29,13 +29,20 @@ export async function POST(req: Request) {
 
   const local = await syncLocalSources();
 
+  // One-time backfill: tag existing mirrored tenders with inferred provinces
+  // after the eTenders API dropped the field. Harmless to re-run — rows with
+  // a province already set are skipped, and once every empty row that can be
+  // tagged has been, this returns 0 in under a millisecond.
+  const backfilled = await backfillProvinces();
+
   const result = await syncRecentAdverts();
   if (!result.claimed) {
     return Response.json({
       ok: true,
       local,
+      backfilled,
       skipped: "A feed sync was already running.",
     });
   }
-  return Response.json({ ok: true, local, ...result });
+  return Response.json({ ok: true, local, backfilled, ...result });
 }
