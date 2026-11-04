@@ -10,7 +10,7 @@ import {
   parseProvinces,
   unannouncedAdverts,
 } from "@/lib/tender-alerts";
-import { itemsByTender, listDocuments, listTenders } from "@/lib/tenders";
+import { deleteOverdueTenders, itemsByTender, listDocuments, listTenders } from "@/lib/tenders";
 
 export const dynamic = "force-dynamic";
 
@@ -44,6 +44,9 @@ export async function POST(req: Request) {
       { status: 200 }
     );
   }
+
+  // Clean up tenders whose closing date passed while still in "preparing".
+  await deleteOverdueTenders();
 
   const [tenders, itemMap, documents] = await Promise.all([
     listTenders(),

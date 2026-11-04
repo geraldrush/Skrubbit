@@ -1130,6 +1130,29 @@ export async function deleteTender(id: number): Promise<void> {
   ]);
 }
 
+/**
+ * Deletes tenders that are still "preparing" but whose closing date has passed.
+ *
+ * A tender that was never submitted after its deadline is dead weight — keeping
+ * it clutters the register and triggers stale reminders. Tenders marked as
+ * submitted, won, lost or abandoned are kept as history.
+ */
+export async function deleteOverdueTenders(): Promise<number> {
+  const d = db();
+  const overdue = await d
+    .prepare(
+      `SELECT id FROM tenders
+        WHERE status = 'preparing'
+          AND closing_at < datetime('now')`
+    )
+    .all<{ id: number }>();
+
+  for (const row of overdue.results) {
+    await deleteTender(row.id);
+  }
+  return overdue.results.length;
+}
+
 /* ---------------------------- pricing schedule --------------------------- */
 
 /** South African VAT. */

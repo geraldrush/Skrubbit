@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, Clock, XCircle } from "lucide-react";
 
 import {
   assessTender,
+  deleteOverdueTenders,
   formatDateTime,
   itemsByTender,
   listDocuments,
@@ -32,6 +33,8 @@ const STATUS_LABELS: Record<string, string> = {
 export default async function TendersPage() {
   const gate = await adminGate();
   if (gate) return gate;
+
+  await deleteOverdueTenders();
 
   const [tenders, items, documents] = await Promise.all([
     listTenders(),
