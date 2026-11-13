@@ -27,11 +27,7 @@ declare global {
  * Rendered explicitly rather than by the script's auto-scan: `onSuccess` has
  * to reach React state, and the implicit mode has nowhere to put it.
  */
-export function Turnstile({
-  onToken,
-}: {
-  onToken: (token: string) => void;
-}) {
+export function Turnstile({ onToken }: { onToken: (token: string) => void }) {
   const ref = React.useRef<HTMLDivElement>(null);
   const widgetId = React.useRef<string | null>(null);
   // Held in a ref so re-renders don't tear down and re-render the widget,
@@ -62,9 +58,7 @@ export function Turnstile({
     if (window.turnstile) {
       render();
     } else {
-      const existing = document.querySelector<HTMLScriptElement>(
-        `script[src="${SCRIPT_SRC}"]`
-      );
+      const existing = document.querySelector<HTMLScriptElement>(`script[src="${SCRIPT_SRC}"]`);
       if (existing) {
         existing.addEventListener("load", render);
       } else {

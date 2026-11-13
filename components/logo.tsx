@@ -3,13 +3,7 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { site } from "@/data/site";
 
-export function Logo({
-  className,
-  priority = false,
-}: {
-  className?: string;
-  priority?: boolean;
-}) {
+export function Logo({ className, priority = false }: { className?: string; priority?: boolean }) {
   return (
     <Link
       href="/"

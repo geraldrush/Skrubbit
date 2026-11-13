@@ -89,7 +89,13 @@ function SyncBar({
           {sync?.message ? ` · ${sync.message}` : ""}
         </p>
       </div>
-      <Button type="button" variant="outline" size="sm" onClick={onSync} disabled={Boolean(running)}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        onClick={onSync}
+        disabled={Boolean(running)}
+      >
         {running ? (
           <>
             <Loader2 className="mr-1 h-4 w-4 animate-spin" /> Syncing
@@ -244,11 +250,7 @@ export function TenderSearch() {
 
   return (
     <div className="space-y-6">
-      <SyncBar
-        sync={sync}
-        syncing={syncing}
-        onSync={startSync}
-      />
+      <SyncBar sync={sync} syncing={syncing} onSync={startSync} />
 
       <form onSubmit={search} className="space-y-4 rounded-lg border p-4">
         <div className="grid gap-4 sm:grid-cols-3">
@@ -319,8 +321,8 @@ export function TenderSearch() {
         <>
           <p className="text-sm text-muted-foreground">
             {matched} open {matched === 1 ? "tender" : "tenders"} matched
-            {matched > rows.length ? `, showing the first ${rows.length}` : ""} ·{" "}
-            {available} open in total.
+            {matched > rows.length ? `, showing the first ${rows.length}` : ""} · {available} open
+            in total.
           </p>
           <ul className="divide-y rounded-lg border">
             {rows.map((row) => {

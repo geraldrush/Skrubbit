@@ -129,9 +129,7 @@ export function LibraryManager({ documents }: { documents: LibraryDocument[] }) 
             type="file"
             accept=".pdf,.xlsx,.xls,.csv,.png,.jpg,.jpeg"
           />
-          <p className="text-xs text-muted-foreground">
-            PDF, spreadsheet or image, up to 25 MB.
-          </p>
+          <p className="text-xs text-muted-foreground">PDF, spreadsheet or image, up to 25 MB.</p>
         </div>
 
         <label className="flex items-center gap-2 text-sm font-normal">
@@ -145,11 +143,7 @@ export function LibraryManager({ documents }: { documents: LibraryDocument[] }) 
         </label>
 
         <Button type="submit" disabled={busy} variant="accent">
-          {busy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
-          ) : (
-            <Upload className="h-4 w-4" />
-          )}
+          {busy ? <Loader2 className="h-4 w-4 animate-spin" /> : <Upload className="h-4 w-4" />}
           Upload
         </Button>
       </form>
@@ -162,10 +156,7 @@ export function LibraryManager({ documents }: { documents: LibraryDocument[] }) 
             <h2 className="font-display text-lg font-bold">{group.label}</h2>
             <ul className="divide-y rounded-lg border">
               {group.items.map((doc) => (
-                <li
-                  key={doc.id}
-                  className="flex flex-wrap items-center justify-between gap-3 p-4"
-                >
+                <li key={doc.id} className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <div className="min-w-0">
                     <p className="flex items-center gap-2 font-semibold">
                       {doc.title}
@@ -179,8 +170,7 @@ export function LibraryManager({ documents }: { documents: LibraryDocument[] }) 
                       <p className="mt-0.5 text-sm text-muted-foreground">{doc.notes}</p>
                     )}
                     <p className="mt-0.5 text-xs text-muted-foreground">
-                      {doc.fileName} · {fmtSize(doc.fileSize)} · filed{" "}
-                      {doc.uploadedAt.slice(0, 10)}
+                      {doc.fileName} · {fmtSize(doc.fileSize)} · filed {doc.uploadedAt.slice(0, 10)}
                     </p>
                   </div>
                   <div className="flex gap-2">

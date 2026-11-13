@@ -12,13 +12,7 @@ import type {
   TenderStatus,
 } from "@/lib/tenders";
 
-const STATUSES: TenderStatus[] = [
-  "preparing",
-  "submitted",
-  "won",
-  "lost",
-  "abandoned",
-];
+const STATUSES: TenderStatus[] = ["preparing", "submitted", "won", "lost", "abandoned"];
 
 const KINDS: DocumentKind[] = [
   "cipc",
@@ -103,11 +97,7 @@ export function validateTenderBody(
     errors.push(`Status must be one of: ${STATUSES.join(", ")}.`);
   }
 
-  const bbbeeClaimedLevel = toLevel(
-    body.bbbeeClaimedLevel,
-    errors,
-    "Claimed B-BBEE level"
-  );
+  const bbbeeClaimedLevel = toLevel(body.bbbeeClaimedLevel, errors, "Claimed B-BBEE level");
 
   const rawSubmitted = str(body.submittedAt);
   const submittedAt = rawSubmitted ? toSastIso(rawSubmitted) : null;
@@ -116,7 +106,11 @@ export function validateTenderBody(
   }
 
   let submittedAmount: number | null = null;
-  if (body.submittedAmount !== null && body.submittedAmount !== undefined && body.submittedAmount !== "") {
+  if (
+    body.submittedAmount !== null &&
+    body.submittedAmount !== undefined &&
+    body.submittedAmount !== ""
+  ) {
     const amount = Number(body.submittedAmount);
     if (!Number.isFinite(amount) || amount < 0) {
       errors.push("Submitted amount must be a positive number.");
@@ -148,9 +142,7 @@ export function validateTenderBody(
       experience: str(body.experience).slice(0, 20000),
       submittedAt,
       submittedBy: str(body.submittedBy).slice(0, 200),
-      submittedMethod: METHODS.includes(str(body.submittedMethod))
-        ? str(body.submittedMethod)
-        : "",
+      submittedMethod: METHODS.includes(str(body.submittedMethod)) ? str(body.submittedMethod) : "",
       submittedAmount,
       submittedReference: str(body.submittedReference).slice(0, 200),
     },

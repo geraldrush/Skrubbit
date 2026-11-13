@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import {
-  LIMITS,
-  clamp,
-  normaliseItems,
-  recordOrder,
-  subtotalOf,
-} from "@/lib/enquiries";
+import { LIMITS, clamp, normaliseItems, recordOrder, subtotalOf } from "@/lib/enquiries";
 import { notifyOrder } from "@/lib/enquiry-mail";
+import { guardPublicForm } from "@/lib/form-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +15,9 @@ export const dynamic = "force-dynamic";
  *
  * The subtotal is recomputed from the stored line items rather than trusting
  * the one the client sends, so a stored order always adds up to its own lines.
+ *
+ * Public and unauthenticated, so it is rate-limited per IP and Turnstile-checked
+ * before anything is stored or emailed (see lib/form-guard.ts).
  */
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
@@ -27,6 +25,12 @@ export async function POST(req: Request) {
     body = (await req.json()) as Record<string, unknown>;
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
+  }
+
+  const { env, ctx } = getCloudflareContext();
+  const rejected = await guardPublicForm(req, env, "orders", body.turnstileToken);
+  if (rejected) {
+    return NextResponse.json({ error: rejected.error }, { status: rejected.status });
   }
 
   const items = normaliseItems(body.items);
@@ -66,7 +70,6 @@ export async function POST(req: Request) {
   // The order is placed by email, so this send is the checkout. It still runs in waitUntil: the customer should see
   // their confirmation page immediately, and the order is already in D1 if the
   // mail provider is having a bad day.
-  const { env, ctx } = getCloudflareContext();
   ctx.waitUntil(
     notifyOrder(env, { reference, items, subtotal, customer }).catch((err) =>
       console.error("[order] could not send notification", reference, err)

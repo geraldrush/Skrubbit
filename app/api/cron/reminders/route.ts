@@ -39,10 +39,7 @@ export async function POST(req: Request) {
     );
   }
   if (!emailConfigured(env)) {
-    return Response.json(
-      { ok: true, skipped: "Email provider not configured." },
-      { status: 200 }
-    );
+    return Response.json({ ok: true, skipped: "Email provider not configured." }, { status: 200 });
   }
 
   // Clean up tenders whose closing date passed while still in "preparing".
@@ -97,13 +94,7 @@ export async function POST(req: Request) {
          ON CONFLICT(tender_id, kind) DO UPDATE SET
            sent_at = datetime('now'), ok = excluded.ok, detail = excluded.detail`
       )
-        .bind(
-          reminder.tenderId,
-          reminder.kind,
-          recipient,
-          result.ok ? 1 : 0,
-          result.detail
-        )
+        .bind(reminder.tenderId, reminder.kind, recipient, result.ok ? 1 : 0, result.detail)
         .run();
 
       if (result.ok) sent++;

@@ -45,9 +45,13 @@ export async function POST(req: Request) {
   }
 
   const file = form.get("file");
-  const title = String(form.get("title") ?? "").trim().slice(0, 200);
+  const title = String(form.get("title") ?? "")
+    .trim()
+    .slice(0, 200);
   const category = String(form.get("category") ?? "other");
-  const notes = String(form.get("notes") ?? "").trim().slice(0, 1000);
+  const notes = String(form.get("notes") ?? "")
+    .trim()
+    .slice(0, 1000);
   const confidential = form.get("confidential") === "true";
 
   if (!(file instanceof File)) {
@@ -73,8 +77,11 @@ export async function POST(req: Request) {
   }
 
   const slug =
-    title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "").slice(0, 60) ||
-    "document";
+    title
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 60) || "document";
   const key = `library/${Date.now()}-${slug}.${EXT[file.type]}`;
 
   await env.PRODUCT_IMAGES.put(key, await file.arrayBuffer(), {

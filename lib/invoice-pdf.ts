@@ -14,7 +14,17 @@ import { PDFDocument, StandardFonts, degrees, rgb } from "pdf-lib";
 
 import type { CompanyProfile } from "@/lib/company";
 import { balance, METHOD_LABELS, type InvoiceDetail } from "@/lib/invoices";
-import { A4, CONTENT_W, INK, Layout, MARGIN, MUTED, RULE, sanitize, type Fonts } from "@/lib/pdf-layout";
+import {
+  A4,
+  CONTENT_W,
+  INK,
+  Layout,
+  MARGIN,
+  MUTED,
+  RULE,
+  sanitize,
+  type Fonts,
+} from "@/lib/pdf-layout";
 import { letterhead } from "@/lib/profile-pdf";
 
 /** "R 5 210,43" from Intl uses a comma; printed invoices here use a point. */
@@ -41,8 +51,20 @@ function rightPairs(L: Layout, fonts: Fonts, rows: [string, string, boolean?][])
     const font = bold ? fonts.bold : fonts.regular;
     const l = sanitize(label);
     const v = sanitize(value);
-    page.drawText(l, { x: labelRight - font.widthOfTextAtSize(l, size), y, size, font, color: bold ? INK : MUTED });
-    page.drawText(v, { x: valueRight - font.widthOfTextAtSize(v, size), y, size, font, color: INK });
+    page.drawText(l, {
+      x: labelRight - font.widthOfTextAtSize(l, size),
+      y,
+      size,
+      font,
+      color: bold ? INK : MUTED,
+    });
+    page.drawText(v, {
+      x: valueRight - font.widthOfTextAtSize(v, size),
+      y,
+      size,
+      font,
+      color: INK,
+    });
     L.space(size + 6);
   }
 }
@@ -80,12 +102,20 @@ export async function buildInvoicePdf(data: {
     ["Date", inv.issuedOn ?? ""],
     [isQuote ? "Valid until" : "Due date", inv.dueOn ?? ""],
     ...(inv.reference ? ([["Your reference", inv.reference]] as [string, string][]) : []),
-    ...(taxInvoice && profile.vatNumber ? ([["Our VAT no.", profile.vatNumber]] as [string, string][]) : []),
+    ...(taxInvoice && profile.vatNumber
+      ? ([["Our VAT no.", profile.vatNumber]] as [string, string][])
+      : []),
   ];
   let my = top - 6;
   for (const [label, value] of meta) {
     const v = sanitize(value);
-    page.drawText(sanitize(label), { x: MARGIN + CONTENT_W - 190, y: my - 9, size: 9, font: fonts.regular, color: MUTED });
+    page.drawText(sanitize(label), {
+      x: MARGIN + CONTENT_W - 190,
+      y: my - 9,
+      size: 9,
+      font: fonts.regular,
+      color: MUTED,
+    });
     page.drawText(v, {
       x: MARGIN + CONTENT_W - fonts.bold.widthOfTextAtSize(v, 9),
       y: my - 9,
@@ -97,11 +127,17 @@ export async function buildInvoicePdf(data: {
   }
 
   L.space(34);
-  L.text(isQuote ? "PREPARED FOR" : "BILL TO", { size: 8, bold: true, color: MUTED, width: CONTENT_W - 220 });
+  L.text(isQuote ? "PREPARED FOR" : "BILL TO", {
+    size: 8,
+    bold: true,
+    color: MUTED,
+    width: CONTENT_W - 220,
+  });
   L.text(inv.customerName, { bold: true, width: CONTENT_W - 220 });
   if (inv.customerContact) L.text(`Attn: ${inv.customerContact}`, { width: CONTENT_W - 220 });
   if (inv.customerAddress) L.text(inv.customerAddress, { color: MUTED, width: CONTENT_W - 220 });
-  if (inv.customerVat) L.text(`VAT no. ${inv.customerVat}`, { color: MUTED, width: CONTENT_W - 220 });
+  if (inv.customerVat)
+    L.text(`VAT no. ${inv.customerVat}`, { color: MUTED, width: CONTENT_W - 220 });
 
   // Whichever ran lower: the bill-to block or the particulars.
   L.space(Math.max(0, L.cursor - my) + 14);
@@ -135,10 +171,13 @@ export async function buildInvoicePdf(data: {
 
   if (!taxInvoice && !isQuote) {
     L.space(4);
-    L.text(`${profile.legalName || "The supplier"} is not registered for VAT. No VAT has been charged.`, {
-      size: 8,
-      color: MUTED,
-    });
+    L.text(
+      `${profile.legalName || "The supplier"} is not registered for VAT. No VAT has been charged.`,
+      {
+        size: 8,
+        color: MUTED,
+      }
+    );
   }
 
   /* ------------------------------ how to pay ------------------------------ */
@@ -147,9 +186,12 @@ export async function buildInvoicePdf(data: {
     L.space(10);
     L.text("PAYMENTS RECEIVED", { size: 8, bold: true, color: MUTED });
     for (const p of inv.payments) {
-      L.text(`${p.receivedOn}  ·  ${METHOD_LABELS[p.method]}  ·  ${rand(p.amount)}${p.reference ? `  ·  ${p.reference}` : ""}`, {
-        size: 9,
-      });
+      L.text(
+        `${p.receivedOn}  ·  ${METHOD_LABELS[p.method]}  ·  ${rand(p.amount)}${p.reference ? `  ·  ${p.reference}` : ""}`,
+        {
+          size: 9,
+        }
+      );
     }
   }
 
@@ -169,10 +211,13 @@ export async function buildInvoicePdf(data: {
 
   if (isQuote) {
     L.space(12);
-    L.text(`This quotation is valid until ${inv.dueOn ?? "30 days from its date"}. Prices are in South African Rand.`, {
-      size: 8,
-      color: MUTED,
-    });
+    L.text(
+      `This quotation is valid until ${inv.dueOn ?? "30 days from its date"}. Prices are in South African Rand.`,
+      {
+        size: 8,
+        color: MUTED,
+      }
+    );
   }
 
   /* ---------------------------- marks and footer --------------------------- */
@@ -190,7 +235,12 @@ export async function buildInvoicePdf(data: {
         rotate: degrees(35),
       });
     }
-    p.drawLine({ start: { x: MARGIN, y: MARGIN }, end: { x: A4[0] - MARGIN, y: MARGIN }, thickness: 0.4, color: RULE });
+    p.drawLine({
+      start: { x: MARGIN, y: MARGIN },
+      end: { x: A4[0] - MARGIN, y: MARGIN },
+      thickness: 0.4,
+      color: RULE,
+    });
     const foot = sanitize(`${title} ${number}  ·  page ${i + 1} of ${L.pages.length}`);
     p.drawText(foot, {
       x: A4[0] - MARGIN - fonts.regular.widthOfTextAtSize(foot, 7.5),

@@ -16,11 +16,7 @@ import { getCompanyProfileSafe } from "@/lib/company";
 import { emailConfigured, parseRecipients, sendEmail, type EmailEnv } from "@/lib/notify";
 
 const escapeHtml = (v: string) =>
-  v
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
+  v.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 const nl2br = (v: string) => escapeHtml(v).replace(/\n/g, "<br>");
 
@@ -35,10 +31,7 @@ const nl2br = (v: string) => escapeHtml(v).replace(/\n/g, "<br>");
  */
 async function businessRecipients(): Promise<string[]> {
   const profile = await getCompanyProfileSafe();
-  const all = [
-    ...parseRecipients(profile.email),
-    ...parseRecipients(profile.notifyEmail),
-  ];
+  const all = [...parseRecipients(profile.email), ...parseRecipients(profile.notifyEmail)];
   return [...new Set(all.map((a) => a.toLowerCase()))];
 }
 

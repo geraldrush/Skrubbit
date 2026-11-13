@@ -47,10 +47,7 @@ const capabilities = [
  * products are added.
  */
 export default async function CapabilitiesPage() {
-  const [products, profile] = await Promise.all([
-    getProductsSafe(),
-    getCompanyProfileSafe(),
-  ]);
+  const [products, profile] = await Promise.all([getProductsSafe(), getCompanyProfileSafe()]);
   const byCategory = categories
     .map((c) => ({ ...c, items: products.filter((p) => p.category === c.id) }))
     .filter((c) => c.items.length);
@@ -73,14 +70,14 @@ export default async function CapabilitiesPage() {
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
             {products.length > 0 ? (
               <>
-                {products.length} products across {byCategory.length} categories
-                — cleaning chemicals, hygiene consumables, vehicle care and
-                industrial degreasers, manufactured and delivered from Vhembe.
+                {products.length} products across {byCategory.length} categories — cleaning
+                chemicals, hygiene consumables, vehicle care and industrial degreasers, manufactured
+                and delivered from Vhembe.
               </>
             ) : (
               <>
-                Cleaning chemicals, hygiene consumables, vehicle care and
-                industrial degreasers, manufactured and delivered from Vhembe.
+                Cleaning chemicals, hygiene consumables, vehicle care and industrial degreasers,
+                manufactured and delivered from Vhembe.
               </>
             )}
           </p>
@@ -136,10 +133,10 @@ export default async function CapabilitiesPage() {
             Safety data and product information
           </h2>
           <p className="mt-2 max-w-2xl text-muted-foreground">
-            A material safety data sheet is available for every product we
-            manufacture, and accompanies any quotation that calls for one. Where
-            a tender or supplier database requires product datasheets as part of
-            the submission, ask and we will send them with the quotation.
+            A material safety data sheet is available for every product we manufacture, and
+            accompanies any quotation that calls for one. Where a tender or supplier database
+            requires product datasheets as part of the submission, ask and we will send them with
+            the quotation.
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild variant="accent">
@@ -150,9 +147,7 @@ export default async function CapabilitiesPage() {
             </Button>
           </div>
           {profile.phone && (
-            <p className="mt-4 text-sm text-muted-foreground">
-              Or call {profile.phone}.
-            </p>
+            <p className="mt-4 text-sm text-muted-foreground">Or call {profile.phone}.</p>
           )}
         </div>
       </section>

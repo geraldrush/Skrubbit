@@ -27,18 +27,20 @@ export const HEADER_FILL = rgb(0.94, 0.94, 0.93);
  * actually emit and drop the rest rather than failing the whole document.
  */
 export function sanitize(input: string): string {
-  return input
-    .replace(/ /g, " ")
-    .replace(/[‘’‛]/g, "'")
-    .replace(/[“”]/g, '"')
-    .replace(/[–]/g, "-")
-    .replace(/[—]/g, "—")
-    .replace(/…/g, "...")
-    .replace(/•/g, "•")
-    .replace(/✓|☑/g, "[x]")
-    .replace(/☐/g, "[ ]")
-    // Anything still outside Latin-1 would throw at draw time.
-    .replace(/[^\x09\x0a\x0d\x20-\x7e\xa0-\xff—•]/g, "");
+  return (
+    input
+      .replace(/ /g, " ")
+      .replace(/[‘’‛]/g, "'")
+      .replace(/[“”]/g, '"')
+      .replace(/[–]/g, "-")
+      .replace(/[—]/g, "—")
+      .replace(/…/g, "...")
+      .replace(/•/g, "•")
+      .replace(/✓|☑/g, "[x]")
+      .replace(/☐/g, "[ ]")
+      // Anything still outside Latin-1 would throw at draw time.
+      .replace(/[^\x09\x0a\x0d\x20-\x7e\xa0-\xff—•]/g, "")
+  );
 }
 
 export interface Fonts {

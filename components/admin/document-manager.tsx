@@ -5,11 +5,7 @@ import { useRouter } from "next/navigation";
 import { FileUp, Loader2, Paperclip, Plus, Save, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
-import {
-  DOCUMENT_KIND_LABELS,
-  type CompanyDocument,
-  type DocumentKind,
-} from "@/lib/tenders";
+import { DOCUMENT_KIND_LABELS, type CompanyDocument, type DocumentKind } from "@/lib/tenders";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,11 +26,15 @@ const KINDS = Object.keys(DOCUMENT_KIND_LABELS) as DocumentKind[];
 
 function expiryState(expiresOn: string | null, today: string) {
   if (!expiresOn) return { label: "No expiry", tone: "text-muted-foreground" };
-  if (expiresOn < today) return { label: `Expired ${expiresOn}`, tone: "text-destructive font-semibold" };
+  if (expiresOn < today)
+    return { label: `Expired ${expiresOn}`, tone: "text-destructive font-semibold" };
   const soon = new Date(`${today}T12:00:00+02:00`);
   soon.setDate(soon.getDate() + 30);
   if (new Date(`${expiresOn}T12:00:00+02:00`) <= soon) {
-    return { label: `Expires ${expiresOn}`, tone: "text-amber-700 dark:text-amber-500 font-semibold" };
+    return {
+      label: `Expires ${expiresOn}`,
+      tone: "text-amber-700 dark:text-amber-500 font-semibold",
+    };
   }
   return { label: `Valid to ${expiresOn}`, tone: "text-muted-foreground" };
 }
@@ -199,9 +199,9 @@ function DocumentFields({
               className="sm:w-64"
             />
             <p className="text-xs text-muted-foreground">
-              Leave empty until it has been certified — the pack watermarks
-              uncertified copies “TO BE CERTIFIED” so you know what to take in.
-              Most tenders want one certified within the last 3 months.
+              Leave empty until it has been certified — the pack watermarks uncertified copies “TO
+              BE CERTIFIED” so you know what to take in. Most tenders want one certified within the
+              last 3 months.
             </p>
           </div>
         ) : null}
@@ -218,11 +218,7 @@ function DocumentFields({
         </div>
         <div className="space-y-2">
           <Label>Notes</Label>
-          <Textarea
-            value={draft.notes}
-            onChange={(e) => set({ notes: e.target.value })}
-            rows={1}
-          />
+          <Textarea value={draft.notes} onChange={(e) => set({ notes: e.target.value })} rows={1} />
         </div>
       </div>
 
@@ -254,7 +250,11 @@ function DocumentFields({
  * Files go to R2 under `documents/` and are readable only through the
  * admin-gated download route — never the public image path.
  */
-function FileControl({ doc, busy, setBusy }: {
+function FileControl({
+  doc,
+  busy,
+  setBusy,
+}: {
   doc: CompanyDocument;
   busy: boolean;
   setBusy: (b: boolean) => void;
@@ -313,9 +313,7 @@ function FileControl({ doc, busy, setBusy }: {
             <Paperclip className="h-3.5 w-3.5" />
             {doc.fileName || "View file"}
           </a>
-          <span className="text-muted-foreground">
-            {(doc.fileSize / 1024).toFixed(0)} KB
-          </span>
+          <span className="text-muted-foreground">{(doc.fileSize / 1024).toFixed(0)} KB</span>
           <button
             type="button"
             onClick={removeFile}
@@ -482,8 +480,8 @@ export function DocumentManager({
         </ul>
       ) : (
         <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-          Nothing recorded yet. Add your CSD report, Tax PIN, CIPC documents and
-          B-BBEE certificate so expiries are checked against every tender.
+          Nothing recorded yet. Add your CSD report, Tax PIN, CIPC documents and B-BBEE certificate
+          so expiries are checked against every tender.
         </p>
       )}
 

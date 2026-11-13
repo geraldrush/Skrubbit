@@ -15,10 +15,7 @@ export const dynamic = "force-dynamic";
  * its own separator page. Nothing here is cached — a pack reflects the state
  * of the bid at the moment it was generated.
  */
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
@@ -63,7 +60,10 @@ export async function GET(
   } catch (err) {
     console.error("[pack.pdf] build failed", err);
     return Response.json(
-      { error: "Could not build the pack. Check that uploaded certificates are valid PDFs or images." },
+      {
+        error:
+          "Could not build the pack. Check that uploaded certificates are valid PDFs or images.",
+      },
       { status: 500 }
     );
   }

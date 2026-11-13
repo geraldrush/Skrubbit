@@ -5,13 +5,7 @@ import { ChevronLeft, FileText, Receipt } from "lucide-react";
 
 import { getProducts } from "@/lib/products";
 import { getCompanyProfile } from "@/lib/company";
-import {
-  assessTender,
-  getPricing,
-  getTender,
-  listDocuments,
-  listTenderFiles,
-} from "@/lib/tenders";
+import { assessTender, getPricing, getTender, listDocuments, listTenderFiles } from "@/lib/tenders";
 import { adminGate } from "@/components/admin/admin-gate";
 import { AdminNav } from "@/components/admin/admin-nav";
 import { ReadinessPanel } from "@/components/admin/readiness-panel";
@@ -26,11 +20,7 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function TenderPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function TenderPage({ params }: { params: Promise<{ id: string }> }) {
   const gate = await adminGate();
   if (gate) return gate;
 
@@ -98,8 +88,8 @@ export default async function TenderPage({
       <section className="mb-10">
         <h2 className="mb-1 font-display text-xl font-bold">Pricing schedule</h2>
         <p className="mb-3 text-sm text-muted-foreground">
-          Quoted per bid. Lines are free-form — the shop catalogue can seed one,
-          but tender pricing is your own.
+          Quoted per bid. Lines are free-form — the shop catalogue can seed one, but tender pricing
+          is your own.
         </p>
         <PricingEditor
           tenderId={tender.id}
@@ -112,9 +102,8 @@ export default async function TenderPage({
       <section className="mb-10">
         <h2 className="mb-1 font-display text-xl font-bold">Tender documents</h2>
         <p className="mb-3 text-sm text-muted-foreground">
-          The buyer&apos;s own paperwork for this bid — the advert, the blank
-          official forms, addenda, briefing proof. Kept here rather than in an
-          email thread.
+          The buyer&apos;s own paperwork for this bid — the advert, the blank official forms,
+          addenda, briefing proof. Kept here rather than in an email thread.
         </p>
         <TenderFiles tenderId={tender.id} files={files} />
       </section>

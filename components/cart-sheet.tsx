@@ -63,12 +63,8 @@ export function CartSheet() {
                     <div className="flex flex-1 flex-col">
                       <div className="flex justify-between gap-2">
                         <div>
-                          <p className="text-sm font-semibold leading-tight">
-                            {item.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground">
-                            {item.size}
-                          </p>
+                          <p className="text-sm font-semibold leading-tight">{item.name}</p>
+                          <p className="text-xs text-muted-foreground">{item.size}</p>
                         </div>
                         <button
                           onClick={() => removeItem(item.sku)}
@@ -87,9 +83,7 @@ export function CartSheet() {
                           >
                             <Minus className="h-3.5 w-3.5" />
                           </button>
-                          <span className="w-8 text-center text-sm font-semibold">
-                            {item.qty}
-                          </span>
+                          <span className="w-8 text-center text-sm font-semibold">{item.qty}</span>
                           <button
                             onClick={() => setQty(item.sku, item.qty + 1)}
                             aria-label="Increase quantity"
@@ -111,17 +105,13 @@ export function CartSheet() {
             <SheetFooter>
               <div className="flex items-center justify-between text-base">
                 <span className="font-semibold">Subtotal</span>
-                <span className="font-display text-xl font-bold">
-                  {formatZAR(subtotal)}
-                </span>
+                <span className="font-display text-xl font-bold">{formatZAR(subtotal)}</span>
               </div>
               <p className="text-xs text-muted-foreground">
                 Delivery is quoted separately.
                 {site.freeDeliveryOver > 0 &&
                   subtotal < site.freeDeliveryOver &&
-                  ` Add ${formatZAR(
-                    site.freeDeliveryOver - subtotal
-                  )} more for free delivery.`}
+                  ` Add ${formatZAR(site.freeDeliveryOver - subtotal)} more for free delivery.`}
               </p>
               <Separator className="my-1" />
               <SheetClose asChild>

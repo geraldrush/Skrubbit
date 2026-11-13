@@ -42,8 +42,8 @@ export default async function ShopPage() {
       <header className="mb-8">
         <h1 className="font-display text-4xl font-extrabold">Shop</h1>
         <p className="mt-2 max-w-xl text-muted-foreground">
-          Professional-strength cleaning products and personal care essentials,
-          in retail and bulk sizes. Add to cart and send your order — we confirm by email.
+          Professional-strength cleaning products and personal care essentials, in retail and bulk
+          sizes. Add to cart and send your order — we confirm by email.
         </p>
       </header>
       {products === null ? (
@@ -52,16 +52,19 @@ export default async function ShopPage() {
             The catalogue isn&apos;t loading right now
           </p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            This is temporary and nothing has changed about what we stock. Try
-            again shortly, or get in touch and we&apos;ll send you the range and
-            current prices directly.
+            This is temporary and nothing has changed about what we stock. Try again shortly, or get
+            in touch and we&apos;ll send you the range and current prices directly.
           </p>
           <Button asChild className="mt-6">
             <Link href="/contact">Contact us</Link>
           </Button>
         </div>
       ) : (
-        <Suspense fallback={<div className="py-16 text-center text-muted-foreground">Loading products…</div>}>
+        <Suspense
+          fallback={
+            <div className="py-16 text-center text-muted-foreground">Loading products…</div>
+          }
+        >
           <ShopGrid products={products} />
         </Suspense>
       )}

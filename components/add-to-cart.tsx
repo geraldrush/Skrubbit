@@ -22,8 +22,7 @@ export function AddToCart({ product }: { product: Product }) {
   const [sku, setSku] = React.useState(product.variants[0].sku);
   const [qty, setQty] = React.useState(1);
 
-  const variant =
-    product.variants.find((v) => v.sku === sku) ?? product.variants[0];
+  const variant = product.variants.find((v) => v.sku === sku) ?? product.variants[0];
 
   function add() {
     addItem(
@@ -84,9 +83,7 @@ export function AddToCart({ product }: { product: Product }) {
       </div>
 
       <div className="flex items-center gap-4">
-        <p className="font-display text-3xl font-extrabold">
-          {formatZAR(variant.price * qty)}
-        </p>
+        <p className="font-display text-3xl font-extrabold">{formatZAR(variant.price * qty)}</p>
         <Button size="lg" onClick={add} className="flex-1 sm:flex-none">
           <ShoppingCart className="h-5 w-5" />
           Add to cart

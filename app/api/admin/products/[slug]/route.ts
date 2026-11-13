@@ -6,10 +6,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+export async function PUT(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
@@ -49,10 +46,7 @@ export async function PUT(
   return Response.json({ ok: true, slug });
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ slug: string }> }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ slug: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;

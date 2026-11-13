@@ -59,21 +59,23 @@ const MAX_LINES = 200;
 
 function lines(raw: unknown): InvoiceLine[] {
   if (!Array.isArray(raw)) return [];
-  return raw
-    .slice(0, MAX_LINES)
-    .map((entry) => {
-      const l = (entry ?? {}) as Record<string, unknown>;
-      const quantity = Number(l.quantity);
-      const unitPrice = Number(l.unitPrice);
-      return {
-        description: str(l.description, 500),
-        unit: str(l.unit, 40) || "each",
-        quantity: Number.isFinite(quantity) ? quantity : 0,
-        unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
-      };
-    })
-    // A blank row left at the bottom of the editor is not a line.
-    .filter((l) => l.description);
+  return (
+    raw
+      .slice(0, MAX_LINES)
+      .map((entry) => {
+        const l = (entry ?? {}) as Record<string, unknown>;
+        const quantity = Number(l.quantity);
+        const unitPrice = Number(l.unitPrice);
+        return {
+          description: str(l.description, 500),
+          unit: str(l.unit, 40) || "each",
+          quantity: Number.isFinite(quantity) ? quantity : 0,
+          unitPrice: Number.isFinite(unitPrice) ? unitPrice : 0,
+        };
+      })
+      // A blank row left at the bottom of the editor is not a line.
+      .filter((l) => l.description)
+  );
 }
 
 export function validateDraft(body: Record<string, unknown>): Result<DraftInput> {
@@ -121,7 +123,9 @@ export function validatePayment(body: Record<string, unknown>): Result<Omit<Paym
     value: {
       receivedOn: receivedOn!,
       amount,
-      method: METHODS.includes(body.method as PaymentMethod) ? (body.method as PaymentMethod) : "eft",
+      method: METHODS.includes(body.method as PaymentMethod)
+        ? (body.method as PaymentMethod)
+        : "eft",
       reference: str(body.reference, 120),
     },
   };

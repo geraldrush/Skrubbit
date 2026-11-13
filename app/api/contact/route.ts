@@ -3,6 +3,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { LIMITS, clamp, recordContactMessage } from "@/lib/enquiries";
 import { notifyEnquiry } from "@/lib/enquiry-mail";
+import { guardPublicForm } from "@/lib/form-guard";
 
 export const dynamic = "force-dynamic";
 
@@ -14,6 +15,9 @@ export const dynamic = "force-dynamic";
  * swallowed. The form already tells the customer to email us directly when the
  * request fails, which is the honest outcome; the old version always answered
  * "ok" and dropped the message on the floor.
+ *
+ * Public and unauthenticated, so it is rate-limited per IP and Turnstile-checked
+ * before anything is stored or emailed (see lib/form-guard.ts).
  */
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
@@ -23,16 +27,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
+  const { env, ctx } = getCloudflareContext();
+  const rejected = await guardPublicForm(req, env, "contact", body.turnstileToken);
+  if (rejected) {
+    return NextResponse.json({ error: rejected.error }, { status: rejected.status });
+  }
+
   const name = clamp(body.name, LIMITS.name);
   const email = clamp(body.email, LIMITS.email);
   const phone = clamp(body.phone, LIMITS.phone);
   const message = clamp(body.message, LIMITS.message);
 
   if (!name || !email || !message) {
-    return NextResponse.json(
-      { error: "Name, email and message are required." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Name, email and message are required." }, { status: 400 });
   }
 
   try {
@@ -50,7 +57,6 @@ export async function POST(req: Request) {
   // Emailed after the write, and never allowed to fail the request: the
   // message is already saved, and telling the customer their enquiry failed
   // because our mail provider is down would be a lie.
-  const { env, ctx } = getCloudflareContext();
   ctx.waitUntil(
     notifyEnquiry(env, { name, email, phone, message }).catch((err) =>
       console.error("[contact] could not send notification", err)

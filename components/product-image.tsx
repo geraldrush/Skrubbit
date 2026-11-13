@@ -30,14 +30,7 @@ export function ProductImage({
 }) {
   if (src) {
     return (
-      <Image
-        src={src}
-        alt={name}
-        fill
-        priority={priority}
-        sizes={sizes}
-        className={className}
-      />
+      <Image src={src} alt={name} fill priority={priority} sizes={sizes} className={className} />
     );
   }
 

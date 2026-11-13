@@ -71,7 +71,9 @@ export async function getProducts(): Promise<Product[]> {
   const [{ results: productRows }, { results: variantRows }] = await Promise.all([
     d.prepare("SELECT * FROM products ORDER BY created_at, slug").all<ProductRow>(),
     d
-      .prepare("SELECT sku, product_slug, size, price FROM variants ORDER BY product_slug, position")
+      .prepare(
+        "SELECT sku, product_slug, size, price FROM variants ORDER BY product_slug, position"
+      )
       .all<VariantRow>(),
   ]);
 
@@ -116,11 +118,16 @@ export async function getProductsSafe(): Promise<Product[]> {
 
 export async function getProduct(slug: string): Promise<Product | undefined> {
   const d = db();
-  const row = await d.prepare("SELECT * FROM products WHERE slug = ?").bind(slug).first<ProductRow>();
+  const row = await d
+    .prepare("SELECT * FROM products WHERE slug = ?")
+    .bind(slug)
+    .first<ProductRow>();
   if (!row) return undefined;
 
   const { results } = await d
-    .prepare("SELECT sku, product_slug, size, price FROM variants WHERE product_slug = ? ORDER BY position")
+    .prepare(
+      "SELECT sku, product_slug, size, price FROM variants WHERE product_slug = ? ORDER BY position"
+    )
     .bind(slug)
     .all<VariantRow>();
 
@@ -167,7 +174,9 @@ export async function createProduct(p: NewProduct): Promise<void> {
       ),
     ...p.variants.map((v, i) =>
       d
-        .prepare("INSERT INTO variants (sku, product_slug, size, price, position) VALUES (?, ?, ?, ?, ?)")
+        .prepare(
+          "INSERT INTO variants (sku, product_slug, size, price, position) VALUES (?, ?, ?, ?, ?)"
+        )
         .bind(v.sku, p.slug, v.size, v.price, i)
     ),
   ];
@@ -182,10 +191,7 @@ export async function createProduct(p: NewProduct): Promise<void> {
  * simpler to reason about than matching rows by SKU. The whole thing runs as
  * one batch so a mid-update failure can't leave the product variant-less.
  */
-export async function updateProduct(
-  slug: string,
-  p: Omit<NewProduct, "slug">
-): Promise<void> {
+export async function updateProduct(slug: string, p: Omit<NewProduct, "slug">): Promise<void> {
   const d = db();
   await d.batch([
     d
@@ -209,7 +215,9 @@ export async function updateProduct(
     d.prepare("DELETE FROM variants WHERE product_slug = ?").bind(slug),
     ...p.variants.map((v, i) =>
       d
-        .prepare("INSERT INTO variants (sku, product_slug, size, price, position) VALUES (?, ?, ?, ?, ?)")
+        .prepare(
+          "INSERT INTO variants (sku, product_slug, size, price, position) VALUES (?, ?, ?, ?, ?)"
+        )
         .bind(v.sku, slug, v.size, v.price, i)
     ),
   ]);

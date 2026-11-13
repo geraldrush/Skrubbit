@@ -15,9 +15,7 @@ import { Card } from "@/components/ui/card";
 
 export function ProductCard({ product }: { product: Product }) {
   const addItem = useCart((s) => s.addItem);
-  const cheapest = product.variants.reduce((a, b) =>
-    a.price <= b.price ? a : b
-  );
+  const cheapest = product.variants.reduce((a, b) => (a.price <= b.price ? a : b));
 
   function quickAdd() {
     addItem({
@@ -52,13 +50,9 @@ export function ProductCard({ product }: { product: Product }) {
       </Link>
       <div className="flex flex-1 flex-col p-4">
         <Link href={`/shop/${product.slug}`}>
-          <h3 className="font-display text-lg font-bold leading-tight">
-            {product.name}
-          </h3>
+          <h3 className="font-display text-lg font-bold leading-tight">{product.name}</h3>
         </Link>
-        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-          {product.tagline}
-        </p>
+        <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{product.tagline}</p>
         <div className="mt-4 flex items-center justify-between">
           <div>
             <span className="text-xs text-muted-foreground">from</span>

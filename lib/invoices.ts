@@ -107,7 +107,17 @@ export async function updateCustomer(id: number, c: CustomerInput): Promise<void
          vat_number = ?, terms_days = ?, notes = ?
        WHERE id = ?`
     )
-    .bind(c.name, c.contactPerson, c.email, c.phone, c.address, c.vatNumber, c.termsDays, c.notes, id)
+    .bind(
+      c.name,
+      c.contactPerson,
+      c.email,
+      c.phone,
+      c.address,
+      c.vatNumber,
+      c.termsDays,
+      c.notes,
+      id
+    )
     .run();
 }
 
@@ -305,7 +315,8 @@ export function invoiceState(inv: Invoice, today: string): InvoiceState {
 /** Days past due, for the age analysis. Zero when not yet due. */
 export function daysOverdue(inv: Invoice, today: string): number {
   if (!inv.dueOn || inv.dueOn >= today) return 0;
-  const ms = new Date(`${today}T12:00:00Z`).getTime() - new Date(`${inv.dueOn}T12:00:00Z`).getTime();
+  const ms =
+    new Date(`${today}T12:00:00Z`).getTime() - new Date(`${inv.dueOn}T12:00:00Z`).getTime();
   return Math.round(ms / 864e5);
 }
 
@@ -322,8 +333,14 @@ const SELECT_INVOICES = `
 
 export async function listInvoices(kind?: InvoiceKind): Promise<Invoice[]> {
   const stmt = kind
-    ? db().prepare(`${SELECT_INVOICES} WHERE i.kind = ? ORDER BY COALESCE(i.issued_on, i.created_at) DESC, i.id DESC`).bind(kind)
-    : db().prepare(`${SELECT_INVOICES} ORDER BY COALESCE(i.issued_on, i.created_at) DESC, i.id DESC`);
+    ? db()
+        .prepare(
+          `${SELECT_INVOICES} WHERE i.kind = ? ORDER BY COALESCE(i.issued_on, i.created_at) DESC, i.id DESC`
+        )
+        .bind(kind)
+    : db().prepare(
+        `${SELECT_INVOICES} ORDER BY COALESCE(i.issued_on, i.created_at) DESC, i.id DESC`
+      );
   const { results } = await stmt.all<InvoiceRow>();
   return results.map(toInvoice);
 }
@@ -338,10 +355,7 @@ export async function invoicesForTender(tenderId: number): Promise<Invoice[]> {
 
 export async function getInvoice(id: number): Promise<InvoiceDetail | null> {
   const d = db();
-  const row = await d
-    .prepare(`${SELECT_INVOICES} WHERE i.id = ?`)
-    .bind(id)
-    .first<InvoiceRow>();
+  const row = await d.prepare(`${SELECT_INVOICES} WHERE i.id = ?`).bind(id).first<InvoiceRow>();
   if (!row) return null;
 
   const [lines, payments] = await Promise.all([
@@ -349,10 +363,13 @@ export async function getInvoice(id: number): Promise<InvoiceDetail | null> {
       .prepare("SELECT * FROM invoice_lines WHERE invoice_id = ? ORDER BY position")
       .bind(id)
       .all<{ description: string; unit: string; quantity: number; unit_price: number }>(),
-    d
-      .prepare("SELECT * FROM payments WHERE invoice_id = ? ORDER BY received_on, id")
-      .bind(id)
-      .all<{ id: number; received_on: string; amount: number; method: PaymentMethod; reference: string }>(),
+    d.prepare("SELECT * FROM payments WHERE invoice_id = ? ORDER BY received_on, id").bind(id).all<{
+      id: number;
+      received_on: string;
+      amount: number;
+      method: PaymentMethod;
+      reference: string;
+    }>(),
   ]);
 
   return {
@@ -404,7 +421,10 @@ function lineStatements(d: D1Database, invoiceId: number, lines: InvoiceLine[]) 
   );
 }
 
-export async function createDraft(input: DraftInput, vatRegistered: boolean): Promise<number | null> {
+export async function createDraft(
+  input: DraftInput,
+  vatRegistered: boolean
+): Promise<number | null> {
   const snap = await snapshot(input.customerId);
   if (!snap) return null;
 
@@ -570,7 +590,10 @@ export async function voidInvoice(id: number): Promise<boolean> {
 }
 
 /** Raises an invoice draft from a quote, copying its lines and customer. */
-export async function invoiceFromQuote(quoteId: number, vatRegistered: boolean): Promise<number | null> {
+export async function invoiceFromQuote(
+  quoteId: number,
+  vatRegistered: boolean
+): Promise<number | null> {
   const quote = await getInvoice(quoteId);
   if (!quote || quote.kind !== "quote" || quote.status !== "issued" || !quote.customerId) {
     return null;
@@ -603,10 +626,7 @@ export async function markEmailed(id: number, to: string): Promise<void> {
 
 /* -------------------------------- payments ------------------------------- */
 
-export async function addPayment(
-  invoiceId: number,
-  p: Omit<Payment, "id">
-): Promise<boolean> {
+export async function addPayment(invoiceId: number, p: Omit<Payment, "id">): Promise<boolean> {
   const inv = await db()
     .prepare("SELECT kind, status FROM invoices WHERE id = ?")
     .bind(invoiceId)

@@ -54,10 +54,7 @@ export async function POST(req: Request) {
 
   const credential = await getAdminCredential(env);
   if (!credential || !env.ADMIN_SESSION_SECRET) {
-    return Response.json(
-      { error: "Admin sign-in is not configured." },
-      { status: 503 }
-    );
+    return Response.json({ error: "Admin sign-in is not configured." }, { status: 503 });
   }
 
   const ip = clientIp(req);
@@ -88,8 +85,7 @@ export async function POST(req: Request) {
     };
     username = typeof body.username === "string" ? body.username : "";
     password = typeof body.password === "string" ? body.password : "";
-    turnstileToken =
-      typeof body.turnstileToken === "string" ? body.turnstileToken : "";
+    turnstileToken = typeof body.turnstileToken === "string" ? body.turnstileToken : "";
   } catch {
     return Response.json({ error: "Invalid request." }, { status: 400 });
   }
@@ -121,19 +117,13 @@ export async function POST(req: Request) {
 
     // Deliberately vague: one message for a wrong username and a wrong
     // password alike, so the response never confirms that an account exists.
-    return Response.json(
-      { error: "Incorrect username or password." },
-      { status: 401 }
-    );
+    return Response.json({ error: "Incorrect username or password." }, { status: 401 });
   }
 
   // Success clears the counter so a later typo doesn't inherit old failures.
   await env.DB.prepare("DELETE FROM login_attempts WHERE ip = ?").bind(ip).run();
 
-  const token = await createSessionToken(
-    env.ADMIN_SESSION_SECRET,
-    credential.passwordHash
-  );
+  const token = await createSessionToken(env.ADMIN_SESSION_SECRET, credential.passwordHash);
   const secure = new URL(req.url).protocol === "https:";
 
   return new Response(JSON.stringify({ ok: true }), {

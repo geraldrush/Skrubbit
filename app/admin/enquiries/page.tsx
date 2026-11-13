@@ -25,10 +25,7 @@ export default async function EnquiriesPage() {
   const gate = await adminGate();
   if (gate) return gate;
 
-  const [messages, orders] = await Promise.all([
-    getRecentContactMessages(50),
-    getRecentOrders(50),
-  ]);
+  const [messages, orders] = await Promise.all([getRecentContactMessages(50), getRecentOrders(50)]);
 
   return (
     <div className="container max-w-4xl py-10">
@@ -53,9 +50,7 @@ export default async function EnquiriesPage() {
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="font-semibold">
                     {o.name}{" "}
-                    <span className="font-mono text-xs text-muted-foreground">
-                      {o.reference}
-                    </span>
+                    <span className="font-mono text-xs text-muted-foreground">{o.reference}</span>
                   </p>
                   <p className="flex items-baseline gap-3">
                     <a
@@ -89,9 +84,7 @@ export default async function EnquiriesPage() {
                     </li>
                   ))}
                 </ul>
-                {o.address && (
-                  <p className="text-sm text-muted-foreground">{o.address}</p>
-                )}
+                {o.address && <p className="text-sm text-muted-foreground">{o.address}</p>}
                 {o.note && <p className="text-sm italic text-muted-foreground">{o.note}</p>}
               </li>
             ))}
@@ -101,8 +94,7 @@ export default async function EnquiriesPage() {
 
       <section className="mt-10 space-y-3">
         <h2 className="font-display text-lg font-bold">
-          Messages{" "}
-          <span className="text-muted-foreground">({messages.length})</span>
+          Messages <span className="text-muted-foreground">({messages.length})</span>
         </h2>
         {messages.length === 0 ? (
           <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
@@ -114,9 +106,7 @@ export default async function EnquiriesPage() {
               <li key={m.id} className="space-y-1 p-4">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <p className="font-semibold">{m.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {m.createdAt.slice(0, 16)}
-                  </p>
+                  <p className="text-xs text-muted-foreground">{m.createdAt.slice(0, 16)}</p>
                 </div>
                 <p className="flex flex-wrap gap-3 text-sm text-muted-foreground">
                   <a href={`mailto:${m.email}`} className="hover:text-accent">

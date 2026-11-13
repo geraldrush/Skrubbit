@@ -45,9 +45,7 @@ export default async function TendersPage() {
   const now = new Date();
   const rows = tenders.map((tender) => ({
     tender,
-    readiness: summarise(
-      assessTender(tender, items.get(tender.id) ?? [], documents, now)
-    ),
+    readiness: summarise(assessTender(tender, items.get(tender.id) ?? [], documents, now)),
   }));
 
   const open = rows.filter((r) => r.tender.status === "preparing");
@@ -92,15 +90,12 @@ export default async function TendersPage() {
                     {readiness.ready ? (
                       <p className="inline-flex items-center gap-1.5 text-emerald-600">
                         <CheckCircle2 className="h-3.5 w-3.5" />
-                        {readiness.warnings
-                          ? `${readiness.warnings} to check`
-                          : "Ready"}
+                        {readiness.warnings ? `${readiness.warnings} to check` : "Ready"}
                       </p>
                     ) : (
                       <p className="inline-flex items-center gap-1.5 text-destructive">
                         <XCircle className="h-3.5 w-3.5" />
-                        {readiness.blockers}{" "}
-                        {readiness.blockers === 1 ? "blocker" : "blockers"}
+                        {readiness.blockers} {readiness.blockers === 1 ? "blocker" : "blockers"}
                       </p>
                     )}
                   </div>
@@ -110,8 +105,8 @@ export default async function TendersPage() {
           </ul>
         ) : (
           <p className="rounded-lg border border-dashed p-8 text-center text-muted-foreground">
-            No tenders yet. Add one below and its compliance matrix is created
-            from the mandatory checklist.
+            No tenders yet. Add one below and its compliance matrix is created from the mandatory
+            checklist.
           </p>
         )}
       </section>
@@ -120,8 +115,8 @@ export default async function TendersPage() {
         <p className="mb-10 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
           <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-500" />
           <span>
-            No company documents are recorded yet, so certificate expiry can&apos;t
-            be checked against any tender.{" "}
+            No company documents are recorded yet, so certificate expiry can&apos;t be checked
+            against any tender.{" "}
             <Link href="/admin/documents" className="font-medium underline">
               Add them
             </Link>

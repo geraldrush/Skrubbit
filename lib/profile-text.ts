@@ -42,9 +42,7 @@ export function parseProfile(value: string): ProfileBlock[] {
 }
 
 /** Groups the blocks under their headings, for layouts that need sections. */
-export function profileSections(
-  value: string
-): Array<{ heading: string; blocks: ProfileBlock[] }> {
+export function profileSections(value: string): Array<{ heading: string; blocks: ProfileBlock[] }> {
   const sections: Array<{ heading: string; blocks: ProfileBlock[] }> = [];
   for (const block of parseProfile(value)) {
     if (block.kind === "heading") sections.push({ heading: block.text, blocks: [] });

@@ -6,4 +6,5 @@ interface CloudflareEnv {
 	PRODUCT_IMAGES: R2Bucket;
 	DB: D1Database;
 	ASSETS: Fetcher;
+	FORM_LIMITER: RateLimit;
 }

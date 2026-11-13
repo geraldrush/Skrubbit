@@ -1,10 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import {
-  clearDocumentFile,
-  getDocument,
-  setDocumentFile,
-} from "@/lib/tenders";
+import { clearDocumentFile, getDocument, setDocumentFile } from "@/lib/tenders";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
@@ -23,12 +19,7 @@ export const dynamic = "force-dynamic";
  */
 
 const MAX_BYTES = 10 * 1024 * 1024; // 10 MB — certificates are small
-const ALLOWED = new Set([
-  "application/pdf",
-  "image/png",
-  "image/jpeg",
-  "image/webp",
-]);
+const ALLOWED = new Set(["application/pdf", "image/png", "image/jpeg", "image/webp"]);
 const EXT: Record<string, string> = {
   "application/pdf": "pdf",
   "image/png": "png",
@@ -41,10 +32,7 @@ function parseId(raw: string): number | null {
   return Number.isInteger(id) && id > 0 ? id : null;
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
@@ -74,7 +62,9 @@ export async function POST(
   }
   if (file.size > MAX_BYTES) {
     return Response.json(
-      { error: `File is ${(file.size / 1024 / 1024).toFixed(1)} MB. Keep certificates under 10 MB.` },
+      {
+        error: `File is ${(file.size / 1024 / 1024).toFixed(1)} MB. Keep certificates under 10 MB.`,
+      },
       { status: 400 }
     );
   }
@@ -102,10 +92,7 @@ export async function POST(
   return Response.json({ ok: true, name: file.name, size: file.size });
 }
 
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
@@ -133,10 +120,7 @@ export async function GET(
   });
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;

@@ -155,7 +155,8 @@ export async function POST(req: Request) {
 
     case "deleteDraft": {
       if (!id) return bad("Missing id");
-      if (!(await deleteDraft(id))) return bad("Only a draft can be deleted. Void it instead.", 409);
+      if (!(await deleteDraft(id)))
+        return bad("Only a draft can be deleted. Void it instead.", 409);
       return Response.json({ ok: true });
     }
 
@@ -206,7 +207,8 @@ export async function POST(req: Request) {
 
     case "email": {
       if (!id) return bad("Missing id");
-      if (!emailConfigured(env)) return bad("Email is not set up (BREVO_API_KEY / BREVO_SENDER).", 503);
+      if (!emailConfigured(env))
+        return bad("Email is not set up (BREVO_API_KEY / BREVO_SENDER).", 503);
 
       const invoice = await getInvoice(id);
       if (!invoice) return bad("Not found", 404);

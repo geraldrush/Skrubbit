@@ -78,9 +78,7 @@ interface StateRow {
 }
 
 export async function getSyncState(): Promise<SyncState> {
-  const row = await db()
-    .prepare("SELECT * FROM sync_state WHERE id = 1")
-    .first<StateRow>();
+  const row = await db().prepare("SELECT * FROM sync_state WHERE id = 1").first<StateRow>();
 
   return {
     nextPage: row?.next_page ?? 1,
@@ -105,9 +103,7 @@ export async function getSyncState(): Promise<SyncState> {
  * from then on the crawl is only refreshing what it already holds.
  */
 export async function syncIsDue(): Promise<boolean> {
-  const row = await db()
-    .prepare("SELECT * FROM sync_state WHERE id = 1")
-    .first<StateRow>();
+  const row = await db().prepare("SELECT * FROM sync_state WHERE id = 1").first<StateRow>();
   if (!row) return true;
 
   if (row.running === 1) {
@@ -233,12 +229,32 @@ interface Mapped {
   searchText: string;
 }
 
+/**
+ * The parts of an OCDS tender this mirror reads. Fields are optional because
+ * the eTenders feed omits them freely; every value is still checked with
+ * `str()` or `typeof` before use, since the feed is external input.
+ */
+interface OcdsTender {
+  id?: string;
+  title?: string;
+  description?: string;
+  province?: string;
+  mainProcurementCategory?: string;
+  deliveryLocation?: string;
+  procuringEntity?: { name?: string };
+  tenderPeriod?: { startDate?: string; endDate?: string };
+  briefingSession?: { isSession?: boolean; compulsory?: boolean; date?: string; venue?: string };
+  value?: { amount?: number };
+  contactPerson?: { name?: string; email?: string; telephoneNumber?: string };
+  documents?: { url?: string }[];
+}
+
 function map(release: RawRelease): Mapped | null {
   const ocid = str(release.ocid);
-  const t = release.tender as Record<string, any> | undefined;
+  const t = release.tender as OcdsTender | undefined;
   if (!ocid || !t) return null;
 
-  const briefing = t.briefingSession as Record<string, any> | undefined;
+  const briefing = t.briefingSession;
   const isSession = Boolean(briefing?.isSession);
   // OCDS puts the tender number in `title` and the subject in `description`,
   // which is the opposite of what those names suggest.
@@ -310,10 +326,25 @@ async function upsert(rows: Mapped[]): Promise<void> {
              synced_at = datetime('now')`
         )
         .bind(
-          r.ocid, r.reference, r.title, r.description, r.department, r.closingAt,
-          r.publishedAt, r.briefingAt, r.briefingCompulsory, r.briefingVenue,
-          r.province, r.category, r.deliveryLocation, r.valueAmount, r.contactName,
-          r.contactEmail, r.contactPhone, r.documentUrl, r.searchText
+          r.ocid,
+          r.reference,
+          r.title,
+          r.description,
+          r.department,
+          r.closingAt,
+          r.publishedAt,
+          r.briefingAt,
+          r.briefingCompulsory,
+          r.briefingVenue,
+          r.province,
+          r.category,
+          r.deliveryLocation,
+          r.valueAmount,
+          r.contactName,
+          r.contactEmail,
+          r.contactPhone,
+          r.documentUrl,
+          r.searchText
         )
     )
   );
@@ -541,9 +572,7 @@ export async function backfillProvinces(): Promise<number> {
     const province = inferProvince(row.department, row.title);
     if (province) {
       batch.push(
-        d
-          .prepare("UPDATE remote_tenders SET province = ? WHERE ocid = ?")
-          .bind(province, row.ocid)
+        d.prepare("UPDATE remote_tenders SET province = ? WHERE ocid = ?").bind(province, row.ocid)
       );
       updated++;
     }

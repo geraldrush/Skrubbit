@@ -52,9 +52,7 @@ export function Credentials({
   }>;
 
   return (
-    <dl
-      className={`grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4 ${className}`}
-    >
+    <dl className={`grid gap-x-6 gap-y-5 sm:grid-cols-2 lg:grid-cols-4 ${className}`}>
       {items.map(({ icon: Icon, label, detail }) => (
         <div key={label} className="flex items-start gap-3">
           <Icon className="mt-0.5 h-5 w-5 shrink-0 text-accent" aria-hidden />

@@ -297,30 +297,20 @@ export const services: Service[] = [
     name: "Floor stripping, sealing & polishing",
     summary:
       "Old sealer and polish stripped, the floor deep-scrubbed, then resealed and buffed to a protective shine.",
-    includes: [
-      "Vinyl, tiled and concrete floors",
-      "Strip, seal and polish",
-      "Machine buffing",
-    ],
+    includes: ["Vinyl, tiled and concrete floors", "Strip, seal and polish", "Machine buffing"],
   },
   {
     slug: "window-cleaning",
     group: "exterior",
     name: "Window cleaning",
-    summary:
-      "Inside and outside glass, frames and sills on homes, offices and shopfronts.",
-    includes: [
-      "Glass, frames and sills",
-      "Shopfronts and glass doors",
-      "Once-off or scheduled",
-    ],
+    summary: "Inside and outside glass, frames and sills on homes, offices and shopfronts.",
+    includes: ["Glass, frames and sills", "Shopfronts and glass doors", "Once-off or scheduled"],
   },
   {
     slug: "pressure-washing",
     group: "exterior",
     name: "Pressure washing",
-    summary:
-      "High-pressure cleaning of paving, driveways, walls, walkways and bin areas.",
+    summary: "High-pressure cleaning of paving, driveways, walls, walkways and bin areas.",
     includes: [
       "Paving and driveways",
       "Exterior walls and walkways",

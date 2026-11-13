@@ -113,8 +113,7 @@ function go(hash: string) {
   window.location.hash = hash;
 }
 
-const SELECT =
-  "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
+const SELECT = "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm";
 
 const BADGE: Record<InvoiceState, string> = {
   draft: "bg-secondary text-foreground",
@@ -139,7 +138,6 @@ function StateBadge({ state }: { state: InvoiceState }) {
 /* ----------------------------------- app ----------------------------------- */
 
 export function InvoicesApp(props: Props) {
-  const { today } = props;
   const [customers, setCustomers] = React.useState(props.customers);
   const [invoices, setInvoices] = React.useState(props.invoices);
   // Documents opened in this session. A second look costs no request.
@@ -170,9 +168,10 @@ export function InvoicesApp(props: Props) {
 
   const saveCustomer = React.useCallback((c: Customer) => {
     setCustomers((list) =>
-      (list.some((x) => x.id === c.id) ? list.map((x) => (x.id === c.id ? c : x)) : [...list, c]).sort(
-        (a, b) => a.name.localeCompare(b.name)
-      )
+      (list.some((x) => x.id === c.id)
+        ? list.map((x) => (x.id === c.id ? c : x))
+        : [...list, c]
+      ).sort((a, b) => a.name.localeCompare(b.name))
     );
   }, []);
 
@@ -222,7 +221,9 @@ function Tabs({ current }: { current: "invoice" | "quote" | "customers" }) {
           key={t.key}
           href={t.href}
           className={`-mb-px border-b-2 px-3 py-2 text-sm font-medium ${
-            current === t.key ? "border-foreground" : "border-transparent text-muted-foreground hover:text-foreground"
+            current === t.key
+              ? "border-foreground"
+              : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
           {t.label}
@@ -236,12 +237,20 @@ function Tile({ label, value, tone }: { label: string; value: string; tone?: "ba
   return (
     <div className="rounded-lg border p-3">
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className={`font-display text-xl font-bold ${tone === "bad" ? "text-red-700" : ""}`}>{value}</p>
+      <p className={`font-display text-xl font-bold ${tone === "bad" ? "text-red-700" : ""}`}>
+        {value}
+      </p>
     </div>
   );
 }
 
-function Overview({ tab, invoices, today, vatRegistered, hasBankDetails }: Shared & { tab: InvoiceKind }) {
+function Overview({
+  tab,
+  invoices,
+  today,
+  vatRegistered,
+  hasBankDetails,
+}: Shared & { tab: InvoiceKind }) {
   const [filter, setFilter] = React.useState<Filter>("all");
 
   const docs = invoices.filter((i) => i.kind === tab);
@@ -271,7 +280,8 @@ function Overview({ tab, invoices, today, vatRegistered, hasBankDetails }: Share
   const shown = docs.filter((i) => {
     const s = invoiceState(i, today);
     if (filter === "all") return true;
-    if (filter === "outstanding") return s === "unpaid" || s === "part-paid" || s === "overdue" || s === "quote-open";
+    if (filter === "outstanding")
+      return s === "unpaid" || s === "part-paid" || s === "overdue" || s === "quote-open";
     if (filter === "overdue") return s === "overdue" || s === "quote-expired";
     if (filter === "paid") return s === "paid" || s === "quote-accepted";
     return s === "draft";
@@ -284,7 +294,10 @@ function Overview({ tab, invoices, today, vatRegistered, hasBankDetails }: Share
       {!hasBankDetails && (
         <p className="mb-4 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
           Your banking details are blank, so invoices will not say where to pay. Add them under{" "}
-          <a href="/admin/documents" className="underline">Documents → Company</a>.
+          <a href="/admin/documents" className="underline">
+            Documents → Company
+          </a>
+          .
         </p>
       )}
 
@@ -292,7 +305,11 @@ function Overview({ tab, invoices, today, vatRegistered, hasBankDetails }: Share
         <section className="mb-6 space-y-3">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
             <Tile label="Owed to you" value={formatZAR(owed)} />
-            <Tile label="Overdue" value={formatZAR(overdue)} tone={overdue > 0 ? "bad" : undefined} />
+            <Tile
+              label="Overdue"
+              value={formatZAR(overdue)}
+              tone={overdue > 0 ? "bad" : undefined}
+            />
             <Tile label="Invoiced this month" value={formatZAR(billedThisMonth)} />
           </div>
           {owed > 0 && (
@@ -307,8 +324,8 @@ function Overview({ tab, invoices, today, vatRegistered, hasBankDetails }: Share
           )}
           {!vatRegistered && (
             <p className="text-xs text-muted-foreground">
-              Not VAT-registered, so invoices are issued without VAT. Tick “VAT registered” on the company
-              profile once SARS registers you, and new invoices become tax invoices.
+              Not VAT-registered, so invoices are issued without VAT. Tick “VAT registered” on the
+              company profile once SARS registers you, and new invoices become tax invoices.
             </p>
           )}
         </section>
@@ -322,10 +339,18 @@ function Overview({ tab, invoices, today, vatRegistered, hasBankDetails }: Share
               type="button"
               onClick={() => setFilter(f)}
               className={`rounded-full border px-3 py-1 text-xs font-medium capitalize ${
-                filter === f ? "border-transparent bg-foreground text-background" : "hover:bg-secondary"
+                filter === f
+                  ? "border-transparent bg-foreground text-background"
+                  : "hover:bg-secondary"
               }`}
             >
-              {f === "draft" ? "Drafts" : f === "overdue" && tab === "quote" ? "Expired" : f === "paid" && tab === "quote" ? "Invoiced" : f}
+              {f === "draft"
+                ? "Drafts"
+                : f === "overdue" && tab === "quote"
+                  ? "Expired"
+                  : f === "paid" && tab === "quote"
+                    ? "Invoiced"
+                    : f}
             </button>
           ))}
         </div>
@@ -336,7 +361,9 @@ function Overview({ tab, invoices, today, vatRegistered, hasBankDetails }: Share
 
       {shown.length === 0 ? (
         <p className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-          {docs.length ? "Nothing matches this filter." : `No ${tab === "quote" ? "quotes" : "invoices"} yet.`}
+          {docs.length
+            ? "Nothing matches this filter."
+            : `No ${tab === "quote" ? "quotes" : "invoices"} yet.`}
         </p>
       ) : (
         <ul className="divide-y rounded-lg border">
@@ -344,9 +371,16 @@ function Overview({ tab, invoices, today, vatRegistered, hasBankDetails }: Share
             const state = invoiceState(i, today);
             return (
               <li key={i.id}>
-                <a href={`#doc/${i.id}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 p-3 hover:bg-secondary/50">
-                  <span className="w-20 font-mono text-xs text-muted-foreground">{i.number ?? "draft"}</span>
-                  <span className="min-w-0 flex-1 truncate font-medium">{i.customerName || "—"}</span>
+                <a
+                  href={`#doc/${i.id}`}
+                  className="flex flex-wrap items-center gap-x-3 gap-y-1 p-3 hover:bg-secondary/50"
+                >
+                  <span className="w-20 font-mono text-xs text-muted-foreground">
+                    {i.number ?? "draft"}
+                  </span>
+                  <span className="min-w-0 flex-1 truncate font-medium">
+                    {i.customerName || "—"}
+                  </span>
                   <span className="text-xs text-muted-foreground">{i.issuedOn ?? ""}</span>
                   <StateBadge state={state} />
                   <span className="w-28 text-right font-semibold">
@@ -387,11 +421,19 @@ function CustomerFields({
     <div className="grid gap-3 sm:grid-cols-2">
       <div className="space-y-1 sm:col-span-2">
         <Label>Name</Label>
-        <Input value={value.name} onChange={(e) => set({ name: e.target.value })} placeholder="SAPS Tshaulu" />
+        <Input
+          value={value.name}
+          onChange={(e) => set({ name: e.target.value })}
+          placeholder="SAPS Tshaulu"
+        />
       </div>
       <div className="space-y-1">
         <Label>Attention</Label>
-        <Input value={value.contactPerson} onChange={(e) => set({ contactPerson: e.target.value })} placeholder="Station Commander" />
+        <Input
+          value={value.contactPerson}
+          onChange={(e) => set({ contactPerson: e.target.value })}
+          placeholder="Station Commander"
+        />
       </div>
       <div className="space-y-1">
         <Label>Email (comma-separated)</Label>
@@ -413,7 +455,11 @@ function CustomerFields({
       </div>
       <div className="space-y-1 sm:col-span-2">
         <Label>Address</Label>
-        <Textarea rows={2} value={value.address} onChange={(e) => set({ address: e.target.value })} />
+        <Textarea
+          rows={2}
+          value={value.address}
+          onChange={(e) => set({ address: e.target.value })}
+        />
       </div>
       <div className="space-y-1">
         <Label>Their VAT number</Label>
@@ -476,7 +522,12 @@ function Customers({ customers, invoices, today, saveCustomer, setCustomers }: S
       <CustomerFields value={draft} onChange={setDraft} />
       <div className="flex gap-2">
         <Button size="sm" onClick={save} disabled={busy || !draft.name.trim()}>
-          {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />} Save
+          {busy ? (
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-1 h-4 w-4" />
+          )}{" "}
+          Save
         </Button>
         <Button size="sm" variant="outline" onClick={() => setEditing(null)}>
           Cancel
@@ -504,7 +555,11 @@ function Customers({ customers, invoices, today, saveCustomer, setCustomers }: S
             editing === c.id ? (
               <li key={c.id} className="p-3">
                 {editor}
-                <button type="button" onClick={() => remove(c)} className="mt-2 text-xs text-red-700 hover:underline">
+                <button
+                  type="button"
+                  onClick={() => remove(c)}
+                  className="mt-2 text-xs text-red-700 hover:underline"
+                >
                   Delete customer
                 </button>
               </li>
@@ -518,7 +573,9 @@ function Customers({ customers, invoices, today, saveCustomer, setCustomers }: S
                   <span className="flex-1 font-medium">{c.name}</span>
                   <span className="text-xs text-muted-foreground">{c.email || c.phone}</span>
                   <span className="w-28 text-right text-sm">
-                    {owing(c.id) > 0 ? <span className="font-semibold">{formatZAR(owing(c.id))} owed</span> : null}
+                    {owing(c.id) > 0 ? (
+                      <span className="font-semibold">{formatZAR(owing(c.id))} owed</span>
+                    ) : null}
                   </span>
                 </button>
               </li>
@@ -549,7 +606,13 @@ const toDraft = (l: InvoiceLine): LineDraft => ({
   quantity: String(l.quantity),
   unitPrice: String(l.unitPrice),
 });
-const blankLine = (): LineDraft => ({ key: ++lineKey, description: "", unit: "each", quantity: "1", unitPrice: "" });
+const blankLine = (): LineDraft => ({
+  key: ++lineKey,
+  description: "",
+  unit: "each",
+  quantity: "1",
+  unitPrice: "",
+});
 const toLine = (d: LineDraft): InvoiceLine => ({
   description: d.description.trim(),
   unit: d.unit.trim() || "each",
@@ -576,7 +639,9 @@ function Editor({
   orderRef?: string | null;
   existing?: InvoiceDetail;
 }) {
-  const [customerId, setCustomerId] = React.useState<number | "new" | "">(existing?.customerId ?? "");
+  const [customerId, setCustomerId] = React.useState<number | "new" | "">(
+    existing?.customerId ?? ""
+  );
   const [newCustomer, setNewCustomer] = React.useState(blankCustomer());
   const [lines, setLines] = React.useState<LineDraft[]>(
     existing?.lines.length ? existing.lines.map(toDraft) : [blankLine()]
@@ -586,7 +651,9 @@ function Editor({
   const [reference, setReference] = React.useState(existing?.reference ?? "");
   const [notes, setNotes] = React.useState(existing?.notes ?? "");
   const [tenderId, setTenderId] = React.useState<number | null>(existing?.tenderId ?? null);
-  const [orderReference, setOrderReference] = React.useState<string | null>(existing?.orderReference ?? null);
+  const [orderReference, setOrderReference] = React.useState<string | null>(
+    existing?.orderReference ?? null
+  );
   const [busy, setBusy] = React.useState<"" | "save" | "issue">("");
 
   /** Replaces blank rows with these, keeps any the user has already typed. */
@@ -610,17 +677,32 @@ function Editor({
   function fromOrder(ref: string) {
     const o = orders.find((x) => x.reference === ref);
     if (!o) return;
-    addLines(o.items.map((i) => ({ description: `${i.name} (${i.size})`, unit: "each", quantity: i.qty, unitPrice: i.price })));
+    addLines(
+      o.items.map((i) => ({
+        description: `${i.name} (${i.size})`,
+        unit: "each",
+        quantity: i.qty,
+        unitPrice: i.price,
+      }))
+    );
     setOrderReference(o.reference);
     if (!reference) setReference(o.reference);
     // Bill the customer we already have, or start a new one from the order.
     const match = customers.find(
-      (c) => (o.email && c.email.toLowerCase().includes(o.email.toLowerCase())) || c.name.toLowerCase() === o.name.toLowerCase()
+      (c) =>
+        (o.email && c.email.toLowerCase().includes(o.email.toLowerCase())) ||
+        c.name.toLowerCase() === o.name.toLowerCase()
     );
     if (match) setCustomerId(match.id);
     else {
       setCustomerId("new");
-      setNewCustomer({ ...blankCustomer(), name: o.name, email: o.email, phone: o.phone, address: o.address });
+      setNewCustomer({
+        ...blankCustomer(),
+        name: o.name,
+        email: o.email,
+        phone: o.phone,
+        address: o.address,
+      });
     }
   }
 
@@ -646,7 +728,10 @@ function Editor({
     try {
       let cid = customerId;
       if (cid === "new") {
-        const { customer } = await call<{ customer: Customer }>({ action: "saveCustomer", ...newCustomer });
+        const { customer } = await call<{ customer: Customer }>({
+          action: "saveCustomer",
+          ...newCustomer,
+        });
         saveCustomer(customer);
         cid = customer.id;
         setCustomerId(cid);
@@ -700,7 +785,10 @@ function Editor({
 
   return (
     <div className="space-y-6">
-      <a href={kind === "quote" ? "#quotes" : "#"} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-accent">
+      <a
+        href={kind === "quote" ? "#quotes" : "#"}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-accent"
+      >
         <ChevronLeft className="h-4 w-4" /> All {kind === "quote" ? "quotes" : "invoices"}
       </a>
       <h2 className="font-display text-2xl font-bold">
@@ -712,7 +800,11 @@ function Editor({
         <select
           className={SELECT}
           value={customerId}
-          onChange={(e) => setCustomerId(e.target.value === "new" ? "new" : e.target.value ? Number(e.target.value) : "")}
+          onChange={(e) =>
+            setCustomerId(
+              e.target.value === "new" ? "new" : e.target.value ? Number(e.target.value) : ""
+            )
+          }
         >
           <option value="">Choose…</option>
           {customers.map((c) => (
@@ -734,7 +826,11 @@ function Editor({
           <h3 className="font-semibold">Lines</h3>
           <div className="flex flex-wrap gap-2">
             {!existing && tenders.length > 0 && (
-              <select className={`${SELECT} h-9 w-auto`} value="" onChange={(e) => e.target.value && fromTender(Number(e.target.value))}>
+              <select
+                className={`${SELECT} h-9 w-auto`}
+                value=""
+                onChange={(e) => e.target.value && fromTender(Number(e.target.value))}
+              >
                 <option value="">From a tender…</option>
                 {tenders.map((t) => (
                   <option key={t.id} value={t.id}>
@@ -744,7 +840,11 @@ function Editor({
               </select>
             )}
             {!existing && orders.length > 0 && (
-              <select className={`${SELECT} h-9 w-auto`} value="" onChange={(e) => e.target.value && fromOrder(e.target.value)}>
+              <select
+                className={`${SELECT} h-9 w-auto`}
+                value=""
+                onChange={(e) => e.target.value && fromOrder(e.target.value)}
+              >
                 <option value="">From a shop order…</option>
                 {orders.map((o) => (
                   <option key={o.reference} value={o.reference}>
@@ -758,7 +858,15 @@ function Editor({
               value=""
               onChange={(e) => {
                 const p = catalogue[Number(e.target.value)];
-                if (p) addLines([{ description: `${p.name} ${p.size}`, unit: "each", quantity: 1, unitPrice: p.price }]);
+                if (p)
+                  addLines([
+                    {
+                      description: `${p.name} ${p.size}`,
+                      unit: "each",
+                      quantity: 1,
+                      unitPrice: p.price,
+                    },
+                  ]);
               }}
             >
               <option value="">Add a product…</option>
@@ -801,11 +909,17 @@ function Editor({
                 onChange={(e) => patch(l.key, { unitPrice: e.target.value })}
               />
               <div className="col-span-3 flex items-center justify-end gap-1 sm:col-span-2">
-                <span className="text-sm tabular-nums">{formatZAR(toLine(l).quantity * toLine(l).unitPrice)}</span>
+                <span className="text-sm tabular-nums">
+                  {formatZAR(toLine(l).quantity * toLine(l).unitPrice)}
+                </span>
                 <button
                   type="button"
                   aria-label="Remove line"
-                  onClick={() => setLines((ls) => (ls.length > 1 ? ls.filter((x) => x.key !== l.key) : [blankLine()]))}
+                  onClick={() =>
+                    setLines((ls) =>
+                      ls.length > 1 ? ls.filter((x) => x.key !== l.key) : [blankLine()]
+                    )
+                  }
                   className="p-1 text-muted-foreground hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -821,11 +935,20 @@ function Editor({
         <div className="ml-auto max-w-xs space-y-1 text-sm">
           {vatRegistered && (
             <>
-              <p className="flex justify-between"><span className="text-muted-foreground">Subtotal</span>{formatZAR(sums.subtotal)}</p>
-              <p className="flex justify-between"><span className="text-muted-foreground">VAT 15%</span>{formatZAR(sums.vat)}</p>
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">Subtotal</span>
+                {formatZAR(sums.subtotal)}
+              </p>
+              <p className="flex justify-between">
+                <span className="text-muted-foreground">VAT 15%</span>
+                {formatZAR(sums.vat)}
+              </p>
             </>
           )}
-          <p className="flex justify-between font-display text-lg font-bold"><span>Total</span>{formatZAR(sums.total)}</p>
+          <p className="flex justify-between font-display text-lg font-bold">
+            <span>Total</span>
+            {formatZAR(sums.total)}
+          </p>
         </div>
       </section>
 
@@ -848,17 +971,30 @@ function Editor({
         </div>
         <div className="space-y-1 sm:col-span-3">
           <Label>Notes (printed)</Label>
-          <Textarea rows={2} value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Delivery to…, warranty, etc." />
+          <Textarea
+            rows={2}
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Delivery to…, warranty, etc."
+          />
         </div>
       </section>
 
       <div className="flex flex-wrap gap-2">
         <Button onClick={() => save(true)} disabled={!ready || busy !== ""}>
-          {busy === "issue" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />}
+          {busy === "issue" ? (
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+          ) : (
+            <Send className="mr-1 h-4 w-4" />
+          )}
           Save and issue
         </Button>
         <Button variant="outline" onClick={() => save(false)} disabled={!ready || busy !== ""}>
-          {busy === "save" ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Save className="mr-1 h-4 w-4" />}
+          {busy === "save" ? (
+            <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+          ) : (
+            <Save className="mr-1 h-4 w-4" />
+          )}
           Save draft
         </Button>
         {existing && (
@@ -906,7 +1042,10 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
   async function act(body: Record<string, unknown>, done: string) {
     setBusy(true);
     try {
-      const res = await call<{ invoice: InvoiceDetail; quote?: InvoiceDetail }>({ id: inv!.id, ...body });
+      const res = await call<{ invoice: InvoiceDetail; quote?: InvoiceDetail }>({
+        id: inv!.id,
+        ...body,
+      });
       if (res.quote) upsert(res.quote);
       upsert(res.invoice);
       setPanel("");
@@ -921,7 +1060,10 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
 
   return (
     <div className="space-y-6">
-      <a href={isQuote ? "#quotes" : "#"} className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-accent">
+      <a
+        href={isQuote ? "#quotes" : "#"}
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-accent"
+      >
         <ChevronLeft className="h-4 w-4" /> All {isQuote ? "quotes" : "invoices"}
       </a>
 
@@ -954,8 +1096,13 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
           <FileDown className="mr-1.5 h-4 w-4" /> PDF
         </a>
         {inv.status === "issued" && (
-          <Button size="sm" variant="outline" onClick={() => setPanel(panel === "email" ? "" : "email")} disabled={!emailReady}
-            title={emailReady ? undefined : "Email is not set up on the server"}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setPanel(panel === "email" ? "" : "email")}
+            disabled={!emailReady}
+            title={emailReady ? undefined : "Email is not set up on the server"}
+          >
             <Mail className="mr-1.5 h-4 w-4" /> Email
           </Button>
         )}
@@ -964,17 +1111,24 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
             Record payment
           </Button>
         )}
-        {isQuote && inv.status === "issued" && (
-          inv.invoicedBy ? (
-            <a href={`#doc/${inv.invoicedBy}`} className="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium hover:bg-secondary">
+        {isQuote &&
+          inv.status === "issued" &&
+          (inv.invoicedBy ? (
+            <a
+              href={`#doc/${inv.invoicedBy}`}
+              className="inline-flex h-9 items-center rounded-md border px-3 text-sm font-medium hover:bg-secondary"
+            >
               Open its invoice
             </a>
           ) : (
-            <Button size="sm" onClick={() => act({ action: "convert" }, "Invoice draft created")} disabled={busy}>
+            <Button
+              size="sm"
+              onClick={() => act({ action: "convert" }, "Invoice draft created")}
+              disabled={busy}
+            >
               Raise invoice
             </Button>
-          )
-        )}
+          ))}
         {inv.status === "issued" && (
           <Button
             size="sm"
@@ -982,8 +1136,9 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
             className="text-red-700"
             disabled={busy}
             onClick={() =>
-              confirm(`Void ${inv.number}? The number stays used, marked VOID. Issue a new one to replace it.`) &&
-              act({ action: "void" }, `${inv.number} voided`)
+              confirm(
+                `Void ${inv.number}? The number stays used, marked VOID. Issue a new one to replace it.`
+              ) && act({ action: "void" }, `${inv.number} voided`)
             }
           >
             Void
@@ -991,9 +1146,20 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
         )}
       </div>
 
-      {panel === "pay" && <PaymentForm owed={owed} today={today} busy={busy} onSubmit={(p) => act({ action: "addPayment", ...p }, "Payment recorded")} />}
+      {panel === "pay" && (
+        <PaymentForm
+          owed={owed}
+          today={today}
+          busy={busy}
+          onSubmit={(p) => act({ action: "addPayment", ...p }, "Payment recorded")}
+        />
+      )}
       {panel === "email" && (
-        <EmailForm inv={inv} busy={busy} onSubmit={(to, message) => act({ action: "email", to, message }, `Sent to ${to}`)} />
+        <EmailForm
+          inv={inv}
+          busy={busy}
+          onSubmit={(to, message) => act({ action: "email", to, message }, `Sent to ${to}`)}
+        />
       )}
 
       <div className="overflow-x-auto rounded-lg border">
@@ -1014,7 +1180,9 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
                 <td className="p-2 text-right tabular-nums">{l.quantity}</td>
                 <td className="p-2">{l.unit}</td>
                 <td className="p-2 text-right tabular-nums">{formatZAR(l.unitPrice)}</td>
-                <td className="p-2 text-right tabular-nums">{formatZAR(l.quantity * l.unitPrice)}</td>
+                <td className="p-2 text-right tabular-nums">
+                  {formatZAR(l.quantity * l.unitPrice)}
+                </td>
               </tr>
             ))}
           </tbody>
@@ -1024,15 +1192,30 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
       <div className="ml-auto max-w-xs space-y-1 text-sm">
         {inv.vatRate > 0 && (
           <>
-            <p className="flex justify-between"><span className="text-muted-foreground">Subtotal</span>{formatZAR(inv.subtotal)}</p>
-            <p className="flex justify-between"><span className="text-muted-foreground">VAT</span>{formatZAR(inv.vat)}</p>
+            <p className="flex justify-between">
+              <span className="text-muted-foreground">Subtotal</span>
+              {formatZAR(inv.subtotal)}
+            </p>
+            <p className="flex justify-between">
+              <span className="text-muted-foreground">VAT</span>
+              {formatZAR(inv.vat)}
+            </p>
           </>
         )}
-        <p className="flex justify-between font-semibold"><span>Total</span>{formatZAR(inv.total)}</p>
+        <p className="flex justify-between font-semibold">
+          <span>Total</span>
+          {formatZAR(inv.total)}
+        </p>
         {!isQuote && (
           <>
-            <p className="flex justify-between"><span className="text-muted-foreground">Paid</span>{formatZAR(inv.paid)}</p>
-            <p className="flex justify-between font-display text-lg font-bold"><span>Balance</span>{formatZAR(owed)}</p>
+            <p className="flex justify-between">
+              <span className="text-muted-foreground">Paid</span>
+              {formatZAR(inv.paid)}
+            </p>
+            <p className="flex justify-between font-display text-lg font-bold">
+              <span>Balance</span>
+              {formatZAR(owed)}
+            </p>
           </>
         )}
       </div>
@@ -1051,7 +1234,10 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
                   type="button"
                   aria-label="Remove payment"
                   disabled={busy}
-                  onClick={() => confirm("Remove this payment?") && act({ action: "deletePayment", paymentId: p.id }, "Payment removed")}
+                  onClick={() =>
+                    confirm("Remove this payment?") &&
+                    act({ action: "deletePayment", paymentId: p.id }, "Payment removed")
+                  }
                   className="text-muted-foreground hover:text-red-700"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -1062,13 +1248,25 @@ function DocumentView(props: Shared & { id: number; cached?: InvoiceDetail }) {
         </section>
       )}
 
-      {inv.notes && <p className="whitespace-pre-line text-sm text-muted-foreground">{inv.notes}</p>}
+      {inv.notes && (
+        <p className="whitespace-pre-line text-sm text-muted-foreground">{inv.notes}</p>
+      )}
 
       <p className="flex flex-wrap gap-4 text-xs text-muted-foreground">
-        {inv.tenderId && <a className="hover:text-accent" href={`/admin/tenders/${inv.tenderId}`}>From a tender</a>}
-        {inv.quoteId && <a className="hover:text-accent" href={`#doc/${inv.quoteId}`}>From a quote</a>}
+        {inv.tenderId && (
+          <a className="hover:text-accent" href={`/admin/tenders/${inv.tenderId}`}>
+            From a tender
+          </a>
+        )}
+        {inv.quoteId && (
+          <a className="hover:text-accent" href={`#doc/${inv.quoteId}`}>
+            From a quote
+          </a>
+        )}
         {inv.orderReference && <span>From shop order {inv.orderReference}</span>}
-        <a className="inline-flex items-center gap-1 hover:text-accent" href="#customers"><Users className="h-3 w-3" /> Customers</a>
+        <a className="inline-flex items-center gap-1 hover:text-accent" href="#customers">
+          <Users className="h-3 w-3" /> Customers
+        </a>
       </p>
     </div>
   );
@@ -1083,7 +1281,12 @@ function PaymentForm({
   owed: number;
   today: string;
   busy: boolean;
-  onSubmit: (p: { receivedOn: string; amount: number; method: PaymentMethod; reference: string }) => void;
+  onSubmit: (p: {
+    receivedOn: string;
+    amount: number;
+    method: PaymentMethod;
+    reference: string;
+  }) => void;
 }) {
   const [receivedOn, setReceivedOn] = React.useState(today);
   const [amount, setAmount] = React.useState(String(owed));
@@ -1100,17 +1303,33 @@ function PaymentForm({
     >
       <div className="space-y-1">
         <Label>Received on</Label>
-        <Input type="date" value={receivedOn} onChange={(e) => setReceivedOn(e.target.value)} required />
+        <Input
+          type="date"
+          value={receivedOn}
+          onChange={(e) => setReceivedOn(e.target.value)}
+          required
+        />
       </div>
       <div className="space-y-1">
         <Label>Amount</Label>
-        <Input inputMode="decimal" value={amount} onChange={(e) => setAmount(e.target.value)} required />
+        <Input
+          inputMode="decimal"
+          value={amount}
+          onChange={(e) => setAmount(e.target.value)}
+          required
+        />
       </div>
       <div className="space-y-1">
         <Label>Method</Label>
-        <select className={SELECT} value={method} onChange={(e) => setMethod(e.target.value as PaymentMethod)}>
+        <select
+          className={SELECT}
+          value={method}
+          onChange={(e) => setMethod(e.target.value as PaymentMethod)}
+        >
           {Object.entries(METHOD_LABELS).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
+            <option key={k} value={k}>
+              {v}
+            </option>
           ))}
         </select>
       </div>
@@ -1160,7 +1379,12 @@ function EmailForm({
         />
       </div>
       <Button size="sm" type="submit" disabled={busy || !to.trim()}>
-        {busy ? <Loader2 className="mr-1 h-4 w-4 animate-spin" /> : <Send className="mr-1 h-4 w-4" />} Send
+        {busy ? (
+          <Loader2 className="mr-1 h-4 w-4 animate-spin" />
+        ) : (
+          <Send className="mr-1 h-4 w-4" />
+        )}{" "}
+        Send
       </Button>
     </form>
   );

@@ -39,19 +39,13 @@ const steps = [
  * looking for "post-construction cleaning Limpopo" should land here, not on a
  * long list where the service is one card among twenty.
  */
-export default async function ServicePage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function ServicePage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const service = getService(slug);
   if (!service) notFound();
 
   const group = serviceGroups.find((g) => g.id === service.group);
-  const related = services.filter(
-    (s) => s.group === service.group && s.slug !== service.slug
-  );
+  const related = services.filter((s) => s.group === service.group && s.slug !== service.slug);
 
   const serviceSchema = {
     "@context": "https://schema.org",
@@ -102,9 +96,7 @@ export default async function ServicePage({
           <h1 className="mt-3 max-w-3xl font-display text-4xl font-extrabold leading-tight sm:text-5xl">
             {service.name} in Limpopo
           </h1>
-          <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            {service.summary}
-          </p>
+          <p className="mt-4 max-w-2xl text-lg text-muted-foreground">{service.summary}</p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" variant="accent">
               <Link href={`/contact?service=${service.slug}`}>
@@ -127,9 +119,7 @@ export default async function ServicePage({
 
       <section className="container grid gap-12 py-14 md:grid-cols-2">
         <div>
-          <h2 className="font-display text-2xl font-extrabold">
-            What&apos;s included
-          </h2>
+          <h2 className="font-display text-2xl font-extrabold">What&apos;s included</h2>
           <ul className="mt-5 grid gap-3">
             {service.includes.map((item) => (
               <li key={item} className="flex gap-3">
@@ -139,8 +129,8 @@ export default async function ServicePage({
             ))}
           </ul>
           <p className="mt-6 text-muted-foreground">
-            The exact scope is agreed before we quote, so anything specific to
-            your premises can be added or left out.
+            The exact scope is agreed before we quote, so anything specific to your premises can be
+            added or left out.
           </p>
         </div>
         <div>
@@ -160,20 +150,15 @@ export default async function ServicePage({
 
       <section className="border-t bg-secondary/40 py-14">
         <div className="container">
-          <h2 className="font-display text-2xl font-extrabold">
-            Why Skrubb-it
-          </h2>
+          <h2 className="font-display text-2xl font-extrabold">Why Skrubb-it</h2>
           <p className="mt-3 max-w-3xl text-muted-foreground">
-            We manufacture cleaning chemicals in Vhembe and clean with our own
-            products, so the right strength is always on hand. We are a
-            registered, B-BBEE Level 1 company serving homes,
-            businesses, schools, clinics and government across Limpopo.
+            We manufacture cleaning chemicals in Vhembe and clean with our own products, so the
+            right strength is always on hand. We are a registered, B-BBEE Level 1 company serving
+            homes, businesses, schools, clinics and government across Limpopo.
           </p>
           {related.length > 0 && (
             <>
-              <h3 className="mt-10 font-display text-lg font-bold">
-                Related services
-              </h3>
+              <h3 className="mt-10 font-display text-lg font-bold">Related services</h3>
               <div className="mt-4 flex flex-wrap gap-3">
                 {related.map((s) => (
                   <Button key={s.slug} asChild variant="outline" size="sm">
