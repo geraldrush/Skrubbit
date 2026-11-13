@@ -363,16 +363,13 @@ export async function getInvoice(id: number): Promise<InvoiceDetail | null> {
       .prepare("SELECT * FROM invoice_lines WHERE invoice_id = ? ORDER BY position")
       .bind(id)
       .all<{ description: string; unit: string; quantity: number; unit_price: number }>(),
-    d
-      .prepare("SELECT * FROM payments WHERE invoice_id = ? ORDER BY received_on, id")
-      .bind(id)
-      .all<{
-        id: number;
-        received_on: string;
-        amount: number;
-        method: PaymentMethod;
-        reference: string;
-      }>(),
+    d.prepare("SELECT * FROM payments WHERE invoice_id = ? ORDER BY received_on, id").bind(id).all<{
+      id: number;
+      received_on: string;
+      amount: number;
+      method: PaymentMethod;
+      reference: string;
+    }>(),
   ]);
 
   return {
