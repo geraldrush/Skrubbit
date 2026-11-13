@@ -17,7 +17,6 @@ import { degrees, PDFDocument, PDFPage, rgb, StandardFonts } from "pdf-lib";
 
 import {
   A4,
-  BODY,
   CONTENT_W,
   INK,
   Layout,

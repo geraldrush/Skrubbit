@@ -139,7 +139,6 @@ function StateBadge({ state }: { state: InvoiceState }) {
 /* ----------------------------------- app ----------------------------------- */
 
 export function InvoicesApp(props: Props) {
-  const { today } = props;
   const [customers, setCustomers] = React.useState(props.customers);
   const [invoices, setInvoices] = React.useState(props.invoices);
   // Documents opened in this session. A second look costs no request.

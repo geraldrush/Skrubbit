@@ -15,7 +15,7 @@ export const dynamic = "force-dynamic";
  */
 const MIN_SECONDS_BETWEEN_SENDS = 2 * 60;
 
-function baseUrl(req: Request): string {
+function baseUrl(): string {
   // The canonical host, not the request's: the link is going into an email and
   // has to work when clicked from anywhere, and Host is attacker-controlled.
   // Sending a reset link to a host from the request would let someone mint a
@@ -72,7 +72,7 @@ export async function POST(req: Request) {
   }
 
   const token = await createResetToken(env);
-  const link = `${baseUrl(req)}/admin/reset?token=${token}`;
+  const link = `${baseUrl()}/admin/reset?token=${token}`;
 
   const result = await sendEmail(env, {
     to: credential.username,
