@@ -15,11 +15,7 @@ import {
 } from "@/lib/tenders";
 
 export type ReminderKind =
-  | "briefing"
-  | "closing_10d"
-  | "closing_7d"
-  | "closing_48h"
-  | "closing_24h";
+  "briefing" | "closing_10d" | "closing_7d" | "closing_48h" | "closing_24h";
 
 export interface DueReminder {
   tenderId: number;
@@ -29,8 +25,7 @@ export interface DueReminder {
   text: string;
 }
 
-const hoursUntil = (iso: string, now: Date) =>
-  (new Date(iso).getTime() - now.getTime()) / 36e5;
+const hoursUntil = (iso: string, now: Date) => (new Date(iso).getTime() - now.getTime()) / 36e5;
 
 function escapeHtml(value: string): string {
   return value
@@ -126,12 +121,7 @@ export function dueReminders(
   const steps: Array<[ReminderKind, number, string, string]> = [
     ["closing_24h", 24, "closes in under 24 hours", "Last chance to deliver it."],
     ["closing_48h", 48, "closes in under 48 hours", "Allow travel time for a physical drop-off."],
-    [
-      "closing_7d",
-      168,
-      `closes in ${daysLeft} days`,
-      "Time to chase anything still outstanding.",
-    ],
+    ["closing_7d", 168, `closes in ${daysLeft} days`, "Time to chase anything still outstanding."],
     [
       "closing_10d",
       240,

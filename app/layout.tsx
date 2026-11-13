@@ -10,8 +10,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { JsonLd } from "@/components/json-ld";
 import { businessSchema } from "@/lib/seo";
 
-const defaultTitle =
-  "Skrubb-it | Cleaning Products & Professional Cleaning Services in Limpopo";
+const defaultTitle = "Skrubb-it | Cleaning Products & Professional Cleaning Services in Limpopo";
 
 /*
  * Nunito and Baloo 2, served from this repo rather than fetched from Google
@@ -84,9 +83,7 @@ export const viewport: Viewport = {
   initialScale: 1,
 };
 
-export default function RootLayout({
-  children,
-}: Readonly<{ children: React.ReactNode }>) {
+export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html lang="en-ZA" className={`${nunito.variable} ${baloo.variable}`}>
       <body className="flex min-h-dvh flex-col">

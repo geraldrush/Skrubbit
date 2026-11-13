@@ -205,9 +205,7 @@ export async function recordRun(run: CronRun): Promise<void> {
         run.checked,
         run.detail
       ),
-    d.prepare(`DELETE FROM cron_runs WHERE ran_at < datetime('now', ?)`).bind(
-      `-${KEEP_DAYS} days`
-    ),
+    d.prepare(`DELETE FROM cron_runs WHERE ran_at < datetime('now', ?)`).bind(`-${KEEP_DAYS} days`),
   ]);
 }
 

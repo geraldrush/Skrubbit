@@ -34,11 +34,7 @@ export async function generateMetadata({
   };
 }
 
-export default async function ProductPage({
-  params,
-}: {
-  params: Promise<{ slug: string }>;
-}) {
+export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
 
   // Deliberately not a safe read. `undefined` here means "no such product" and
@@ -96,10 +92,7 @@ export default async function ProductPage({
         <ChevronRight className="h-4 w-4" />
         {category && (
           <>
-            <Link
-              href={`/shop?category=${category.id}`}
-              className="hover:text-accent"
-            >
+            <Link href={`/shop?category=${category.id}`} className="hover:text-accent">
               {category.name}
             </Link>
             <ChevronRight className="h-4 w-4" />
@@ -133,12 +126,8 @@ export default async function ProductPage({
               {category.name}
             </p>
           )}
-          <h1 className="mt-1 font-display text-3xl font-extrabold sm:text-4xl">
-            {product.name}
-          </h1>
-          <p className="mt-2 text-lg text-muted-foreground">
-            {product.tagline}
-          </p>
+          <h1 className="mt-1 font-display text-3xl font-extrabold sm:text-4xl">{product.name}</h1>
+          <p className="mt-2 text-lg text-muted-foreground">{product.tagline}</p>
 
           <Separator className="my-6" />
 
@@ -146,9 +135,7 @@ export default async function ProductPage({
 
           <Separator className="my-6" />
 
-          <p className="leading-relaxed text-foreground/90">
-            {product.description}
-          </p>
+          <p className="leading-relaxed text-foreground/90">{product.description}</p>
 
           {product.scents && product.scents.length > 0 && (
             <div className="mt-5">
@@ -188,9 +175,7 @@ export default async function ProductPage({
       {/* Related */}
       {related.length > 0 && (
         <section className="mt-16">
-          <h2 className="mb-6 font-display text-2xl font-extrabold">
-            You might also like
-          </h2>
+          <h2 className="mb-6 font-display text-2xl font-extrabold">You might also like</h2>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             {related.map((p) => (
               <ProductCard key={p.slug} product={p} />

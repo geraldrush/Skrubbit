@@ -25,8 +25,7 @@ interface RawVariant {
 }
 
 const str = (v: unknown): string => (typeof v === "string" ? v.trim() : "");
-const strList = (v: unknown): string[] =>
-  Array.isArray(v) ? v.map(str).filter(Boolean) : [];
+const strList = (v: unknown): string[] => (Array.isArray(v) ? v.map(str).filter(Boolean) : []);
 
 /**
  * Returns the cleaned product body or a list of human-readable errors.

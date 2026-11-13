@@ -59,7 +59,12 @@ export default async function InvoicesPage() {
         // Only tenders that can still turn into a bill.
         tenders={tenders
           .filter((t) => t.status === "won" || t.status === "submitted")
-          .map((t) => ({ id: t.id, reference: t.reference, title: t.title, department: t.department }))}
+          .map((t) => ({
+            id: t.id,
+            reference: t.reference,
+            title: t.title,
+            department: t.department,
+          }))}
         orders={orders.map((o) => ({
           reference: o.reference,
           name: o.name,

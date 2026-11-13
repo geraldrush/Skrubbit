@@ -37,9 +37,9 @@ export function EnquiryForm({
   const [busy, setBusy] = React.useState(false);
   const [sent, setSent] = React.useState(false);
 
-  const set = (field: keyof typeof form) => (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-  ) => setForm((f) => ({ ...f, [field]: e.target.value }));
+  const set =
+    (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
+      setForm((f) => ({ ...f, [field]: e.target.value }));
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -59,9 +59,7 @@ export function EnquiryForm({
 
       setSent(true);
     } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Could not send your message"
-      );
+      toast.error(err instanceof Error ? err.message : "Could not send your message");
     } finally {
       setBusy(false);
     }
@@ -74,8 +72,8 @@ export function EnquiryForm({
           Thank you, {form.name.split(" ")[0]}
         </h2>
         <p className="mt-2 text-muted-foreground">
-          Your message has reached Skrubb-it and you will be contacted shortly.
-          A confirmation is on its way to {form.email}.
+          Your message has reached Skrubb-it and you will be contacted shortly. A confirmation is on
+          its way to {form.email}.
         </p>
         <Button
           className="mt-6"
@@ -91,14 +89,10 @@ export function EnquiryForm({
     );
   }
 
-  const labelClass =
-    "text-xs font-bold uppercase tracking-wider text-muted-foreground";
+  const labelClass = "text-xs font-bold uppercase tracking-wider text-muted-foreground";
 
   return (
-    <form
-      onSubmit={submit}
-      className={`rounded-2xl border bg-background p-6 sm:p-8 ${className}`}
-    >
+    <form onSubmit={submit} className={`rounded-2xl border bg-background p-6 sm:p-8 ${className}`}>
       <h2 className="font-display text-2xl font-extrabold">{title}</h2>
       <p className="mt-1 text-muted-foreground">{intro}</p>
 
@@ -158,18 +152,8 @@ export function EnquiryForm({
           />
         </div>
 
-        <Button
-          type="submit"
-          size="lg"
-          variant="accent"
-          disabled={busy}
-          className="w-full"
-        >
-          {busy ? (
-            <Loader2 className="h-5 w-5 animate-spin" />
-          ) : (
-            <Send className="h-5 w-5" />
-          )}
+        <Button type="submit" size="lg" variant="accent" disabled={busy} className="w-full">
+          {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           Send enquiry
         </Button>
 

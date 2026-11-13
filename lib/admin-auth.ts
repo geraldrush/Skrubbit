@@ -186,11 +186,7 @@ async function hmac(secret: string, message: string): Promise<string> {
     false,
     ["sign"]
   );
-  const sig = await crypto.subtle.sign(
-    "HMAC",
-    key,
-    new TextEncoder().encode(message)
-  );
+  const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(message));
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
@@ -207,10 +203,7 @@ function sessionMessage(expiry: number | string, passwordHash: string): string {
   return `${expiry}:${passwordHash}`;
 }
 
-export async function createSessionToken(
-  secret: string,
-  passwordHash: string
-): Promise<string> {
+export async function createSessionToken(secret: string, passwordHash: string): Promise<string> {
   const expiry = Math.floor(Date.now() / 1000) + SESSION_TTL_SECONDS;
   return `${expiry}.${await hmac(secret, sessionMessage(expiry, passwordHash))}`;
 }
@@ -247,11 +240,7 @@ function bytesToB64(bytes: Uint8Array): string {
  * admin never notices it — and the login route's lockout means an attacker
  * never gets to run it often enough to matter either.
  */
-async function pbkdf2(
-  password: string,
-  salt: Uint8Array,
-  iterations: number
-): Promise<Uint8Array> {
+async function pbkdf2(password: string, salt: Uint8Array, iterations: number): Promise<Uint8Array> {
   const key = await crypto.subtle.importKey(
     "raw",
     new TextEncoder().encode(password),
@@ -318,9 +307,7 @@ export interface AdminCredential {
  * Returns null when neither is configured, which every caller treats as "no
  * admin", so an unconfigured deployment is locked rather than open.
  */
-export async function getAdminCredential(
-  env: AccessEnv
-): Promise<AdminCredential | null> {
+export async function getAdminCredential(env: AccessEnv): Promise<AdminCredential | null> {
   if (env.DB) {
     try {
       const row = await env.DB.prepare(
@@ -350,10 +337,7 @@ export async function getAdminCredential(
  * a reset changes the password and nothing else, so a stolen reset link cannot
  * also change who the admin is.
  */
-export async function setAdminPassword(
-  env: AccessEnv,
-  passwordHash: string
-): Promise<void> {
+export async function setAdminPassword(env: AccessEnv, passwordHash: string): Promise<void> {
   if (!env.DB) throw new Error("No database binding; cannot store a password");
   const current = await getAdminCredential(env);
   if (!current) throw new Error("No admin configured");
@@ -472,11 +456,7 @@ export async function isAdminRequest(req: Request, env: AccessEnv): Promise<bool
     const session = cookieValue(req, SESSION_COOKIE);
     if (
       session &&
-      (await verifySessionToken(
-        session,
-        env.ADMIN_SESSION_SECRET!,
-        credential.passwordHash
-      ))
+      (await verifySessionToken(session, env.ADMIN_SESSION_SECRET!, credential.passwordHash))
     ) {
       return true;
     }
@@ -486,10 +466,7 @@ export async function isAdminRequest(req: Request, env: AccessEnv): Promise<bool
 }
 
 /** Returns a 403 Response when the request is not an authenticated admin. */
-export async function requireAdmin(
-  req: Request,
-  env: AccessEnv
-): Promise<Response | null> {
+export async function requireAdmin(req: Request, env: AccessEnv): Promise<Response | null> {
   if (await isAdminRequest(req, env)) return null;
   return new Response(
     JSON.stringify({

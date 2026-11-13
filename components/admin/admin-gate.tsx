@@ -25,9 +25,7 @@ export async function adminGate(): Promise<React.ReactElement | null> {
 
   return (
     <div className="container py-16">
-      <h1 className="mb-6 text-center font-display text-3xl font-extrabold">
-        Admin
-      </h1>
+      <h1 className="mb-6 text-center font-display text-3xl font-extrabold">Admin</h1>
       {(await passwordAuthConfigured(env)) ? (
         <LoginForm />
       ) : (

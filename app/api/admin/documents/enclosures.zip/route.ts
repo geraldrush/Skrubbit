@@ -21,10 +21,7 @@ export async function GET(req: Request) {
 
   const documents = (await listDocuments()).filter((d) => d.fileKey);
   if (!documents.length) {
-    return Response.json(
-      { error: "No certificates have been uploaded yet." },
-      { status: 404 }
-    );
+    return Response.json({ error: "No certificates have been uploaded yet." }, { status: 404 });
   }
 
   const entries: ZipEntry[] = [];

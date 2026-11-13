@@ -24,12 +24,7 @@ interface Leg {
   body: string;
 }
 
-async function call(
-  env: Env,
-  path: string,
-  timeoutMs: number,
-  payload?: unknown
-): Promise<Leg> {
+async function call(env: Env, path: string, timeoutMs: number, payload?: unknown): Promise<Leg> {
   try {
     const res = await fetch(`${env.APP_URL}${path}`, {
       method: "POST",
@@ -106,8 +101,7 @@ export default {
    * Guarded by the same secret as the endpoints it calls.
    */
   async fetch(req: Request, env: Env): Promise<Response> {
-    const supplied =
-      req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
+    const supplied = req.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ?? "";
     if (!env.CRON_SECRET || supplied !== env.CRON_SECRET) {
       return new Response("Forbidden", { status: 403 });
     }

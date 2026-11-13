@@ -40,16 +40,11 @@ export default function Error({
 
   return (
     <div className="container flex flex-col items-center justify-center gap-5 py-28 text-center">
-      <p className="font-display text-7xl font-extrabold text-primary drop-shadow-sm">
-        Oops
-      </p>
-      <h1 className="font-display text-2xl font-bold">
-        Something went wrong at our end
-      </h1>
+      <p className="font-display text-7xl font-extrabold text-primary drop-shadow-sm">Oops</p>
+      <h1 className="font-display text-2xl font-bold">Something went wrong at our end</h1>
       <p className="max-w-md text-muted-foreground">
-        This one&apos;s on us, not you, and it&apos;s usually temporary. Give it
-        another go — if it keeps happening, get in touch and we&apos;ll sort you
-        out directly.
+        This one&apos;s on us, not you, and it&apos;s usually temporary. Give it another go — if it
+        keeps happening, get in touch and we&apos;ll sort you out directly.
       </p>
       <div className="flex flex-wrap justify-center gap-3">
         <Button onClick={reset}>Try again</Button>
@@ -60,11 +55,7 @@ export default function Error({
           <Link href="/contact">Contact us</Link>
         </Button>
       </div>
-      {error.digest && (
-        <p className="text-xs text-muted-foreground">
-          Reference: {error.digest}
-        </p>
-      )}
+      {error.digest && <p className="text-xs text-muted-foreground">Reference: {error.digest}</p>}
     </div>
   );
 }

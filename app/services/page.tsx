@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  ArrowRight,
-  Beaker,
-  CalendarClock,
-  Check,
-  ClipboardList,
-  Users,
-} from "lucide-react";
+import { ArrowRight, Beaker, CalendarClock, Check, ClipboardList, Users } from "lucide-react";
 
 import { serviceGroups, services } from "@/data/services";
 import { Button } from "@/components/ui/button";
@@ -63,9 +56,8 @@ export default function ServicesPage() {
             Professional cleaning, done with our own products
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            From a one-off deep clean to a daily office contract, heavy-duty
-            and industrial work, we clean homes, workplaces, schools and
-            facilities across Limpopo.
+            From a one-off deep clean to a daily office contract, heavy-duty and industrial work, we
+            clean homes, workplaces, schools and facilities across Limpopo.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" variant="accent">
@@ -100,9 +92,7 @@ export default function ServicesPage() {
           <section
             key={g.id}
             id={g.id}
-            className={`scroll-mt-20 border-t py-14 ${
-              i % 2 === 0 ? "bg-secondary/40" : ""
-            }`}
+            className={`scroll-mt-20 border-t py-14 ${i % 2 === 0 ? "bg-secondary/40" : ""}`}
           >
             <div className="container">
               <h2 className="font-display text-3xl font-extrabold">{g.name}</h2>
@@ -117,32 +107,22 @@ export default function ServicesPage() {
                       className="flex scroll-mt-20 flex-col rounded-xl border bg-background p-6"
                     >
                       <h3 className="font-display text-lg font-bold">
-                        <Link
-                          href={`/services/${s.slug}`}
-                          className="hover:text-accent"
-                        >
+                        <Link href={`/services/${s.slug}`} className="hover:text-accent">
                           {s.name}
                         </Link>
                       </h3>
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        {s.summary}
-                      </p>
+                      <p className="mt-2 text-sm text-muted-foreground">{s.summary}</p>
                       <ul className="mt-4 grid gap-1.5 text-sm">
                         {s.includes.map((item) => (
                           <li key={item} className="flex gap-2">
-                            <Check
-                              className="mt-0.5 h-4 w-4 shrink-0 text-accent"
-                              aria-hidden
-                            />
+                            <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
                             <span>{item}</span>
                           </li>
                         ))}
                       </ul>
                       <div className="mt-auto flex flex-wrap gap-2 pt-6">
                         <Button asChild variant="outline" size="sm">
-                          <Link href={`/contact?service=${s.slug}`}>
-                            Get a quote
-                          </Link>
+                          <Link href={`/contact?service=${s.slug}`}>Get a quote</Link>
                         </Button>
                         <Button asChild variant="link" size="sm">
                           <Link href={`/services/${s.slug}`}>
@@ -164,19 +144,14 @@ export default function ServicesPage() {
             Don&apos;t see what you need?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-lg font-medium text-brand-ink/80">
-            Tell us about the space and what needs doing. If it can be cleaned,
-            we will quote it — and if it is outside what we do, we will say so.
+            Tell us about the space and what needs doing. If it can be cleaned, we will quote it —
+            and if it is outside what we do, we will say so.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" variant="accent">
               <Link href="/contact?service=general">Request a quote</Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-brand-ink/20 bg-white/70"
-            >
+            <Button asChild size="lg" variant="outline" className="border-brand-ink/20 bg-white/70">
               <Link href="/public-sector">Government &amp; tenders</Link>
             </Button>
           </div>

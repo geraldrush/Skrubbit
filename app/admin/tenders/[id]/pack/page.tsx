@@ -42,8 +42,18 @@ export const metadata: Metadata = {
 /** "16 August 2026" — the long form a letter should carry. */
 function longDate(today: string): string {
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   const [y, m, d] = today.split("-");
   return `${Number(d)} ${months[Number(m) - 1]} ${y}`;
@@ -62,11 +72,7 @@ function Field({ label, value }: { label: string; value: string }) {
   );
 }
 
-export default async function PackPage({
-  params,
-}: {
-  params: Promise<{ id: string }>;
-}) {
+export default async function PackPage({ params }: { params: Promise<{ id: string }> }) {
   const gate = await adminGate();
   if (gate) return gate;
 
@@ -171,10 +177,9 @@ export default async function PackPage({
               This pack does not include the SBD forms
             </p>
             <p className="mt-1 text-muted-foreground">
-              SBD 1, 4, 6.1, 8 and 9 are official National Treasury forms that
-              come with the tender document. Complete and sign the originals and
-              insert them behind the matching divider — a reproduced copy is not
-              compliant. Everything here still has to be signed by hand.
+              SBD 1, 4, 6.1, 8 and 9 are official National Treasury forms that come with the tender
+              document. Complete and sign the originals and insert them behind the matching divider
+              — a reproduced copy is not compliant. Everything here still has to be signed by hand.
             </p>
           </div>
 
@@ -198,12 +203,11 @@ export default async function PackPage({
             <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-4 text-sm">
               <p className="flex items-center gap-2 font-semibold text-[#8a5a00] dark:text-[#fab219]">
                 <AlertTriangle className="h-4 w-4" />
-                {documents.length - enclosures.length} of {documents.length}{" "}
-                documents have no file uploaded
+                {documents.length - enclosures.length} of {documents.length} documents have no file
+                uploaded
               </p>
               <p className="mt-1 text-muted-foreground">
-                They appear on the enclosure schedule, but there is nothing to
-                print for them.{" "}
+                They appear on the enclosure schedule, but there is nothing to print for them.{" "}
                 <Link href="/admin/documents" className="font-medium underline">
                   Upload the certificates
                 </Link>
@@ -239,9 +243,8 @@ export default async function PackPage({
                 {profile.physicalAddress || "[Physical address]"}
               </p>
               <p className="text-sm">
-                {[profile.phone, profile.email, profile.website]
-                  .filter(Boolean)
-                  .join(" · ") || "[Contact details]"}
+                {[profile.phone, profile.email, profile.website].filter(Boolean).join(" · ") ||
+                  "[Contact details]"}
               </p>
               <p className="mt-1 text-sm">
                 Reg. no: {profile.registrationNumber || "[Registration number]"}
@@ -263,16 +266,15 @@ export default async function PackPage({
             <div className="space-y-3 text-sm leading-relaxed">
               <p>Dear Sir / Madam,</p>
               <p>
-                {company} hereby submits its bid in response to the above tender.
-                We confirm that we have read and understood the tender document,
-                the conditions of bid and the specifications, and that our offer
-                is made in full compliance with them.
+                {company} hereby submits its bid in response to the above tender. We confirm that we
+                have read and understood the tender document, the conditions of bid and the
+                specifications, and that our offer is made in full compliance with them.
               </p>
               <p>
                 We are registered on the Central Supplier Database
-                {csd?.reference ? ` under supplier number ${csd.reference}` : ""} and
-                our tax affairs are in order with the South African Revenue
-                Service. {bbbee?.bbbeeLevel
+                {csd?.reference ? ` under supplier number ${csd.reference}` : ""} and our tax
+                affairs are in order with the South African Revenue Service.{" "}
+                {bbbee?.bbbeeLevel
                   ? `We are a Level ${bbbee.bbbeeLevel} B-BBEE contributor, and the supporting certificate is enclosed.`
                   : ""}
               </p>
@@ -283,14 +285,13 @@ export default async function PackPage({
                 {totals.incl > 0
                   ? `Our pricing is set out in the enclosed pricing schedule and is ${formatZAR(payable)}${profile.vatRegistered ? " including VAT" : ". We are not registered for VAT"}.`
                   : "Our pricing is set out in the enclosed pricing schedule [pricing to be completed]."}{" "}
-                This offer is valid for the period stipulated in the tender
-                document, and we confirm our capacity to supply and deliver
-                within the required timeframes.
+                This offer is valid for the period stipulated in the tender document, and we confirm
+                our capacity to supply and deliver within the required timeframes.
               </p>
               <p>
-                All mandatory returnable documents are enclosed and indexed in
-                the contents page that follows. We trust our submission is
-                favourably received and remain available for any clarification.
+                All mandatory returnable documents are enclosed and indexed in the contents page
+                that follows. We trust our submission is favourably received and remain available
+                for any clarification.
               </p>
               <p>Yours faithfully,</p>
             </div>
@@ -341,9 +342,7 @@ export default async function PackPage({
                       </td>
                       <td>
                         {item.label}
-                        {item.signatureRequired ? (
-                          <strong> (signature required)</strong>
-                        ) : null}
+                        {item.signatureRequired ? <strong> (signature required)</strong> : null}
                       </td>
                       <td>{item.attached ? "☑" : "☐"}</td>
                     </tr>
@@ -384,11 +383,9 @@ export default async function PackPage({
                 <Field label="Email" value={profile.email} />
                 <Field
                   label="Contact person"
-                  value={
-                    [profile.signatoryName, profile.signatoryPosition]
-                      .filter(Boolean)
-                      .join(", ")
-                  }
+                  value={[profile.signatoryName, profile.signatoryPosition]
+                    .filter(Boolean)
+                    .join(", ")}
                 />
               </tbody>
             </table>
@@ -408,8 +405,7 @@ export default async function PackPage({
           <Sheet>
             <h2 className="mb-1 text-xl font-bold">Schedule of enclosed documents</h2>
             <p className="mb-6 text-sm">
-              Company documents submitted with this bid, with their reference
-              numbers and validity.
+              Company documents submitted with this bid, with their reference numbers and validity.
             </p>
 
             <table className="grid-table text-sm">
@@ -445,8 +441,8 @@ export default async function PackPage({
             </table>
 
             <p className="mt-6 text-xs italic">
-              Certified copies of the documents listed above are enclosed behind
-              the relevant dividers.
+              Certified copies of the documents listed above are enclosed behind the relevant
+              dividers.
             </p>
           </Sheet>
 
@@ -468,9 +464,15 @@ export default async function PackPage({
                   <th style={{ width: "6%" }}>Item</th>
                   <th>Description</th>
                   <th style={{ width: "12%" }}>Unit</th>
-                  <th style={{ width: "10%" }} className="num">Qty</th>
-                  <th style={{ width: "16%" }} className="num">Unit price</th>
-                  <th style={{ width: "16%" }} className="num">Amount</th>
+                  <th style={{ width: "10%" }} className="num">
+                    Qty
+                  </th>
+                  <th style={{ width: "16%" }} className="num">
+                    Unit price
+                  </th>
+                  <th style={{ width: "16%" }} className="num">
+                    Amount
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -482,9 +484,7 @@ export default async function PackPage({
                       <td>{line.unit}</td>
                       <td className="num">{line.quantity}</td>
                       <td className="num">{formatZAR(line.unitPrice)}</td>
-                      <td className="num">
-                        {formatZAR(line.quantity * line.unitPrice)}
-                      </td>
+                      <td className="num">{formatZAR(line.quantity * line.unitPrice)}</td>
                     </tr>
                   ))
                 ) : (
@@ -535,13 +535,12 @@ export default async function PackPage({
             <div className="mt-10">
               <div className="h-12 w-72 border-b border-black" />
               <p className="mt-1 text-sm">
-                {profile.signatoryName || "[Name]"} —{" "}
-                {profile.signatoryPosition || "[Capacity]"}
+                {profile.signatoryName || "[Name]"} — {profile.signatoryPosition || "[Capacity]"}
               </p>
               <p className="mt-3 text-xs italic">
-                Transfer these amounts onto the official SBD 3.1 / 3.2 / 3.3
-                pricing form supplied with the tender, and sign it. This schedule
-                supports that form; it does not replace it.
+                Transfer these amounts onto the official SBD 3.1 / 3.2 / 3.3 pricing form supplied
+                with the tender, and sign it. This schedule supports that form; it does not replace
+                it.
               </p>
             </div>
           </Sheet>
@@ -550,12 +549,8 @@ export default async function PackPage({
           {categories.map((category, ci) => (
             <Sheet key={`divider-${category}`}>
               <div className="flex h-[60vh] flex-col items-center justify-center text-center">
-                <p className="text-6xl font-black">
-                  {String.fromCharCode(65 + ci)}
-                </p>
-                <h2 className="mt-4 text-3xl font-bold">
-                  {CATEGORY_LABELS[category]}
-                </h2>
+                <p className="text-6xl font-black">{String.fromCharCode(65 + ci)}</p>
+                <h2 className="mt-4 text-3xl font-bold">{CATEGORY_LABELS[category]}</h2>
                 <ul className="mt-6 space-y-1 text-sm">
                   {(byCategory.get(category) ?? []).map((item) => (
                     <li key={item.id}>{item.label}</li>

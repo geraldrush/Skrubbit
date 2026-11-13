@@ -10,13 +10,7 @@ import { parseProfile } from "@/lib/profile-text";
  * `hide` drops whole sections by heading (case-insensitive) from the page
  * only. The PDF and tender packs still carry them.
  */
-export function ProfileProse({
-  text,
-  hide = [],
-}: {
-  text: string;
-  hide?: string[];
-}) {
+export function ProfileProse({ text, hide = [] }: { text: string; hide?: string[] }) {
   const hidden = new Set(hide.map((h) => h.toLowerCase()));
   let skipping = false;
   const blocks = parseProfile(text).filter((block) => {

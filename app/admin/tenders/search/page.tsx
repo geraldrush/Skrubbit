@@ -35,11 +35,11 @@ export default async function TenderSearchPage() {
       <TenderSearch />
 
       <p className="mt-8 rounded-lg border bg-muted/40 p-4 text-xs text-muted-foreground">
-        Source: National Treasury eTenders OCDS API, published under a
-        public-domain dedication. Closing times in the feed are stamped as UTC
-        but are South African local times — they are corrected on import.{" "}
-        <strong>Always confirm the deadline against the tender document</strong>{" "}
-        before relying on it.
+        Source: National Treasury eTenders OCDS API, published under a public-domain dedication.
+        Closing times in the feed are stamped as UTC but are South African local times — they are
+        corrected on import.{" "}
+        <strong>Always confirm the deadline against the tender document</strong> before relying on
+        it.
       </p>
     </div>
   );

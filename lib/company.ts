@@ -92,9 +92,7 @@ const EMPTY: CompanyProfile = {
 };
 
 export async function getCompanyProfile(): Promise<CompanyProfile> {
-  const row = await db()
-    .prepare("SELECT * FROM company_profile WHERE id = 1")
-    .first<ProfileRow>();
+  const row = await db().prepare("SELECT * FROM company_profile WHERE id = 1").first<ProfileRow>();
   if (!row) return EMPTY;
 
   return {

@@ -56,9 +56,8 @@ export default async function PublicSectorPage() {
             A compliant local supplier for schools, clinics and municipalities
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            We are a registered company, tax compliant and a B-BBEE Level 1
-            contributor. We manufacture in Vhembe and deliver
-            across Limpopo, which keeps freight out of the price.
+            We are a registered company, tax compliant and a B-BBEE Level 1 contributor. We
+            manufacture in Vhembe and deliver across Limpopo, which keeps freight out of the price.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" variant="accent">
@@ -81,9 +80,7 @@ export default async function PublicSectorPage() {
       </section>
 
       <section className="container py-14">
-        <h2 className="font-display text-3xl font-extrabold">
-          Supplier particulars
-        </h2>
+        <h2 className="font-display text-3xl font-extrabold">Supplier particulars</h2>
         <p className="mt-2 max-w-2xl text-muted-foreground">
           Everything a supply chain officer needs to load us as a supplier.
         </p>
@@ -103,17 +100,12 @@ export default async function PublicSectorPage() {
                 ["Based in", "Khubvi, Vhembe District, Limpopo"],
                 ["Telephone", profile.phone],
                 ["Email", profile.email],
-                [
-                  "Tax, banking and certificates",
-                  "Supplied with every quotation",
-                ],
+                ["Tax, banking and certificates", "Supplied with every quotation"],
               ]
                 .filter(([, v]) => v)
                 .map(([k, v]) => (
                   <tr key={k}>
-                    <th className="w-56 bg-secondary/40 px-4 py-3 text-left font-semibold">
-                      {k}
-                    </th>
+                    <th className="w-56 bg-secondary/40 px-4 py-3 text-left font-semibold">{k}</th>
                     <td className="px-4 py-3 text-muted-foreground">{v}</td>
                   </tr>
                 ))}
@@ -124,9 +116,7 @@ export default async function PublicSectorPage() {
 
       <section className="border-t bg-secondary/40 py-14">
         <div className="container">
-          <h2 className="font-display text-3xl font-extrabold">
-            How a quotation works
-          </h2>
+          <h2 className="font-display text-3xl font-extrabold">How a quotation works</h2>
           <ol className="mt-8 grid gap-6 md:grid-cols-2">
             {steps.map((s, i) => (
               <li key={s.title} className="flex gap-4">
@@ -145,15 +135,12 @@ export default async function PublicSectorPage() {
 
       <section className="container py-14">
         <div className="rounded-xl border bg-background p-8">
-          <h2 className="font-display text-2xl font-extrabold">
-            What we are honest about
-          </h2>
+          <h2 className="font-display text-2xl font-extrabold">What we are honest about</h2>
           <p className="mt-2 max-w-3xl text-muted-foreground">
-            We are an Exempted Micro Enterprise and we describe ourselves as one.
-            Production is owner-run, with staff engaged as the size of an order
-            requires. That suits contracts calling for regular, moderate volumes
-            delivered reliably and close to hand. Where a requirement is beyond
-            what we can produce in the time allowed, we will tell you at
+            We are an Exempted Micro Enterprise and we describe ourselves as one. Production is
+            owner-run, with staff engaged as the size of an order requires. That suits contracts
+            calling for regular, moderate volumes delivered reliably and close to hand. Where a
+            requirement is beyond what we can produce in the time allowed, we will tell you at
             quotation stage rather than accept an order we cannot fill.
           </p>
         </div>

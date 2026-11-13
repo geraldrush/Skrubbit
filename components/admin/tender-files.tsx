@@ -19,13 +19,7 @@ import { Label } from "@/components/ui/label";
 
 const KINDS = Object.keys(TENDER_FILE_LABELS) as TenderFileKind[];
 
-export function TenderFiles({
-  tenderId,
-  files,
-}: {
-  tenderId: number;
-  files: TenderFile[];
-}) {
+export function TenderFiles({ tenderId, files }: { tenderId: number; files: TenderFile[] }) {
   const router = useRouter();
   const [kind, setKind] = React.useState<TenderFileKind>("tender_document");
   const [label, setLabel] = React.useState("");
@@ -90,8 +84,7 @@ export function TenderFiles({
                   {f.label || f.fileName}
                 </a>
                 <p className="text-xs text-muted-foreground">
-                  {TENDER_FILE_LABELS[f.kind]} · {f.fileName} ·{" "}
-                  {(f.fileSize / 1024).toFixed(0)} KB
+                  {TENDER_FILE_LABELS[f.kind]} · {f.fileName} · {(f.fileSize / 1024).toFixed(0)} KB
                 </p>
               </div>
               <Button
@@ -109,8 +102,8 @@ export function TenderFiles({
         </ul>
       ) : (
         <p className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
-          Nothing kept for this tender yet. The advert, the blank official forms
-          and any addendum are the ones worth having here.
+          Nothing kept for this tender yet. The advert, the blank official forms and any addendum
+          are the ones worth having here.
         </p>
       )}
 

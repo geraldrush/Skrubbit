@@ -80,10 +80,7 @@ export async function POST(req: Request) {
     return Response.json({ ok: true, signedIn: false });
   }
 
-  const session = await createSessionToken(
-    env.ADMIN_SESSION_SECRET,
-    credential.passwordHash
-  );
+  const session = await createSessionToken(env.ADMIN_SESSION_SECRET, credential.passwordHash);
   const secure = new URL(req.url).protocol === "https:";
 
   // The lockout counter is cleared too: someone who has just proved control of

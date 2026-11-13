@@ -43,13 +43,7 @@ function slugify(value: string): string {
  * the slug is the primary key and is also baked into the product's image keys
  * and its /shop URL — changing it would orphan both.
  */
-export function ProductForm({
-  product,
-  onDone,
-}: {
-  product?: Product;
-  onDone?: () => void;
-}) {
+export function ProductForm({ product, onDone }: { product?: Product; onDone?: () => void }) {
   const router = useRouter();
   const isEdit = Boolean(product);
 
@@ -128,8 +122,14 @@ export function ProductForm({
         image,
         featured,
         // One per line, matching how they render as lists on the product page.
-        scents: scents.split("\n").map((s) => s.trim()).filter(Boolean),
-        usage: usage.split("\n").map((s) => s.trim()).filter(Boolean),
+        scents: scents
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
+        usage: usage
+          .split("\n")
+          .map((s) => s.trim())
+          .filter(Boolean),
         variants: variants.map((v) => ({ ...v, price: Number(v.price) })),
       };
 

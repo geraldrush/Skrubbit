@@ -72,33 +72,23 @@ export function TenderForm({
   const [briefingCompulsory, setBriefingCompulsory] = React.useState(
     tender?.briefingCompulsory ?? false
   );
-  const [briefingAttended, setBriefingAttended] = React.useState(
-    tender?.briefingAttended ?? false
-  );
+  const [briefingAttended, setBriefingAttended] = React.useState(tender?.briefingAttended ?? false);
   const [submissionMethod, setSubmissionMethod] = React.useState(
     tender?.submissionMethod ?? "physical"
   );
-  const [submissionDetail, setSubmissionDetail] = React.useState(
-    tender?.submissionDetail ?? ""
-  );
+  const [submissionDetail, setSubmissionDetail] = React.useState(tender?.submissionDetail ?? "");
   const [bbbeeClaimedLevel, setBbbeeClaimedLevel] = React.useState(
     tender?.bbbeeClaimedLevel ? String(tender.bbbeeClaimedLevel) : ""
   );
   const [status, setStatus] = React.useState(tender?.status ?? "preparing");
   const [notes, setNotes] = React.useState(tender?.notes ?? "");
-  const [profileOverride, setProfileOverride] = React.useState(
-    tender?.profileOverride ?? ""
-  );
+  const [profileOverride, setProfileOverride] = React.useState(tender?.profileOverride ?? "");
   const [methodology, setMethodology] = React.useState(tender?.methodology ?? "");
   const [experience, setExperience] = React.useState(tender?.experience ?? "");
   const [saving, setSaving] = React.useState(false);
-  const [submittedAt, setSubmittedAt] = React.useState(
-    toLocalInput(tender?.submittedAt ?? null)
-  );
+  const [submittedAt, setSubmittedAt] = React.useState(toLocalInput(tender?.submittedAt ?? null));
   const [submittedBy, setSubmittedBy] = React.useState(tender?.submittedBy ?? "");
-  const [submittedMethod, setSubmittedMethod] = React.useState(
-    tender?.submittedMethod ?? ""
-  );
+  const [submittedMethod, setSubmittedMethod] = React.useState(tender?.submittedMethod ?? "");
   const [submittedAmount, setSubmittedAmount] = React.useState(
     tender?.submittedAmount != null ? String(tender.submittedAmount) : ""
   );
@@ -183,9 +173,7 @@ export function TenderForm({
         profileOverride,
         methodology,
         experience,
-        items: items
-          .filter((i) => !removed.has(i.id))
-          .map((i) => ({ id: i.id, ...drafts[i.id] })),
+        items: items.filter((i) => !removed.has(i.id)).map((i) => ({ id: i.id, ...drafts[i.id] })),
         submittedAt,
         submittedBy,
         submittedMethod,
@@ -202,14 +190,11 @@ export function TenderForm({
           })),
       };
 
-      const res = await fetch(
-        isEdit ? `/api/admin/tenders/${tender!.id}` : "/api/admin/tenders",
-        {
-          method: isEdit ? "PUT" : "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const res = await fetch(isEdit ? `/api/admin/tenders/${tender!.id}` : "/api/admin/tenders", {
+        method: isEdit ? "PUT" : "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       const data = (await res.json()) as {
         error?: string;
         id?: number;
@@ -226,9 +211,7 @@ export function TenderForm({
       ]
         .filter(Boolean)
         .join(", ");
-      toast.success(
-        isEdit ? `Tender saved${extra ? ` — ${extra}` : ""}` : `${title} added`
-      );
+      toast.success(isEdit ? `Tender saved${extra ? ` — ${extra}` : ""}` : `${title} added`);
       // The server owns row ids, so clear local additions/removals and let the
       // refreshed page supply the real rows.
       setNewRows([]);
@@ -349,9 +332,7 @@ export function TenderForm({
             <select
               id="submissionMethod"
               value={submissionMethod}
-              onChange={(e) =>
-                setSubmissionMethod(e.target.value as "physical" | "electronic")
-              }
+              onChange={(e) => setSubmissionMethod(e.target.value as "physical" | "electronic")}
               className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
             >
               <option value="physical">Physical tender box</option>
@@ -367,9 +348,7 @@ export function TenderForm({
               value={submissionDetail}
               onChange={(e) => setSubmissionDetail(e.target.value)}
               placeholder={
-                submissionMethod === "physical"
-                  ? "Ground floor, 12 Church Street"
-                  : "https://…"
+                submissionMethod === "physical" ? "Ground floor, 12 Church Street" : "https://…"
               }
             />
           </div>
@@ -414,12 +393,7 @@ export function TenderForm({
 
         <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
-          <Textarea
-            id="notes"
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            rows={2}
-          />
+          <Textarea id="notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} />
         </div>
       </section>
 
@@ -428,9 +402,8 @@ export function TenderForm({
           <div>
             <h2 className="font-display text-xl font-bold">Compliance matrix</h2>
             <p className="text-sm text-muted-foreground">
-              Every document and signature the bid needs. Untick anything this
-              tender doesn&apos;t ask for, and note &quot;N/A&quot; rather than
-              leaving a row undecided.
+              Every document and signature the bid needs. Untick anything this tender doesn&apos;t
+              ask for, and note &quot;N/A&quot; rather than leaving a row undecided.
             </p>
           </div>
 
@@ -467,7 +440,9 @@ export function TenderForm({
                             <Input
                               value={d.note}
                               onChange={(e) => patch(item.id, { note: e.target.value })}
-                              placeholder={d.required ? "Note (optional)" : 'e.g. "N/A — not construction"'}
+                              placeholder={
+                                d.required ? "Note (optional)" : 'e.g. "N/A — not construction"'
+                              }
                               className="mt-1.5 h-8 text-sm"
                             />
                             {documents.length && category !== "submission" ? (
@@ -535,9 +510,7 @@ export function TenderForm({
                           variant="ghost"
                           size="icon"
                           onClick={() => toggleRemoved(item.id)}
-                          aria-label={
-                            isRemoved ? `Keep ${item.label}` : `Remove ${item.label}`
-                          }
+                          aria-label={isRemoved ? `Keep ${item.label}` : `Remove ${item.label}`}
                           title={isRemoved ? "Keep this row" : "Remove this row"}
                         >
                           {isRemoved ? (
@@ -554,7 +527,10 @@ export function TenderForm({
                 {newRows
                   .filter((r) => r.category === category)
                   .map((r) => (
-                    <li key={r.key} className="grid gap-2 bg-secondary/40 p-3 sm:grid-cols-[1fr_auto]">
+                    <li
+                      key={r.key}
+                      className="grid gap-2 bg-secondary/40 p-3 sm:grid-cols-[1fr_auto]"
+                    >
                       <div>
                         <Input
                           value={r.label}
@@ -592,9 +568,7 @@ export function TenderForm({
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() =>
-                            setNewRows((rows) => rows.filter((x) => x.key !== r.key))
-                          }
+                          onClick={() => setNewRows((rows) => rows.filter((x) => x.key !== r.key))}
                           aria-label="Discard this new row"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -604,14 +578,8 @@ export function TenderForm({
                   ))}
 
                 <li className="p-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => addRow(category)}
-                  >
-                    <Plus className="mr-1 h-4 w-4" /> Add a row to{" "}
-                    {CATEGORY_LABELS[category]}
+                  <Button type="button" variant="ghost" size="sm" onClick={() => addRow(category)}>
+                    <Plus className="mr-1 h-4 w-4" /> Add a row to {CATEGORY_LABELS[category]}
                   </Button>
                 </li>
               </ul>
@@ -620,14 +588,13 @@ export function TenderForm({
         </section>
       ) : null}
 
-
       {isEdit ? (
         <section className="space-y-4 rounded-lg border p-6">
           <div>
             <h2 className="font-display text-xl font-bold">Submission record</h2>
             <p className="text-sm text-muted-foreground">
-              Fill this in on the day you deliver. It is the record you produce
-              if the buyer later says the bid never arrived.
+              Fill this in on the day you deliver. It is the record you produce if the buyer later
+              says the bid never arrived.
             </p>
           </div>
 
@@ -699,10 +666,9 @@ export function TenderForm({
           <div>
             <h2 className="font-display text-xl font-bold">Written sections</h2>
             <p className="text-sm text-muted-foreground">
-              These are printed in the pack and are where functionality points
-              are won. “Insert sample” fills the box with a worked example
-              showing the expected depth — replace it with your own wording; a
-              pack never prints template text on its own.
+              These are printed in the pack and are where functionality points are won. “Insert
+              sample” fills the box with a worked example showing the expected depth — replace it
+              with your own wording; a pack never prints template text on its own.
             </p>
           </div>
 
@@ -838,8 +804,8 @@ function ReceiptUpload({ tender }: { tender: Tender }) {
         />
       </div>
       <p className="text-xs text-muted-foreground">
-        A stamped bid box slip, courier waybill or portal confirmation. Stored
-        privately, behind this login.
+        A stamped bid box slip, courier waybill or portal confirmation. Stored privately, behind
+        this login.
       </p>
     </div>
   );
@@ -870,10 +836,7 @@ function WrittenSection({
           size="sm"
           onClick={() => {
             // Never silently discard writing already done.
-            if (
-              value.trim() &&
-              !window.confirm("Replace what is written here with the sample?")
-            ) {
+            if (value.trim() && !window.confirm("Replace what is written here with the sample?")) {
               return;
             }
             onChange(sample);

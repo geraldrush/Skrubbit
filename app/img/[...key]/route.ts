@@ -19,10 +19,7 @@ export const dynamic = "force-dynamic";
 /** Must match the key prefix written by /api/admin/upload. */
 const ALLOWED_PREFIX = "products/";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ key: string[] }> }
-) {
+export async function GET(_req: Request, { params }: { params: Promise<{ key: string[] }> }) {
   const { key } = await params;
   const objectKey = key.join("/");
 
@@ -45,10 +42,7 @@ export async function GET(
   // ("Cannot stringify arbitrary non-POJOs") in local development. Content
   // type is the only metadata worth copying — the cache-control below is set
   // deliberately and would override the stored one anyway.
-  headers.set(
-    "content-type",
-    object.httpMetadata?.contentType ?? "application/octet-stream"
-  );
+  headers.set("content-type", object.httpMetadata?.contentType ?? "application/octet-stream");
   headers.set("etag", object.httpEtag);
   headers.set("cache-control", "public, max-age=31536000, immutable");
   // The content type is whatever the uploader claimed; don't let a browser

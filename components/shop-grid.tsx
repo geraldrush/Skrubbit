@@ -49,10 +49,7 @@ export function ShopGrid({ products }: { products: Product[] }) {
 
       {/* Category filter */}
       <div className="mb-8 flex flex-wrap gap-2">
-        <FilterChip
-          active={!activeCategory}
-          onClick={() => selectCategory(null)}
-        >
+        <FilterChip active={!activeCategory} onClick={() => selectCategory(null)}>
           All products
         </FilterChip>
         {categories.map((c) => (
@@ -67,9 +64,7 @@ export function ShopGrid({ products }: { products: Product[] }) {
       </div>
 
       {filtered.length === 0 ? (
-        <p className="py-16 text-center text-muted-foreground">
-          No products match your search.
-        </p>
+        <p className="py-16 text-center text-muted-foreground">No products match your search.</p>
       ) : (
         <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4">
           {filtered.map((p) => (

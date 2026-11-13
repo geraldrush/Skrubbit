@@ -19,10 +19,7 @@ function timingSafeEqual(a: string, b: string): boolean {
 
 /** Returns a response to send back when the caller is not the cron, or null
  *  when it is. */
-export function requireCron(
-  req: Request,
-  env: { CRON_SECRET?: string }
-): Response | null {
+export function requireCron(req: Request, env: { CRON_SECRET?: string }): Response | null {
   const secret = env.CRON_SECRET;
   if (!secret) {
     return Response.json(

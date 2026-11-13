@@ -78,9 +78,7 @@ interface StateRow {
 }
 
 export async function getSyncState(): Promise<SyncState> {
-  const row = await db()
-    .prepare("SELECT * FROM sync_state WHERE id = 1")
-    .first<StateRow>();
+  const row = await db().prepare("SELECT * FROM sync_state WHERE id = 1").first<StateRow>();
 
   return {
     nextPage: row?.next_page ?? 1,
@@ -105,9 +103,7 @@ export async function getSyncState(): Promise<SyncState> {
  * from then on the crawl is only refreshing what it already holds.
  */
 export async function syncIsDue(): Promise<boolean> {
-  const row = await db()
-    .prepare("SELECT * FROM sync_state WHERE id = 1")
-    .first<StateRow>();
+  const row = await db().prepare("SELECT * FROM sync_state WHERE id = 1").first<StateRow>();
   if (!row) return true;
 
   if (row.running === 1) {
@@ -330,10 +326,25 @@ async function upsert(rows: Mapped[]): Promise<void> {
              synced_at = datetime('now')`
         )
         .bind(
-          r.ocid, r.reference, r.title, r.description, r.department, r.closingAt,
-          r.publishedAt, r.briefingAt, r.briefingCompulsory, r.briefingVenue,
-          r.province, r.category, r.deliveryLocation, r.valueAmount, r.contactName,
-          r.contactEmail, r.contactPhone, r.documentUrl, r.searchText
+          r.ocid,
+          r.reference,
+          r.title,
+          r.description,
+          r.department,
+          r.closingAt,
+          r.publishedAt,
+          r.briefingAt,
+          r.briefingCompulsory,
+          r.briefingVenue,
+          r.province,
+          r.category,
+          r.deliveryLocation,
+          r.valueAmount,
+          r.contactName,
+          r.contactEmail,
+          r.contactPhone,
+          r.documentUrl,
+          r.searchText
         )
     )
   );
@@ -561,9 +572,7 @@ export async function backfillProvinces(): Promise<number> {
     const province = inferProvince(row.department, row.title);
     if (province) {
       batch.push(
-        d
-          .prepare("UPDATE remote_tenders SET province = ? WHERE ocid = ?")
-          .bind(province, row.ocid)
+        d.prepare("UPDATE remote_tenders SET province = ? WHERE ocid = ?").bind(province, row.ocid)
       );
       updated++;
     }

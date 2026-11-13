@@ -42,7 +42,8 @@ const BADGE_FILL = rgb(1, 0.976, 0.863);
  * internet where the director sleeps.
  */
 function locality(address: string): string {
-  const NOISE = /^(street|str|road|rd|avenue|ave|drive|dr|stand|unit|site|no|block|section|village)$/i;
+  const NOISE =
+    /^(street|str|road|rd|avenue|ave|drive|dr|stand|unit|site|no|block|section|village)$/i;
   const words = address
     .split(/[\s,\n]+/)
     .map((w) => w.trim())
@@ -57,9 +58,7 @@ function locality(address: string): string {
 
   // Everything before the last two words is the street itself.
   const tail = unique.slice(-2);
-  return tail
-    .map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase())
-    .join(", ");
+  return tail.map((w) => w[0].toUpperCase() + w.slice(1).toLowerCase()).join(", ");
 }
 
 /* --------------------------- letterhead furniture ------------------------ */
@@ -201,7 +200,11 @@ export async function letterhead(
     profile.registrationNumber ? `Reg. ${profile.registrationNumber}` : "",
     ...(isPublic
       ? [locality(profile.physicalAddress)]
-      : profile.physicalAddress.split("\n").map((l) => l.trim()).filter(Boolean).slice(0, 3)),
+      : profile.physicalAddress
+          .split("\n")
+          .map((l) => l.trim())
+          .filter(Boolean)
+          .slice(0, 3)),
     [profile.phone, profile.website].filter(Boolean).join("  ·  "),
   ].filter(Boolean);
 
@@ -223,10 +226,19 @@ export async function letterhead(
   // The brand rule: yellow running into red, as on the printed letterhead.
   // Below whichever runs lower: the mark, or the particulars block.
   const ruleY = Math.min(ry, logoBottom) - 12;
-  page.drawRectangle({ x: MARGIN, y: ruleY, width: CONTENT_W * 0.62, height: 7, color: BRAND_YELLOW });
   page.drawRectangle({
-    x: MARGIN + CONTENT_W * 0.62, y: ruleY,
-    width: CONTENT_W * 0.38, height: 7, color: BRAND_RED,
+    x: MARGIN,
+    y: ruleY,
+    width: CONTENT_W * 0.62,
+    height: 7,
+    color: BRAND_YELLOW,
+  });
+  page.drawRectangle({
+    x: MARGIN + CONTENT_W * 0.62,
+    y: ruleY,
+    width: CONTENT_W * 0.38,
+    height: 7,
+    color: BRAND_RED,
   });
 
   L.space(top - ruleY + 22);
@@ -307,8 +319,7 @@ export async function buildProfilePdf(data: ProfilePdfData): Promise<Uint8Array>
   for (const [i, block] of blocks.entries()) {
     const next = blocks[i + 1];
     if (block.kind === "heading") sectionHeading(L, fonts, block.text);
-    else if (block.kind === "bullet")
-      L.text(`\u2022  ${block.text}`, { size: 9.5, leading: 14 });
+    else if (block.kind === "bullet") L.text(`\u2022  ${block.text}`, { size: 9.5, leading: 14 });
     else {
       L.text(block.text, { size: 9.5, leading: 14.5 });
       L.space(7);
@@ -317,33 +328,37 @@ export async function buildProfilePdf(data: ProfilePdfData): Promise<Uint8Array>
   }
 
   sectionHeading(L, fonts, "Registered particulars");
-  particulars(L, fonts, [
-    ["Registered name", profile.legalName],
-    ["CIPC registration", profile.registrationNumber],
-    ["Income tax number", isPublic ? "Supplied with quotations" : profile.taxNumber],
-    ["CSD supplier number", profile.csdNumber],
+  particulars(
+    L,
+    fonts,
     [
-      "VAT registration",
-      profile.vatRegistered
-        ? profile.vatNumber
-        : "Not registered for VAT. All prices quoted are VAT-exclusive.",
-    ],
-    ["B-BBEE status", profile.bbbeeStatus],
-    ["Annual turnover", profile.annualTurnover],
-    ["Banking", isPublic ? "Supplied on award, on a company letterhead" : profile.bankDetails],
-    [
-      "Address",
-      isPublic ? locality(profile.physicalAddress) : profile.physicalAddress.replace(/\n/g, ", "),
-    ],
-    [
-      "Contact",
-      isPublic
-        ? [profile.phone, profile.email].filter(Boolean).join(" - ")
-        : [profile.signatoryName, profile.signatoryPosition, profile.phone, profile.email]
-            .filter(Boolean)
-            .join(" - "),
-    ],
-  ].filter((r) => r[1]));
+      ["Registered name", profile.legalName],
+      ["CIPC registration", profile.registrationNumber],
+      ["Income tax number", isPublic ? "Supplied with quotations" : profile.taxNumber],
+      ["CSD supplier number", profile.csdNumber],
+      [
+        "VAT registration",
+        profile.vatRegistered
+          ? profile.vatNumber
+          : "Not registered for VAT. All prices quoted are VAT-exclusive.",
+      ],
+      ["B-BBEE status", profile.bbbeeStatus],
+      ["Annual turnover", profile.annualTurnover],
+      ["Banking", isPublic ? "Supplied on award, on a company letterhead" : profile.bankDetails],
+      [
+        "Address",
+        isPublic ? locality(profile.physicalAddress) : profile.physicalAddress.replace(/\n/g, ", "),
+      ],
+      [
+        "Contact",
+        isPublic
+          ? [profile.phone, profile.email].filter(Boolean).join(" - ")
+          : [profile.signatoryName, profile.signatoryPosition, profile.phone, profile.email]
+              .filter(Boolean)
+              .join(" - "),
+      ],
+    ].filter((r) => r[1])
+  );
 
   if (isPublic) {
     sectionHeading(L, fonts, "Verifying us");
@@ -377,7 +392,13 @@ export async function buildProfilePdf(data: ProfilePdfData): Promise<Uint8Array>
       thickness: 0.5,
       color: RULE,
     });
-    p.drawText(sanitize(foot), { x: MARGIN, y: MARGIN + 5, size: 7.5, font: fonts.regular, color: MUTED });
+    p.drawText(sanitize(foot), {
+      x: MARGIN,
+      y: MARGIN + 5,
+      size: 7.5,
+      font: fonts.regular,
+      color: MUTED,
+    });
     const right = `${today}   Page ${i + 1} of ${L.pages.length}`;
     p.drawText(right, {
       x: A4[0] - MARGIN - fonts.regular.widthOfTextAtSize(right, 7.5),

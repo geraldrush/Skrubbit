@@ -1,13 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
-import {
-  ShieldCheck,
-  Sparkles,
-  Truck,
-  HeartHandshake,
-  ArrowRight,
-} from "lucide-react";
+import { ShieldCheck, Sparkles, Truck, HeartHandshake, ArrowRight } from "lucide-react";
 
 import { site } from "@/data/site";
 import { categories } from "@/data/products";
@@ -58,10 +52,7 @@ export const dynamic = "force-dynamic";
  * rather than wrong when the read fails.
  */
 export default async function HomePage() {
-  const [products, profile] = await Promise.all([
-    getProductsSafe(),
-    getCompanyProfileSafe(),
-  ]);
+  const [products, profile] = await Promise.all([getProductsSafe(), getCompanyProfileSafe()]);
   const featured = products.filter((p) => p.featured);
 
   return (
@@ -74,14 +65,12 @@ export default async function HomePage() {
               ★★★★★ Loved by South Africans
             </Badge>
             <h1 className="font-display text-4xl font-extrabold leading-tight sm:text-5xl lg:text-6xl">
-              Powerful cleaning,{" "}
-              <span className="text-accent">proudly&nbsp;local.</span>
+              Powerful cleaning, <span className="text-accent">proudly&nbsp;local.</span>
             </h1>
             <p className="max-w-md text-lg font-medium text-brand-ink/80">
-              {site.legalName} manufactures industrial &amp; household cleaning
-              products and personal care essentials, and provides professional
-              cleaning services across Limpopo — quality you can trust, at
-              prices that make sense.
+              {site.legalName} manufactures industrial &amp; household cleaning products and
+              personal care essentials, and provides professional cleaning services across Limpopo —
+              quality you can trust, at prices that make sense.
             </p>
             <div className="flex flex-wrap gap-3">
               <Button asChild size="lg" variant="accent">
@@ -123,8 +112,8 @@ export default async function HomePage() {
                 A registered, compliant supplier
               </h2>
               <p className="mt-1 max-w-xl text-muted-foreground">
-                We manufacture in Vhembe and supply households, businesses and
-                the public sector across Limpopo.
+                We manufacture in Vhembe and supply households, businesses and the public sector
+                across Limpopo.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -152,9 +141,7 @@ export default async function HomePage() {
                 <perk.icon className="h-6 w-6" />
               </div>
               <div>
-                <h3 className="font-display text-base font-bold">
-                  {perk.title}
-                </h3>
+                <h3 className="font-display text-base font-bold">{perk.title}</h3>
                 <p className="text-sm text-muted-foreground">{perk.body}</p>
               </div>
             </div>
@@ -166,12 +153,10 @@ export default async function HomePage() {
       <section className="container pt-14">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h2 className="font-display text-3xl font-extrabold">
-              Professional cleaning services
-            </h2>
+            <h2 className="font-display text-3xl font-extrabold">Professional cleaning services</h2>
             <p className="mt-1 max-w-xl text-muted-foreground">
-              We don&apos;t just make the products — we clean with them. Homes,
-              offices, factories, schools and clinics, once-off or on contract.
+              We don&apos;t just make the products — we clean with them. Homes, offices, factories,
+              schools and clinics, once-off or on contract.
             </p>
           </div>
           <Button asChild variant="accent">
@@ -188,9 +173,7 @@ export default async function HomePage() {
               href={`/services#${g.id}`}
               className="rounded-xl border bg-card p-4 transition-colors hover:border-accent hover:bg-secondary"
             >
-              <p className="font-display text-sm font-bold leading-tight">
-                {g.name}
-              </p>
+              <p className="font-display text-sm font-bold leading-tight">{g.name}</p>
               <p className="mt-2 text-xs text-muted-foreground">
                 {services
                   .filter((s) => s.group === g.id)
@@ -206,9 +189,7 @@ export default async function HomePage() {
       <section className="container py-14">
         <div className="mb-8 flex items-end justify-between">
           <div>
-            <h2 className="font-display text-3xl font-extrabold">
-              Shop by category
-            </h2>
+            <h2 className="font-display text-3xl font-extrabold">Shop by category</h2>
             <p className="mt-1 text-muted-foreground">
               Everything you need for a spotless home or workplace.
             </p>
@@ -221,9 +202,7 @@ export default async function HomePage() {
               href={`/shop?category=${c.id}`}
               className="group rounded-xl border bg-card p-4 text-center transition-colors hover:border-accent hover:bg-secondary"
             >
-              <p className="font-display text-sm font-bold leading-tight">
-                {c.name}
-              </p>
+              <p className="font-display text-sm font-bold leading-tight">{c.name}</p>
               <p className="mt-1 text-xs text-muted-foreground">{c.blurb}</p>
             </Link>
           ))}
@@ -239,12 +218,8 @@ export default async function HomePage() {
           <div className="container">
             <div className="mb-8 flex items-end justify-between">
               <div>
-                <h2 className="font-display text-3xl font-extrabold">
-                  Bestsellers
-                </h2>
-                <p className="mt-1 text-muted-foreground">
-                  Our most popular formulas.
-                </p>
+                <h2 className="font-display text-3xl font-extrabold">Bestsellers</h2>
+                <p className="mt-1 text-muted-foreground">Our most popular formulas.</p>
               </div>
               <Button asChild variant="link" className="hidden sm:inline-flex">
                 <Link href="/shop">
@@ -273,19 +248,14 @@ export default async function HomePage() {
             Need bulk cleaning supplies?
           </h2>
           <p className="mx-auto mt-3 max-w-xl text-lg font-medium text-brand-ink/80">
-            We supply schools, offices, guest houses and businesses across South
-            Africa. Send an enquiry and we reply within one business day.
+            We supply schools, offices, guest houses and businesses across South Africa. Send an
+            enquiry and we reply within one business day.
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" variant="accent">
               <Link href="/contact">Request a quote</Link>
             </Button>
-            <Button
-              asChild
-              size="lg"
-              variant="outline"
-              className="border-brand-ink/20 bg-white/70"
-            >
+            <Button asChild size="lg" variant="outline" className="border-brand-ink/20 bg-white/70">
               <Link href="/shop">Browse the shop</Link>
             </Button>
           </div>

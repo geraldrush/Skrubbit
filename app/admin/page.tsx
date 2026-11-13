@@ -1,13 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  CalendarClock,
-  CheckCircle2,
-  FileCheck,
-  FolderLock,
-  Search,
-  XCircle,
-} from "lucide-react";
+import { CalendarClock, CheckCircle2, FileCheck, FolderLock, Search, XCircle } from "lucide-react";
 
 import { OVERDUE_HOURS, lastRun } from "@/lib/cron-runs";
 import { getProducts } from "@/lib/products";
@@ -61,16 +54,15 @@ export default async function DashboardPage() {
   const gate = await adminGate();
   if (gate) return gate;
 
-  const [tenders, items, documents, orders, messages, products, run] =
-    await Promise.all([
-      listTenders(),
-      itemsByTender(),
-      listDocuments(),
-      getRecentOrders(),
-      getRecentContactMessages(),
-      getProducts(),
-      lastRun(),
-    ]);
+  const [tenders, items, documents, orders, messages, products, run] = await Promise.all([
+    listTenders(),
+    itemsByTender(),
+    listDocuments(),
+    getRecentOrders(),
+    getRecentContactMessages(),
+    getProducts(),
+    lastRun(),
+  ]);
 
   const now = new Date();
   const today = sastToday(now);
@@ -88,9 +80,7 @@ export default async function DashboardPage() {
 
   const ready = assessed.filter((a) => a.readiness.ready).length;
   const blocked = assessed.length - ready;
-  const closingThisWeek = assessed.filter(
-    (a) => a.daysLeft >= 0 && a.daysLeft <= 7
-  ).length;
+  const closingThisWeek = assessed.filter((a) => a.daysLeft >= 0 && a.daysLeft <= 7).length;
 
   const docRows: DocRow[] = documents.map((d) => ({
     id: d.id,
@@ -164,7 +154,9 @@ export default async function DashboardPage() {
         />
         <StatTile
           label="Documents"
-          value={expired ? `${expired} expired` : expiring ? `${expiring} expiring` : documents.length}
+          value={
+            expired ? `${expired} expired` : expiring ? `${expiring} expiring` : documents.length
+          }
           hint={
             expired
               ? "Renew before your next bid"
@@ -190,10 +182,7 @@ export default async function DashboardPage() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Panel
-          title="Compliance register"
-          action={{ href: "/admin/documents", label: "Manage" }}
-        >
+        <Panel title="Compliance register" action={{ href: "/admin/documents", label: "Manage" }}>
           <DocumentStatus rows={docRows} />
         </Panel>
         <Panel title="Shop" action={{ href: "/admin/shop", label: "Manage" }}>

@@ -1,11 +1,6 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import {
-  addTenderFile,
-  getTender,
-  TENDER_FILE_LABELS,
-  type TenderFileKind,
-} from "@/lib/tenders";
+import { addTenderFile, getTender, TENDER_FILE_LABELS, type TenderFileKind } from "@/lib/tenders";
 import { requireAdmin } from "@/lib/admin-auth";
 
 export const dynamic = "force-dynamic";
@@ -28,10 +23,7 @@ const EXT: Record<string, string> = {
   "image/webp": "webp",
 };
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
@@ -69,13 +61,15 @@ export async function POST(
   }
 
   const rawKind = String(form.get("kind") ?? "other");
-  const kind: TenderFileKind = (
-    Object.keys(TENDER_FILE_LABELS) as TenderFileKind[]
-  ).includes(rawKind as TenderFileKind)
+  const kind: TenderFileKind = (Object.keys(TENDER_FILE_LABELS) as TenderFileKind[]).includes(
+    rawKind as TenderFileKind
+  )
     ? (rawKind as TenderFileKind)
     : "other";
 
-  const label = String(form.get("label") ?? "").trim().slice(0, 200);
+  const label = String(form.get("label") ?? "")
+    .trim()
+    .slice(0, 200);
 
   const key = `documents/tender-${id}-${Date.now().toString(36)}.${EXT[file.type]}`;
   await env.PRODUCT_IMAGES.put(key, await file.arrayBuffer(), {

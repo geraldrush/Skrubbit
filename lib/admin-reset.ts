@@ -22,10 +22,7 @@ function toHex(bytes: Uint8Array): string {
 
 /** SHA-256 of the token, hex. The only form that touches the database. */
 export async function hashToken(token: string): Promise<string> {
-  const digest = await crypto.subtle.digest(
-    "SHA-256",
-    new TextEncoder().encode(token)
-  );
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(token));
   return toHex(new Uint8Array(digest));
 }
 
@@ -54,9 +51,7 @@ export async function createResetToken(env: ResetEnv): Promise<string> {
   return token;
 }
 
-export type ResetCheck =
-  | { ok: true }
-  | { ok: false; reason: "invalid" | "expired" | "used" };
+export type ResetCheck = { ok: true } | { ok: false; reason: "invalid" | "expired" | "used" };
 
 /**
  * Whether this token can still be redeemed.
@@ -65,10 +60,7 @@ export type ResetCheck =
  * expired" is actionable where "invalid" is not — and it gives an attacker
  * nothing, since they cannot produce a token to ask about in the first place.
  */
-export async function checkResetToken(
-  env: ResetEnv,
-  token: string
-): Promise<ResetCheck> {
+export async function checkResetToken(env: ResetEnv, token: string): Promise<ResetCheck> {
   if (!env.DB) return { ok: false, reason: "invalid" };
 
   const row = await env.DB.prepare(
@@ -91,10 +83,7 @@ export async function checkResetToken(
  * The `used_at IS NULL` guard is what makes redemption single-use even if two
  * requests arrive together: the second updates no rows and is refused.
  */
-export async function consumeResetToken(
-  env: ResetEnv,
-  token: string
-): Promise<boolean> {
+export async function consumeResetToken(env: ResetEnv, token: string): Promise<boolean> {
   if (!env.DB) return false;
   const result = await env.DB.prepare(
     "UPDATE admin_password_resets SET used_at = ? WHERE token_hash = ? AND used_at IS NULL"

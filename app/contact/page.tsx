@@ -65,9 +65,7 @@ export default async function ContactPage({
   searchParams: Promise<{ service?: string | string[] }>;
 }) {
   const { service } = await searchParams;
-  const initialMessage = serviceMessage(
-    Array.isArray(service) ? service[0] : service
-  );
+  const initialMessage = serviceMessage(Array.isArray(service) ? service[0] : service);
 
   return (
     <div className="container py-10">
@@ -109,10 +107,7 @@ export default async function ContactPage({
               </li>
               <li className="flex items-start gap-3">
                 <Mail className="mt-0.5 h-5 w-5 shrink-0 text-accent" />
-                <a
-                  href={`mailto:${site.contact.email}`}
-                  className="hover:text-accent"
-                >
+                <a href={`mailto:${site.contact.email}`} className="hover:text-accent">
                   {site.contact.email}
                 </a>
               </li>
@@ -133,9 +128,7 @@ export default async function ContactPage({
 
       {/* FAQ */}
       <section className="mt-16 max-w-3xl">
-        <h2 className="mb-4 font-display text-2xl font-extrabold">
-          Frequently asked questions
-        </h2>
+        <h2 className="mb-4 font-display text-2xl font-extrabold">Frequently asked questions</h2>
         <Accordion type="single" collapsible>
           {faqs.map((f, i) => (
             <AccordionItem key={i} value={`faq-${i}`}>

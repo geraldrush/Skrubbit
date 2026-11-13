@@ -79,8 +79,8 @@ export function ResetForm({ token }: { token: string }) {
           autoFocus
         />
         <p className="text-xs text-muted-foreground">
-          At least {MIN_LENGTH} characters. Length is what matters — a long
-          phrase beats a short one with punctuation in it.
+          At least {MIN_LENGTH} characters. Length is what matters — a long phrase beats a short one
+          with punctuation in it.
         </p>
       </div>
       <div className="space-y-2">

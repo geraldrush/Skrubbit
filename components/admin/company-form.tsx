@@ -48,9 +48,7 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
     .filter(Boolean);
 
   function toggleProvince(province: string, on: boolean) {
-    const next = on
-      ? [...watched, province]
-      : watched.filter((p) => p !== province);
+    const next = on ? [...watched, province] : watched.filter((p) => p !== province);
     // Stored in the listed order rather than the order they were clicked, so
     // the field reads the same however it was filled in.
     setForm((f) => ({
@@ -126,16 +124,13 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
               type="checkbox"
               className="h-4 w-4 rounded border-border"
               checked={form.vatRegistered}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, vatRegistered: e.target.checked }))
-              }
+              onChange={(e) => setForm((f) => ({ ...f, vatRegistered: e.target.checked }))}
             />
             We are registered for VAT
           </label>
           <p className="text-xs text-muted-foreground">
-            Tick only if actually registered. Every pricing schedule adds 15%
-            VAT when this is on — quoting VAT you cannot charge can invalidate
-            a bid.
+            Tick only if actually registered. Every pricing schedule adds 15% VAT when this is on —
+            quoting VAT you cannot charge can invalidate a bid.
           </p>
         </div>
       </div>
@@ -208,10 +203,9 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
           className="sm:max-w-lg"
         />
         <p className="text-xs text-muted-foreground">
-          An inbox someone actually watches — separate several with commas, and
-          everyone listed gets the same message. Warnings go out ten days, a
-          week, 48 hours and 24 hours before closing, and before a compulsory
-          briefing. Leave empty to fall back to the email above.
+          An inbox someone actually watches — separate several with commas, and everyone listed gets
+          the same message. Warnings go out ten days, a week, 48 hours and 24 hours before closing,
+          and before a compulsory briefing. Leave empty to fall back to the email above.
         </p>
       </div>
 
@@ -219,10 +213,7 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
         <Label>Tell me about new tenders in</Label>
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {PROVINCES.map((province) => (
-            <label
-              key={province}
-              className="flex items-center gap-2 text-sm font-normal"
-            >
+            <label key={province} className="flex items-center gap-2 text-sm font-normal">
               <input
                 type="checkbox"
                 className="h-4 w-4 rounded border-border"
@@ -234,9 +225,9 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
           ))}
         </div>
         <p className="text-xs text-muted-foreground">
-          A daily digest of adverts newly published on eTenders in these
-          provinces, sent to the address above. Tick nothing to switch it off —
-          the deadline reminders above carry on either way.
+          A daily digest of adverts newly published on eTenders in these provinces, sent to the
+          address above. Tick nothing to switch it off — the deadline reminders above carry on
+          either way.
         </p>
       </div>
 
@@ -247,7 +238,12 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="csdNumber">CSD supplier number</Label>
-          <Input id="csdNumber" value={form.csdNumber} onChange={set("csdNumber")} placeholder="MAAA…" />
+          <Input
+            id="csdNumber"
+            value={form.csdNumber}
+            onChange={set("csdNumber")}
+            placeholder="MAAA…"
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="annualTurnover">Annual turnover</Label>
@@ -262,10 +258,15 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
 
       <div className="space-y-2">
         <Label htmlFor="bbbeeStatus">B-BBEE status</Label>
-        <Textarea id="bbbeeStatus" value={form.bbbeeStatus} onChange={set("bbbeeStatus")} rows={2} />
+        <Textarea
+          id="bbbeeStatus"
+          value={form.bbbeeStatus}
+          onChange={set("bbbeeStatus")}
+          rows={2}
+        />
         <p className="text-xs text-muted-foreground">
-          Copy it from the affidavit word for word, expiry date included. A buyer
-          checks this against the certificate you attach.
+          Copy it from the affidavit word for word, expiry date included. A buyer checks this
+          against the certificate you attach.
         </p>
       </div>
 
@@ -284,11 +285,10 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
           placeholder="What the business does, how long it has traded, capacity, delivery footprint, notable clients…"
         />
         <p className="text-xs text-muted-foreground">
-          Printed in the technical section of every tender pack, and the body of
-          the downloadable profile. Start a line with{" "}
-          <code className="rounded bg-muted px-1">## </code> for a heading or{" "}
-          <code className="rounded bg-muted px-1">- </code> for a bullet;
-          everything else becomes a paragraph.
+          Printed in the technical section of every tender pack, and the body of the downloadable
+          profile. Start a line with <code className="rounded bg-muted px-1">## </code> for a
+          heading or <code className="rounded bg-muted px-1">- </code> for a bullet; everything else
+          becomes a paragraph.
         </p>
         <a
           href="/api/admin/company/profile.pdf"
@@ -297,8 +297,8 @@ export function CompanyForm({ profile }: { profile: CompanyProfile }) {
           <Download className="h-4 w-4" /> Download company profile (PDF)
         </a>
         <p className="text-xs text-muted-foreground">
-          Save your changes first — the PDF is built from what is stored, not
-          from what is on screen.
+          Save your changes first — the PDF is built from what is stored, not from what is on
+          screen.
         </p>
       </div>
 

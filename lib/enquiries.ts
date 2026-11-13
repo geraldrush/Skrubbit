@@ -164,9 +164,7 @@ export async function recordContactMessage(
   message: string
 ): Promise<void> {
   await db()
-    .prepare(
-      "INSERT INTO contact_messages (name, email, phone, message) VALUES (?, ?, ?, ?)"
-    )
+    .prepare("INSERT INTO contact_messages (name, email, phone, message) VALUES (?, ?, ?, ?)")
     .bind(name, email, phone, message)
     .run();
 }

@@ -7,7 +7,11 @@ const variant = { size: "5L", sku: "SK-BL-5", price: 89.99 };
 
 describe("validateProductBody", () => {
   it("accepts a complete product", () => {
-    const result = validateProductBody({ name: "Bleach", category: "kitchen", variants: [variant] });
+    const result = validateProductBody({
+      name: "Bleach",
+      category: "kitchen",
+      variants: [variant],
+    });
     expect("value" in result).toBe(true);
   });
 
@@ -26,7 +30,9 @@ describe("validateProductBody", () => {
       category: "kitchen",
       variants: [{ ...variant, price: "" }],
     });
-    expect("errors" in result && result.errors).toContain("Variant 1: price must be greater than 0.");
+    expect("errors" in result && result.errors).toContain(
+      "Variant 1: price must be greater than 0."
+    );
   });
 
   it("rejects duplicate SKUs within a product", () => {

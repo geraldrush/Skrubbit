@@ -1,13 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
-import {
-  LIMITS,
-  clamp,
-  normaliseItems,
-  recordOrder,
-  subtotalOf,
-} from "@/lib/enquiries";
+import { LIMITS, clamp, normaliseItems, recordOrder, subtotalOf } from "@/lib/enquiries";
 import { notifyOrder } from "@/lib/enquiry-mail";
 
 export const dynamic = "force-dynamic";

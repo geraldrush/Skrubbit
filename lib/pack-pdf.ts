@@ -57,8 +57,18 @@ export interface PackData {
 
 function longDate(today: string): string {
   const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
   ];
   const [y, m, d] = today.split("-");
   return `${Number(d)} ${months[Number(m) - 1]} ${y}`;
@@ -296,15 +306,13 @@ export async function buildPackPdf(data: PackData): Promise<Uint8Array> {
     rows: [...priceRows, ...totalRows],
     widths: [0.07, 0.37, 0.12, 0.1, 0.17, 0.17],
     align: ["left", "left", "left", "right", "right", "right"],
-    boldRows: priceRows.length === 1 && !pricing.length
-      ? []
-      : totalRows.map((_, i) => priceRows.length + i),
+    boldRows:
+      priceRows.length === 1 && !pricing.length
+        ? []
+        : totalRows.map((_, i) => priceRows.length + i),
   });
 
-  L.signature(
-    profile.signatoryName || "[Name]",
-    profile.signatoryPosition || "[Capacity]"
-  );
+  L.signature(profile.signatoryName || "[Name]", profile.signatoryPosition || "[Capacity]");
   L.space(4);
   L.text(
     "Transfer these amounts onto the official SBD 3.1 / 3.2 / 3.3 pricing form supplied with the tender, and sign it. This schedule supports that form; it does not replace it.",
@@ -401,11 +409,7 @@ export async function buildPackPdf(data: PackData): Promise<Uint8Array> {
             : await doc.embedJpg(file.bytes);
         const page = doc.addPage(A4);
         // Fit inside the margins, preserving aspect ratio.
-        const scale = Math.min(
-          CONTENT_W / image.width,
-          (A4[1] - MARGIN * 2) / image.height,
-          1
-        );
+        const scale = Math.min(CONTENT_W / image.width, (A4[1] - MARGIN * 2) / image.height, 1);
         const w = image.width * scale;
         const h = image.height * scale;
         page.drawImage(image, {

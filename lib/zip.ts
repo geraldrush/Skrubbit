@@ -37,8 +37,7 @@ function crc32(bytes: Uint8Array): number {
 function dosDateTime(d: Date): { time: number; date: number } {
   const time =
     (d.getHours() << 11) | (d.getMinutes() << 5) | (Math.floor(d.getSeconds() / 2) & 0x1f);
-  const date =
-    ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
+  const date = ((d.getFullYear() - 1980) << 9) | ((d.getMonth() + 1) << 5) | d.getDate();
   return { time, date };
 }
 
@@ -125,8 +124,7 @@ export function createZip(entries: ZipEntry[], now: Date = new Date()): Uint8Arr
   ev.setUint32(16, offset, true);
   ev.setUint16(20, 0, true); // comment length
 
-  const total =
-    locals.reduce((n, p) => n + p.length, 0) + centralSize + end.length;
+  const total = locals.reduce((n, p) => n + p.length, 0) + centralSize + end.length;
   const out = new Uint8Array(total);
   let pos = 0;
   for (const part of [...locals, ...centrals, end]) {

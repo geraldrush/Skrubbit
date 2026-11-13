@@ -15,12 +15,7 @@ function db(): D1Database {
 
 /* -------------------------------- types -------------------------------- */
 
-export type TenderStatus =
-  | "preparing"
-  | "submitted"
-  | "won"
-  | "lost"
-  | "abandoned";
+export type TenderStatus = "preparing" | "submitted" | "won" | "lost" | "abandoned";
 
 export type SubmissionMethod = "physical" | "electronic";
 
@@ -201,7 +196,11 @@ const DEFAULT_MATRIX: SeedItem[] = [
   { category: "technical", label: "Reference letters on client letterheads", required: false },
   { category: "technical", label: "CVs and qualifications of key staff", required: false },
 
-  { category: "financial", label: "Pricing schedule (SBD 3.1 / 3.2 / 3.3)", signatureRequired: true },
+  {
+    category: "financial",
+    label: "Pricing schedule (SBD 3.1 / 3.2 / 3.3)",
+    signatureRequired: true,
+  },
   { category: "financial", label: "Detailed cost breakdown (VAT inclusive)" },
   { category: "financial", label: "Financial statements", required: false },
 
@@ -213,13 +212,37 @@ const DEFAULT_MATRIX: SeedItem[] = [
   // keeps them out of the printed pack and out of the readiness blockers, where
   // they would otherwise sit as permanent noise from the day a tender is added.
   { category: "submission", label: "Pack printed in full and every page present", required: false },
-  { category: "submission", label: "Official MBD/SBD forms completed and inserted behind the matching dividers", required: false },
-  { category: "submission", label: "Every signature page signed by hand, in black ink", required: false },
-  { category: "submission", label: "Certified copies enclosed where the tender requires them", required: false },
+  {
+    category: "submission",
+    label: "Official MBD/SBD forms completed and inserted behind the matching dividers",
+    required: false,
+  },
+  {
+    category: "submission",
+    label: "Every signature page signed by hand, in black ink",
+    required: false,
+  },
+  {
+    category: "submission",
+    label: "Certified copies enclosed where the tender requires them",
+    required: false,
+  },
   { category: "submission", label: "All pages numbered", required: false },
-  { category: "submission", label: "No blank fields anywhere — N/A written where something does not apply", required: false },
-  { category: "submission", label: "Envelope sealed and marked with the bid number and description", required: false },
-  { category: "submission", label: "Delivered to the tender box or portal, with time to spare", required: false },
+  {
+    category: "submission",
+    label: "No blank fields anywhere — N/A written where something does not apply",
+    required: false,
+  },
+  {
+    category: "submission",
+    label: "Envelope sealed and marked with the bid number and description",
+    required: false,
+  },
+  {
+    category: "submission",
+    label: "Delivered to the tender box or portal, with time to spare",
+    required: false,
+  },
 ];
 
 export function defaultMatrix(): SeedItem[] {
@@ -356,11 +379,7 @@ export function assessTender(
   // returnables needing an N/A decision, and eight permanent warnings would
   // drown the ones that matter.
   const blank = items.filter(
-    (i) =>
-      i.category !== "submission" &&
-      !i.required &&
-      !isSatisfied(i, docs) &&
-      !i.note.trim()
+    (i) => i.category !== "submission" && !i.required && !isSatisfied(i, docs) && !i.note.trim()
   );
   for (const item of blank) {
     issues.push({
@@ -446,8 +465,7 @@ export function assessTender(
   if (tender.status === "submitted" && !tender.submittedAt) {
     issues.push({
       severity: "warning",
-      message:
-        "Marked submitted, but no submission date, method or proof of delivery is recorded.",
+      message: "Marked submitted, but no submission date, method or proof of delivery is recorded.",
     });
   }
 
@@ -473,10 +491,7 @@ export function assessTender(
  * and will never have a file — but where a file exists, the row no longer
  * depends on somebody remembering to tick it.
  */
-export function isSatisfied(
-  item: TenderItem,
-  documents: CompanyDocument[] = []
-): boolean {
+export function isSatisfied(item: TenderItem, documents: CompanyDocument[] = []): boolean {
   if (item.attached) return true;
   if (item.documentId === null) return false;
   const doc = documents.find((d) => d.id === item.documentId);
@@ -497,10 +512,7 @@ export interface Progress {
  * needed, signed — the same bar the readiness check applies, so the progress
  * bar can never read 100% while the bid is still blocked.
  */
-export function matrixProgress(
-  items: TenderItem[],
-  documents: CompanyDocument[] = []
-): Progress {
+export function matrixProgress(items: TenderItem[], documents: CompanyDocument[] = []): Progress {
   const required = items.filter((i) => i.required);
   const done = required.filter(
     (i) => isSatisfied(i, documents) && (!i.signatureRequired || i.signed)
@@ -692,10 +704,7 @@ export async function itemsByTender(): Promise<Map<number, TenderItem[]>> {
 export async function getTender(
   id: number
 ): Promise<{ tender: Tender; items: TenderItem[] } | null> {
-  const row = await db()
-    .prepare("SELECT * FROM tenders WHERE id = ?")
-    .bind(id)
-    .first<TenderRow>();
+  const row = await db().prepare("SELECT * FROM tenders WHERE id = ?").bind(id).first<TenderRow>();
   if (!row) return null;
 
   const { results } = await db()
@@ -920,10 +929,7 @@ export interface ItemPatch {
 }
 
 /** Saves the whole matrix at once; ticking boxes shouldn't be N requests. */
-export async function updateItems(
-  tenderId: number,
-  patches: ItemPatch[]
-): Promise<void> {
+export async function updateItems(tenderId: number, patches: ItemPatch[]): Promise<void> {
   if (!patches.length) return;
   const d = db();
   await d.batch(
@@ -962,10 +968,7 @@ export interface NewItemInput {
  * this the only way to add one was editing the database by hand, which is not
  * a thing the person assembling a bid at 9pm can do.
  */
-export async function addItems(
-  tenderId: number,
-  items: NewItemInput[]
-): Promise<void> {
+export async function addItems(tenderId: number, items: NewItemInput[]): Promise<void> {
   if (!items.length) return;
   const d = db();
 
@@ -1007,9 +1010,7 @@ export async function deleteItems(tenderId: number, ids: number[]): Promise<void
   const d = db();
   await d.batch(
     ids.map((id) =>
-      d
-        .prepare("DELETE FROM tender_items WHERE id = ? AND tender_id = ?")
-        .bind(id, tenderId)
+      d.prepare("DELETE FROM tender_items WHERE id = ? AND tender_id = ?").bind(id, tenderId)
     )
   );
 }
@@ -1075,10 +1076,7 @@ export async function listTenderFiles(tenderId: number): Promise<TenderFile[]> {
   }));
 }
 
-export async function getTenderFile(
-  tenderId: number,
-  fileId: number
-): Promise<TenderFile | null> {
+export async function getTenderFile(tenderId: number, fileId: number): Promise<TenderFile | null> {
   const row = await db()
     .prepare("SELECT * FROM tender_files WHERE id = ? AND tender_id = ?")
     .bind(fileId, tenderId)
@@ -1098,7 +1096,14 @@ export async function getTenderFile(
 
 export async function addTenderFile(
   tenderId: number,
-  file: { kind: TenderFileKind; label: string; key: string; name: string; type: string; size: number }
+  file: {
+    kind: TenderFileKind;
+    label: string;
+    key: string;
+    name: string;
+    type: string;
+    size: number;
+  }
 ): Promise<void> {
   await db()
     .prepare(
@@ -1239,10 +1244,7 @@ export interface PricingInput {
  * line set is small, rows are reordered and deleted freely while quoting, and
  * a full replace is easier to reason about than diffing by id.
  */
-export async function replacePricing(
-  tenderId: number,
-  lines: PricingInput[]
-): Promise<void> {
+export async function replacePricing(tenderId: number, lines: PricingInput[]): Promise<void> {
   const d = db();
   await d.batch([
     d.prepare("DELETE FROM tender_pricing WHERE tender_id = ?").bind(tenderId),
@@ -1314,10 +1316,7 @@ export async function createDocument(input: DocumentInput): Promise<void> {
     .run();
 }
 
-export async function updateDocument(
-  id: number,
-  input: DocumentInput
-): Promise<void> {
+export async function updateDocument(id: number, input: DocumentInput): Promise<void> {
   await db()
     .prepare(
       `UPDATE company_documents SET

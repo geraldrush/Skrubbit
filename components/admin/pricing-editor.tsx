@@ -291,8 +291,8 @@ export function PricingEditor({
                 <dd className="tabular-nums">{formatZAR(totals.excl)}</dd>
               </div>
               <p className="pt-1 text-xs text-muted-foreground">
-                No VAT added — not registered for VAT. Change this under
-                Documents → Company details if that is wrong.
+                No VAT added — not registered for VAT. Change this under Documents → Company details
+                if that is wrong.
               </p>
             </>
           )}
@@ -304,12 +304,10 @@ export function PricingEditor({
           </p>
           {totals.anyCost ? (
             <>
-              <p className="mt-1 text-2xl font-bold tabular-nums">
-                {formatZAR(totals.margin)}
-              </p>
+              <p className="mt-1 text-2xl font-bold tabular-nums">{formatZAR(totals.margin)}</p>
               <p className="text-xs text-muted-foreground">
-                {totals.marginPct.toFixed(1)}% of the quoted value. Cost never
-                appears on the pack or the CSV.
+                {totals.marginPct.toFixed(1)}% of the quoted value. Cost never appears on the pack
+                or the CSV.
               </p>
             </>
           ) : (
@@ -339,8 +337,8 @@ export function PricingEditor({
         </Button>
       </div>
       <p className="text-xs text-muted-foreground">
-        Save before downloading — the CSV is generated from what is stored, not
-        from what is on screen.
+        Save before downloading — the CSV is generated from what is stored, not from what is on
+        screen.
       </p>
     </div>
   );

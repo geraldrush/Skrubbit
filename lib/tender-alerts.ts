@@ -50,13 +50,15 @@ interface Row {
 
 /** "Limpopo, Gauteng" as stored on the profile → the provinces to match. */
 export function parseProvinces(value: string): string[] {
-  return value
-    .split(",")
-    .map((p) => p.trim())
-    .filter(Boolean)
-    // The feed spells provinces exactly one way, so a cap keeps a malformed
-    // setting from turning into a query with hundreds of bound parameters.
-    .slice(0, 12);
+  return (
+    value
+      .split(",")
+      .map((p) => p.trim())
+      .filter(Boolean)
+      // The feed spells provinces exactly one way, so a cap keeps a malformed
+      // setting from turning into a query with hundreds of bound parameters.
+      .slice(0, 12)
+  );
 }
 
 /**
@@ -195,9 +197,7 @@ export function buildDigest(
         `${escapeHtml(a.title)}<br>` +
         `<span style="color:#555">${escapeHtml(a.department)}</span><br>` +
         `<span style="color:#555">${escapeHtml(closing)}</span>` +
-        (a.documentUrl
-          ? `<br><a href="${escapeHtml(a.documentUrl)}">Tender document</a>`
-          : "") +
+        (a.documentUrl ? `<br><a href="${escapeHtml(a.documentUrl)}">Tender document</a>` : "") +
         `</div>`,
       text:
         `${a.reference || a.ocid}\n${a.title}\n${a.department}\n${closing}` +

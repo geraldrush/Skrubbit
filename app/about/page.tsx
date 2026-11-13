@@ -39,9 +39,9 @@ export default async function AboutPage() {
             {profile.legalName || site.legalName}
           </h1>
           <p className="mt-4 max-w-2xl text-lg text-muted-foreground">
-            A registered South African manufacturer of cleaning chemicals and
-            hygiene consumables, supplying households, businesses and the public
-            sector from the Vhembe District of Limpopo.
+            A registered South African manufacturer of cleaning chemicals and hygiene consumables,
+            supplying households, businesses and the public sector from the Vhembe District of
+            Limpopo.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Button asChild size="lg" variant="accent">
@@ -74,21 +74,17 @@ export default async function AboutPage() {
             hide={["Track record"]}
           />
         ) : (
-          <p className="text-muted-foreground">
-            The company profile has not been written yet.
-          </p>
+          <p className="text-muted-foreground">The company profile has not been written yet.</p>
         )}
       </section>
 
       <section className="border-t bg-secondary/40">
         <div className="container flex flex-col items-start gap-4 py-12 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="font-display text-2xl font-extrabold">
-              Need a quotation?
-            </h2>
+            <h2 className="font-display text-2xl font-extrabold">Need a quotation?</h2>
             <p className="mt-1 max-w-xl text-muted-foreground">
-              Tell us what you need and in what quantity. Bulk and contract
-              pricing is quoted per order.
+              Tell us what you need and in what quantity. Bulk and contract pricing is quoted per
+              order.
             </p>
           </div>
           <div className="flex flex-wrap gap-3">

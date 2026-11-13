@@ -85,13 +85,10 @@ export default function CheckoutPage() {
         <div className="rounded-full bg-accent/15 p-6">
           <CheckCircle2 className="h-10 w-10 text-accent" />
         </div>
-        <h1 className="font-display text-3xl font-extrabold">
-          Order sent to Skrubb-it
-        </h1>
+        <h1 className="font-display text-3xl font-extrabold">Order sent to Skrubb-it</h1>
         <p className="text-muted-foreground">
-          You will be contacted shortly to confirm availability, delivery and
-          the final price. A confirmation of what you submitted is on its way to
-          your inbox.
+          You will be contacted shortly to confirm availability, delivery and the final price. A
+          confirmation of what you submitted is on its way to your inbox.
         </p>
         <p className="rounded-lg border bg-secondary/40 px-4 py-2 text-sm">
           Your reference is <strong>{reference}</strong>
@@ -112,9 +109,7 @@ export default function CheckoutPage() {
           <ShoppingBag className="h-10 w-10 text-muted-foreground" />
         </div>
         <h1 className="font-display text-2xl font-bold">Your cart is empty</h1>
-        <p className="text-muted-foreground">
-          Add some products before checking out.
-        </p>
+        <p className="text-muted-foreground">Add some products before checking out.</p>
         <Button asChild>
           <Link href="/shop">Browse products</Link>
         </Button>
@@ -126,9 +121,9 @@ export default function CheckoutPage() {
     <div className="container py-10">
       <h1 className="font-display text-3xl font-extrabold">Checkout</h1>
       <p className="mt-2 max-w-2xl text-muted-foreground">
-        Send your order to Skrubb-it and you will be contacted shortly to
-        confirm stock, delivery and the final price. No card details are needed
-        here — nothing is charged until we have spoken to you.
+        Send your order to Skrubb-it and you will be contacted shortly to confirm stock, delivery
+        and the final price. No card details are needed here — nothing is charged until we have
+        spoken to you.
       </p>
 
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_380px]">
@@ -201,9 +196,8 @@ export default function CheckoutPage() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Your order goes straight to {site.contact.email} and a copy is
-            emailed to you. We will be in touch to confirm stock, delivery and
-            the final price.
+            Your order goes straight to {site.contact.email} and a copy is emailed to you. We will
+            be in touch to confirm stock, delivery and the final price.
           </p>
         </form>
 
@@ -242,13 +236,9 @@ export default function CheckoutPage() {
                       <div className="flex flex-1 justify-between gap-2 text-sm">
                         <span>
                           {item.qty} × {item.name}
-                          <span className="block text-xs text-muted-foreground">
-                            {item.size}
-                          </span>
+                          <span className="block text-xs text-muted-foreground">{item.size}</span>
                         </span>
-                        <span className="font-semibold">
-                          {formatZAR(item.price * item.qty)}
-                        </span>
+                        <span className="font-semibold">{formatZAR(item.price * item.qty)}</span>
                       </div>
                     </li>
                   ))}

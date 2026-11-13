@@ -42,8 +42,8 @@ export async function Footer() {
         <Logo />
 
         <p className="text-sm text-muted-foreground">
-          Cleaning chemicals, hygiene consumables and professional cleaning
-          services, from {site.contact.location}.
+          Cleaning chemicals, hygiene consumables and professional cleaning services, from{" "}
+          {site.contact.location}.
         </p>
 
         <nav
@@ -62,16 +62,10 @@ export async function Footer() {
         </nav>
 
         <address className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-sm not-italic text-muted-foreground">
-          <a
-            href={`tel:${site.contact.whatsapp}`}
-            className="transition-colors hover:text-accent"
-          >
+          <a href={`tel:${site.contact.whatsapp}`} className="transition-colors hover:text-accent">
             {site.contact.phoneDisplay}
           </a>
-          <a
-            href={`mailto:${site.contact.email}`}
-            className="transition-colors hover:text-accent"
-          >
+          <a href={`mailto:${site.contact.email}`} className="transition-colors hover:text-accent">
             {site.contact.email}
           </a>
           {site.socials.facebook && (
@@ -90,10 +84,7 @@ export async function Footer() {
 
       <div className="border-t">
         <div className="container flex flex-col items-center gap-2 py-4 text-center text-xs text-muted-foreground">
-          <nav
-            aria-label="Legal"
-            className="flex flex-wrap justify-center gap-x-4 gap-y-1"
-          >
+          <nav aria-label="Legal" className="flex flex-wrap justify-center gap-x-4 gap-y-1">
             <Link href="/privacy" className="transition-colors hover:text-accent">
               Privacy policy
             </Link>
@@ -112,8 +103,7 @@ export async function Footer() {
             </p>
           )}
           <p>
-            © {new Date().getFullYear()} {profile.legalName || site.legalName}.
-            All rights reserved.
+            © {new Date().getFullYear()} {profile.legalName || site.legalName}. All rights reserved.
           </p>
         </div>
       </div>

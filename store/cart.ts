@@ -35,16 +35,13 @@ export const useCart = create<CartState>()(
           const existing = state.items.find((i) => i.sku === item.sku);
           if (existing) {
             return {
-              items: state.items.map((i) =>
-                i.sku === item.sku ? { ...i, qty: i.qty + qty } : i
-              ),
+              items: state.items.map((i) => (i.sku === item.sku ? { ...i, qty: i.qty + qty } : i)),
               isOpen: true,
             };
           }
           return { items: [...state.items, { ...item, qty }], isOpen: true };
         }),
-      removeItem: (sku) =>
-        set((state) => ({ items: state.items.filter((i) => i.sku !== sku) })),
+      removeItem: (sku) => set((state) => ({ items: state.items.filter((i) => i.sku !== sku) })),
       setQty: (sku, qty) =>
         set((state) => ({
           items: state.items

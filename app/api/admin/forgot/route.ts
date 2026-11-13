@@ -46,9 +46,7 @@ export async function POST(req: Request) {
   const credential = await getAdminCredential(env);
   if (!credential) return accepted;
 
-  if (
-    username.trim().toLowerCase() !== credential.username.trim().toLowerCase()
-  ) {
+  if (username.trim().toLowerCase() !== credential.username.trim().toLowerCase()) {
     return accepted;
   }
 

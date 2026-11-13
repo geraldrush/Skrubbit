@@ -144,9 +144,7 @@ function fromRow(r: LocalRow): RemoteTender {
  * Runs against D1 rather than the live feed, which is too slow and too
  * unreliable to crawl while someone waits. See lib/etenders-sync.ts.
  */
-export async function searchTenders(
-  options: SearchOptions = {}
-): Promise<SearchResult> {
+export async function searchTenders(options: SearchOptions = {}): Promise<SearchResult> {
   const { keyword = "", province = "", category = "", limit = 300 } = options;
   const d = getCloudflareContext().env.DB;
 

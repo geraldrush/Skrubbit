@@ -18,10 +18,7 @@ export default async function DocumentsPage() {
   const gate = await adminGate();
   if (gate) return gate;
 
-  const [documents, profile] = await Promise.all([
-    listDocuments(),
-    getCompanyProfile(),
-  ]);
+  const [documents, profile] = await Promise.all([listDocuments(), getCompanyProfile()]);
 
   return (
     <div className="container max-w-4xl py-10">
@@ -32,12 +29,11 @@ export default async function DocumentsPage() {
       />
 
       <p className="mb-6 rounded-lg border bg-muted/40 p-4 text-sm text-muted-foreground">
-        Reference numbers and validity dates, and — where you upload one — the
-        certificate itself. <strong>Uploaded files are stored privately</strong>:
-        they sit behind this admin login, are never served on a public URL, and
-        are excluded from search engines and shared caches. They are attached to
-        the generated tender pack and to the enclosures download, so a bid can
-        be assembled and printed from one place.
+        Reference numbers and validity dates, and — where you upload one — the certificate itself.{" "}
+        <strong>Uploaded files are stored privately</strong>: they sit behind this admin login, are
+        never served on a public URL, and are excluded from search engines and shared caches. They
+        are attached to the generated tender pack and to the enclosures download, so a bid can be
+        assembled and printed from one place.
       </p>
 
       <section className="mb-10">
@@ -48,8 +44,7 @@ export default async function DocumentsPage() {
       <section>
         <h2 className="mb-1 font-display text-xl font-bold">Company details</h2>
         <p className="mb-3 text-sm text-muted-foreground">
-          Printed on every generated cover letter, company profile and pricing
-          schedule.
+          Printed on every generated cover letter, company profile and pricing schedule.
         </p>
         <CompanyForm profile={profile} />
       </section>

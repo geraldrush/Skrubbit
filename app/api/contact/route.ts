@@ -29,10 +29,7 @@ export async function POST(req: Request) {
   const message = clamp(body.message, LIMITS.message);
 
   if (!name || !email || !message) {
-    return NextResponse.json(
-      { error: "Name, email and message are required." },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: "Name, email and message are required." }, { status: 400 });
   }
 
   try {

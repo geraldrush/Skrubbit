@@ -15,10 +15,7 @@ async function exists(id: number): Promise<boolean> {
   return (await listDocuments()).some((d) => d.id === id);
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
@@ -44,10 +41,7 @@ export async function PUT(
   return Response.json({ ok: true });
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;

@@ -55,9 +55,7 @@ export function StatTile({
   const body = (
     <div className="h-full rounded-lg border bg-card p-4">
       <div className="flex items-center justify-between gap-2">
-        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-          {label}
-        </p>
+        <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
         <Icon className={`h-4 w-4 ${TONE_TEXT[tone]}`} />
       </div>
       <p className={`mt-2 text-3xl font-bold ${TONE_TEXT[tone]}`}>{value}</p>
@@ -231,8 +229,8 @@ export function DocumentStatus({ rows }: { rows: DocRow[] }) {
   if (!rows.length) {
     return (
       <Empty>
-        Nothing recorded. Add your CSD report, Tax PIN and B-BBEE certificate so
-        expiry is checked against every bid.
+        Nothing recorded. Add your CSD report, Tax PIN and B-BBEE certificate so expiry is checked
+        against every bid.
       </Empty>
     );
   }
@@ -349,7 +347,15 @@ export function RunStatus({
   overdueHours,
   now = new Date(),
 }: {
-  run: { ranAt: string; ok: boolean; syncOk: boolean; sent: number; announced: number; checked: number; detail: string } | null;
+  run: {
+    ranAt: string;
+    ok: boolean;
+    syncOk: boolean;
+    sent: number;
+    announced: number;
+    checked: number;
+    detail: string;
+  } | null;
   overdueHours: number;
   now?: Date;
 }) {
@@ -391,8 +397,7 @@ export function RunStatus({
     headline = `Daily check ran ${stamp(run.ranAt)} — ${did}`;
   }
 
-  const Icon =
-    tone === "good" ? CheckCircle2 : tone === "critical" ? XCircle : AlertTriangle;
+  const Icon = tone === "good" ? CheckCircle2 : tone === "critical" ? XCircle : AlertTriangle;
 
   return (
     <section

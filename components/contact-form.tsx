@@ -63,13 +63,7 @@ export function ContactForm() {
       </div>
       <div>
         <Label htmlFor="c-email">Email *</Label>
-        <Input
-          id="c-email"
-          name="email"
-          type="email"
-          required
-          className="mt-1.5"
-        />
+        <Input id="c-email" name="email" type="email" required className="mt-1.5" />
       </div>
       <div>
         <Label htmlFor="c-message">Message *</Label>

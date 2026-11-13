@@ -61,8 +61,8 @@ export function OrderList({ orders }: { orders: OrderRecord[] }) {
   if (!orders.length) {
     return (
       <Empty>
-        No orders yet. Every checkout is recorded here, including the ones where
-        the customer never sends the WhatsApp message.
+        No orders yet. Every checkout is recorded here, including the ones where the customer never
+        sends the WhatsApp message.
       </Empty>
     );
   }
@@ -76,9 +76,7 @@ export function OrderList({ orders }: { orders: OrderRecord[] }) {
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
               {o.name}
             </span>
-            <span className="font-display text-lg font-bold">
-              {formatZAR(o.subtotal)}
-            </span>
+            <span className="font-display text-lg font-bold">{formatZAR(o.subtotal)}</span>
           </div>
 
           <p className="text-xs text-muted-foreground">
@@ -90,8 +88,7 @@ export function OrderList({ orders }: { orders: OrderRecord[] }) {
           <ul className="mt-3 space-y-0.5 text-sm text-muted-foreground">
             {o.items.map((item, i) => (
               <li key={i}>
-                {item.qty} × {item.name} ({item.size}) —{" "}
-                {formatZAR(item.price * item.qty)}
+                {item.qty} × {item.name} ({item.size}) — {formatZAR(item.price * item.qty)}
               </li>
             ))}
           </ul>
@@ -128,9 +125,7 @@ export function MessageList({ messages }: { messages: ContactRecord[] }) {
               <MessageSquare className="h-4 w-4 text-muted-foreground" />
               {m.name}
             </span>
-            <span className="text-xs text-muted-foreground">
-              {formatSast(m.createdAt)}
-            </span>
+            <span className="text-xs text-muted-foreground">{formatSast(m.createdAt)}</span>
           </div>
           <ContactLinks email={m.email} phone={m.phone} />
           <p className="mt-2 whitespace-pre-line text-sm">{m.message}</p>

@@ -22,10 +22,7 @@ function cell(value: string | number): string {
  * Cost and margin are deliberately excluded: this file is one careless
  * forward away from the buyer, and our cost price is nobody else's business.
  */
-export async function GET(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
@@ -42,7 +39,11 @@ export async function GET(
   const totals = priceTotals(lines);
 
   const rows: string[] = [];
-  rows.push(["Item", "Description", "Unit", "Quantity", "Unit price (excl VAT)", "Total (excl VAT)"].map(cell).join(","));
+  rows.push(
+    ["Item", "Description", "Unit", "Quantity", "Unit price (excl VAT)", "Total (excl VAT)"]
+      .map(cell)
+      .join(",")
+  );
   lines.forEach((l, i) => {
     rows.push(
       [
@@ -63,11 +64,21 @@ export async function GET(
   // vendor that cannot lawfully charge it is a pricing error on a binding
   // offer, not a display detail.
   if (profile.vatRegistered) {
-    rows.push([" ", " ", " ", " ", "Subtotal (excl VAT)", totals.excl.toFixed(2)].map(cell).join(","));
-    rows.push([" ", " ", " ", " ", `VAT @ ${(VAT_RATE * 100).toFixed(0)}%`, totals.vat.toFixed(2)].map(cell).join(","));
+    rows.push(
+      [" ", " ", " ", " ", "Subtotal (excl VAT)", totals.excl.toFixed(2)].map(cell).join(",")
+    );
+    rows.push(
+      [" ", " ", " ", " ", `VAT @ ${(VAT_RATE * 100).toFixed(0)}%`, totals.vat.toFixed(2)]
+        .map(cell)
+        .join(",")
+    );
     rows.push([" ", " ", " ", " ", "Total (incl VAT)", totals.incl.toFixed(2)].map(cell).join(","));
   } else {
-    rows.push([" ", " ", " ", " ", "Total (no VAT - not VAT registered)", totals.excl.toFixed(2)].map(cell).join(","));
+    rows.push(
+      [" ", " ", " ", " ", "Total (no VAT - not VAT registered)", totals.excl.toFixed(2)]
+        .map(cell)
+        .join(",")
+    );
   }
 
   const safeRef = loaded.tender.reference.replace(/[^A-Za-z0-9._-]+/g, "-") || "tender";

@@ -16,10 +16,7 @@ function num(v: unknown): number {
   return Number.isFinite(n) && n >= 0 ? n : 0;
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;

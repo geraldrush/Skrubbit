@@ -56,9 +56,7 @@ export function ProductList({ products }: { products: Product[] }) {
         <li key={p.slug} className="p-3">
           <div className="flex items-center gap-4">
             <div className="relative h-14 w-14 shrink-0 rounded bg-muted/30">
-              {p.image ? (
-                <Image src={p.image} alt="" fill className="object-contain p-1" />
-              ) : null}
+              {p.image ? <Image src={p.image} alt="" fill className="object-contain p-1" /> : null}
             </div>
             <div className="min-w-0 flex-1">
               <div className="flex flex-wrap items-center gap-2">

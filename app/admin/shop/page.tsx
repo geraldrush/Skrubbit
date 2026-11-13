@@ -37,16 +37,12 @@ export default async function ShopAdminPage() {
       />
 
       <section className="mb-10">
-        <h2 className="mb-3 font-display text-xl font-bold">
-          Recent orders ({orders.length})
-        </h2>
+        <h2 className="mb-3 font-display text-xl font-bold">Recent orders ({orders.length})</h2>
         <OrderList orders={orders} />
       </section>
 
       <section className="mb-10">
-        <h2 className="mb-3 font-display text-xl font-bold">
-          Messages ({messages.length})
-        </h2>
+        <h2 className="mb-3 font-display text-xl font-bold">Messages ({messages.length})</h2>
         <MessageList messages={messages} />
       </section>
 

@@ -20,8 +20,8 @@ export function ReadinessPanel({ issues }: { issues: Issue[] }) {
         <div>
           <p className="font-semibold">Ready to submit</p>
           <p className="text-sm text-muted-foreground">
-            Every required document is attached and signed, certificates are
-            valid at the closing date, and no compulsory briefing is outstanding.
+            Every required document is attached and signed, certificates are valid at the closing
+            date, and no compulsory briefing is outstanding.
           </p>
         </div>
       </div>
@@ -34,8 +34,8 @@ export function ReadinessPanel({ issues }: { issues: Issue[] }) {
         <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
           <p className="mb-2 flex items-center gap-2 font-semibold text-destructive">
             <XCircle className="h-5 w-5" />
-            {blockers.length} {blockers.length === 1 ? "blocker" : "blockers"} —
-            this bid would be disqualified
+            {blockers.length} {blockers.length === 1 ? "blocker" : "blockers"} — this bid would be
+            disqualified
           </p>
           <ul className="ml-7 list-disc space-y-1 text-sm">
             {blockers.map((issue, i) => (

@@ -29,10 +29,7 @@ function parseId(raw: string): number | null {
  * through a 24-row checklist would otherwise be 24 round trips, and a partial
  * save would leave the readiness assessment reading a half-updated bid.
  */
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;
@@ -116,10 +113,7 @@ export async function PUT(
   });
 }
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { env } = getCloudflareContext();
   const denied = await requireAdmin(req, env);
   if (denied) return denied;

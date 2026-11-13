@@ -21,13 +21,13 @@ pnpm dev            # http://localhost:3000
 
 ## Scripts
 
-| Script          | What it does                                            |
-| --------------- | ------------------------------------------------------- |
-| `pnpm dev`      | Next.js dev server                                      |
-| `pnpm build`    | Production Next.js build                                |
-| `pnpm preview`  | Build + run on the Cloudflare Workers runtime locally   |
-| `pnpm deploy`   | Build + deploy to Cloudflare Workers                    |
-| `pnpm typecheck`| `tsc --noEmit`                                          |
+| Script           | What it does                                          |
+| ---------------- | ----------------------------------------------------- |
+| `pnpm dev`       | Next.js dev server                                    |
+| `pnpm build`     | Production Next.js build                              |
+| `pnpm preview`   | Build + run on the Cloudflare Workers runtime locally |
+| `pnpm deploy`    | Build + deploy to Cloudflare Workers                  |
+| `pnpm typecheck` | `tsc --noEmit`                                        |
 
 ## Project structure
 

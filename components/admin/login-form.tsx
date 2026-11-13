@@ -69,10 +69,7 @@ export function LoginForm() {
 
   if (mode === "forgot") {
     return (
-      <form
-        onSubmit={requestReset}
-        className="mx-auto max-w-sm space-y-4 rounded-lg border p-6"
-      >
+      <form onSubmit={requestReset} className="mx-auto max-w-sm space-y-4 rounded-lg border p-6">
         <div className="flex items-center gap-2">
           <Lock className="h-5 w-5 text-muted-foreground" />
           <h2 className="font-display text-xl font-bold">Reset password</h2>
@@ -81,8 +78,8 @@ export function LoginForm() {
         {sent ? (
           <>
             <p className="text-sm text-muted-foreground">
-              If that address belongs to the admin, a reset link is on its way.
-              It works once and expires in an hour.
+              If that address belongs to the admin, a reset link is on its way. It works once and
+              expires in an hour.
             </p>
             <Button
               type="button"
@@ -99,8 +96,7 @@ export function LoginForm() {
         ) : (
           <>
             <p className="text-sm text-muted-foreground">
-              Enter the admin email address and we&apos;ll send a link to set a
-              new password.
+              Enter the admin email address and we&apos;ll send a link to set a new password.
             </p>
             <div className="space-y-2">
               <Label htmlFor="reset-username">Email</Label>
@@ -171,11 +167,7 @@ export function LoginForm() {
           {error}
         </p>
       ) : null}
-      <Button
-        type="submit"
-        disabled={busy || (turnstileEnabled && !token)}
-        className="w-full"
-      >
+      <Button type="submit" disabled={busy || (turnstileEnabled && !token)} className="w-full">
         {busy ? (
           <>
             <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in…

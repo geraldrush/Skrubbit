@@ -66,7 +66,9 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    font-feature-settings:
+      "rlig" 1,
+      "calt" 1;
   }
   h1,
   h2,
@@ -80,20 +82,9 @@
   /* Subtle diagonal bubble texture for hero / section backgrounds */
   .bg-bubbles {
     background-color: hsl(var(--primary));
-    background-image: radial-gradient(
-        circle at 20% 30%,
-        rgba(255, 255, 255, 0.35) 0,
-        rgba(255, 255, 255, 0) 12%
-      ),
-      radial-gradient(
-        circle at 75% 65%,
-        rgba(255, 255, 255, 0.28) 0,
-        rgba(255, 255, 255, 0) 14%
-      ),
-      radial-gradient(
-        circle at 55% 20%,
-        rgba(255, 255, 255, 0.22) 0,
-        rgba(255, 255, 255, 0) 10%
-      );
+    background-image:
+      radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.35) 0, rgba(255, 255, 255, 0) 12%),
+      radial-gradient(circle at 75% 65%, rgba(255, 255, 255, 0.28) 0, rgba(255, 255, 255, 0) 14%),
+      radial-gradient(circle at 55% 20%, rgba(255, 255, 255, 0.22) 0, rgba(255, 255, 255, 0) 10%);
   }
 }
