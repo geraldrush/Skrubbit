@@ -4,6 +4,7 @@ import * as React from "react";
 import { Loader2, Send } from "lucide-react";
 import { toast } from "sonner";
 
+import { Turnstile, turnstileEnabled } from "@/components/turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,6 +37,7 @@ export function EnquiryForm({
   });
   const [busy, setBusy] = React.useState(false);
   const [sent, setSent] = React.useState(false);
+  const [token, setToken] = React.useState("");
 
   const set =
     (field: keyof typeof form) => (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) =>
@@ -52,7 +54,7 @@ export function EnquiryForm({
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({ ...form, turnstileToken: token }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "Could not send your message");
@@ -60,6 +62,9 @@ export function EnquiryForm({
       setSent(true);
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Could not send your message");
+      // The Turnstile token is single-use, so a retry needs a fresh one.
+      setToken("");
+      window.turnstile?.reset();
     } finally {
       setBusy(false);
     }
@@ -152,7 +157,15 @@ export function EnquiryForm({
           />
         </div>
 
-        <Button type="submit" size="lg" variant="accent" disabled={busy} className="w-full">
+        <Turnstile onToken={setToken} />
+
+        <Button
+          type="submit"
+          size="lg"
+          variant="accent"
+          disabled={busy || (turnstileEnabled && !token)}
+          className="w-full"
+        >
           {busy ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
           Send enquiry
         </Button>

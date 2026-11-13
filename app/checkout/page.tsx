@@ -10,6 +10,7 @@ import { formatZAR } from "@/lib/utils";
 import { site } from "@/data/site";
 import { useCart, cartSubtotal } from "@/store/cart";
 import { ProductImage } from "@/components/product-image";
+import { Turnstile, turnstileEnabled } from "@/components/turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +32,7 @@ export default function CheckoutPage() {
   });
   const [submitting, setSubmitting] = React.useState(false);
   const [reference, setReference] = React.useState<string | null>(null);
+  const [token, setToken] = React.useState("");
 
   React.useEffect(() => setMounted(true), []);
 
@@ -57,7 +59,7 @@ export default function CheckoutPage() {
       const res = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ items, subtotal, customer: form }),
+        body: JSON.stringify({ items, subtotal, customer: form, turnstileToken: token }),
       });
       const data = (await res.json()) as { reference?: string; error?: string };
       if (!res.ok || !data.reference) {
@@ -71,6 +73,9 @@ export default function CheckoutPage() {
           ? `${err.message}. Please email us at info@skrubbit.co.za instead.`
           : "Could not send your order. Please email us at info@skrubbit.co.za instead."
       );
+      // The Turnstile token is single-use, so a retry needs a fresh one.
+      setToken("");
+      window.turnstile?.reset();
     } finally {
       setSubmitting(false);
     }
@@ -183,12 +188,14 @@ export default function CheckoutPage() {
             />
           </div>
 
+          <Turnstile onToken={setToken} />
+
           <div className="flex flex-col gap-3 sm:flex-row">
             <Button
               type="submit"
               size="lg"
               variant="accent"
-              disabled={submitting}
+              disabled={submitting || (turnstileEnabled && !token)}
               className="flex-1"
             >
               <Mail className="h-5 w-5" />

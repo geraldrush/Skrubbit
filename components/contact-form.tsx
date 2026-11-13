@@ -4,6 +4,7 @@ import * as React from "react";
 import { Send } from "lucide-react";
 import { toast } from "sonner";
 
+import { Turnstile, turnstileEnabled } from "@/components/turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +13,7 @@ import { Textarea } from "@/components/ui/textarea";
 export function ContactForm() {
   const [submitting, setSubmitting] = React.useState(false);
   const [sent, setSent] = React.useState(false);
+  const [token, setToken] = React.useState("");
 
   async function submit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -22,7 +24,7 @@ export function ContactForm() {
       const res = await fetch("/api/contact", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({ ...data, turnstileToken: token }),
       });
       if (!res.ok) throw new Error("Failed");
       setSent(true);
@@ -30,6 +32,9 @@ export function ContactForm() {
       toast.success("Thanks! We'll be in touch soon.");
     } catch {
       toast.error("Something went wrong. Please email us at info@skrubbit.co.za instead.");
+      // The Turnstile token is single-use, so a retry needs a fresh one.
+      setToken("");
+      window.turnstile?.reset();
     } finally {
       setSubmitting(false);
     }
@@ -75,7 +80,8 @@ export function ContactForm() {
           placeholder="How can we help? Bulk orders, stockist enquiries, product questions…"
         />
       </div>
-      <Button type="submit" size="lg" disabled={submitting}>
+      <Turnstile onToken={setToken} />
+      <Button type="submit" size="lg" disabled={submitting || (turnstileEnabled && !token)}>
         <Send className="h-4 w-4" />
         {submitting ? "Sending…" : "Send message"}
       </Button>

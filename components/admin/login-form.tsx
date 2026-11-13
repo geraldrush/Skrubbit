@@ -7,7 +7,7 @@ import { Loader2, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Turnstile, turnstileEnabled } from "@/components/admin/turnstile";
+import { Turnstile, turnstileEnabled } from "@/components/turnstile";
 
 export function LoginForm() {
   const router = useRouter();
